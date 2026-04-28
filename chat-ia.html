@@ -594,7 +594,19 @@ async function sendMessage() {
   ta.focus();
 }
 
-// === IndexedDB ===
+// === Storage layer (cloud quando logado, IndexedDB senão) ===
+let cloudUser = null;
+
+async function refreshCloudUser() {
+  if (!window.supabase) return null;
+  try {
+    const { data: { user } } = await window.supabase.auth.getUser();
+    cloudUser = user || null;
+  } catch { cloudUser = null; }
+  return cloudUser;
+}
+
+// IndexedDB (local fallback)
 const DB_NAME = 'innova-prompts';
 const STORE = 'prompts';
 function openDB() {
@@ -611,7 +623,7 @@ function openDB() {
     req.onerror = () => reject(req.error);
   });
 }
-async function dbAddPrompt(p) {
+async function localAddPrompt(p) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -620,7 +632,7 @@ async function dbAddPrompt(p) {
     r.onerror = () => reject(r.error);
   });
 }
-async function dbUpdatePrompt(p) {
+async function localUpdatePrompt(p) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -629,7 +641,7 @@ async function dbUpdatePrompt(p) {
     tx.onerror = () => reject(tx.error);
   });
 }
-async function dbDeletePrompt(id) {
+async function localDeletePrompt(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -638,7 +650,7 @@ async function dbDeletePrompt(id) {
     tx.onerror = () => reject(tx.error);
   });
 }
-async function dbGetAllPrompts() {
+async function localGetAllPrompts() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readonly');
@@ -646,6 +658,103 @@ async function dbGetAllPrompts() {
     r.onsuccess = () => resolve(r.result.sort((a,b) => b.timestamp - a.timestamp));
     r.onerror = () => reject(r.error);
   });
+}
+
+// Cloud (Supabase) variants
+async function cloudResolveImages(items) {
+  const arr = items.sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  const result = [];
+  for (const it of arr) {
+    const { data } = await window.supabase.storage.from('prompt-images').createSignedUrl(it.storage_path, 3600);
+    result.push({ id: it.id, path: it.storage_path, url: data?.signedUrl || '' });
+  }
+  return result;
+}
+
+async function cloudGetAllPrompts() {
+  const { data, error } = await window.supabase
+    .from('prompts')
+    .select('id, text, good, source, created_at, prompt_images(id, kind, storage_path, sort_order)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const out = [];
+  for (const p of data) {
+    out.push({
+      id: p.id,
+      text: p.text,
+      good: p.good,
+      source: p.source,
+      timestamp: new Date(p.created_at).getTime(),
+      refImages: await cloudResolveImages((p.prompt_images || []).filter(i => i.kind === 'ref')),
+      generatedImages: await cloudResolveImages((p.prompt_images || []).filter(i => i.kind === 'gen')),
+    });
+  }
+  return out;
+}
+
+async function cloudAddPrompt(p) {
+  const { data, error } = await window.supabase.from('prompts').insert({
+    user_id: cloudUser.id,
+    text: p.text,
+    good: p.good,
+    source: p.source || 'chat',
+  }).select().single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function cloudUpdatePrompt(p) {
+  const { error } = await window.supabase.from('prompts').update({
+    text: p.text,
+    good: p.good,
+  }).eq('id', p.id);
+  if (error) throw error;
+}
+
+async function cloudDeletePrompt(id) {
+  // Get image paths before delete (cascade só limpa o DB, não o storage)
+  const { data: imgs } = await window.supabase.from('prompt_images').select('storage_path').eq('prompt_id', id);
+  const paths = (imgs || []).map(i => i.storage_path);
+  if (paths.length) await window.supabase.storage.from('prompt-images').remove(paths);
+  const { error } = await window.supabase.from('prompts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function cloudUploadImage(promptId, kind, blob) {
+  const ext = (blob.type.split('/')[1] || 'png').replace('jpeg','jpg');
+  const path = `${cloudUser.id}/${promptId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error: upErr } = await window.supabase.storage.from('prompt-images').upload(path, blob, { contentType: blob.type });
+  if (upErr) throw upErr;
+  // sort_order = current max+1
+  const { data: existing } = await window.supabase.from('prompt_images').select('sort_order').eq('prompt_id', promptId).eq('kind', kind).order('sort_order', { ascending: false }).limit(1);
+  const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
+  const { error: insErr } = await window.supabase.from('prompt_images').insert({
+    prompt_id: promptId, user_id: cloudUser.id, kind, storage_path: path, sort_order: nextOrder,
+  });
+  if (insErr) throw insErr;
+}
+
+async function cloudDeleteImage(imageId, path) {
+  await window.supabase.storage.from('prompt-images').remove([path]);
+  await window.supabase.from('prompt_images').delete().eq('id', imageId);
+}
+
+// Roteamento (cloud se logado, local senão)
+async function dbAddPrompt(p) {
+  if (cloudUser) return cloudAddPrompt(p);
+  return localAddPrompt(p);
+}
+async function dbUpdatePrompt(p) {
+  if (cloudUser) return cloudUpdatePrompt(p);
+  return localUpdatePrompt(p);
+}
+async function dbDeletePrompt(id) {
+  if (cloudUser) return cloudDeletePrompt(id);
+  return localDeletePrompt(id);
+}
+async function dbGetAllPrompts() {
+  if (cloudUser) return cloudGetAllPrompts();
+  return localGetAllPrompts();
 }
 
 // === History modal ===
@@ -690,23 +799,27 @@ async function renderHistory() {
   list.innerHTML = filtered.map(p => renderHistoryItem(p)).join('');
 
   // Hookup interactions
+  const idFromStr = (s) => cloudUser ? s : Number(s);
+
   list.querySelectorAll('[data-action="check"]').forEach(b => b.addEventListener('click', async () => {
-    const id = +b.dataset.id;
+    const id = idFromStr(b.dataset.id);
     const value = b.dataset.value === 'good' ? true : false;
-    const p = (await dbGetAllPrompts()).find(x => x.id === id);
+    const all = await dbGetAllPrompts();
+    const p = all.find(x => String(x.id) === String(id));
     if (!p) return;
     p.good = (p.good === value) ? null : value;
     await dbUpdatePrompt(p);
     renderHistory();
   }));
   list.querySelectorAll('[data-action="expand"]').forEach(b => b.addEventListener('click', () => {
-    const id = +b.dataset.id;
+    const id = String(b.dataset.id);
     if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
     renderHistory();
   }));
   list.querySelectorAll('[data-action="copy"]').forEach(b => b.addEventListener('click', async () => {
-    const id = +b.dataset.id;
-    const p = (await dbGetAllPrompts()).find(x => x.id === id);
+    const id = idFromStr(b.dataset.id);
+    const all = await dbGetAllPrompts();
+    const p = all.find(x => String(x.id) === String(id));
     if (p) navigator.clipboard.writeText(p.text);
     b.innerHTML = '<i data-lucide="check"></i>';
     if (window.lucide) lucide.createIcons();
@@ -714,10 +827,12 @@ async function renderHistory() {
   }));
   list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Apagar este prompt?')) return;
-    await dbDeletePrompt(+b.dataset.id);
+    await dbDeletePrompt(idFromStr(b.dataset.id));
     await refreshHistoryCount();
     renderHistory();
   }));
+  const promptIdFrom = (str) => cloudUser ? str : Number(str);
+
   const attachImages = (id, kind) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -725,35 +840,49 @@ async function renderHistory() {
     input.multiple = true;
     input.onchange = async (e) => {
       const files = Array.from(e.target.files || []);
-      const p = (await dbGetAllPrompts()).find(x => x.id === id);
-      if (!p) return;
-      const arr = kind === 'ref' ? p.refImages : p.generatedImages;
-      for (const f of files) arr.push(f);
-      await dbUpdatePrompt(p);
-      expandedIds.add(id);
+      if (cloudUser) {
+        for (const f of files) {
+          await cloudUploadImage(id, kind, f);
+        }
+      } else {
+        const all = await dbGetAllPrompts();
+        const p = all.find(x => String(x.id) === String(id));
+        if (!p) return;
+        const arr = kind === 'ref' ? p.refImages : p.generatedImages;
+        for (const f of files) arr.push(f);
+        await dbUpdatePrompt(p);
+      }
+      expandedIds.add(String(id));
       renderHistory();
     };
     input.click();
   };
 
   list.querySelectorAll('[data-action="add-img"]').forEach(b => b.addEventListener('click', () => {
-    attachImages(+b.dataset.id, b.dataset.kind);
+    attachImages(promptIdFrom(b.dataset.id), b.dataset.kind);
   }));
   list.querySelectorAll('[data-action="quick-add-ref"]').forEach(b => b.addEventListener('click', () => {
-    attachImages(+b.dataset.id, 'ref');
+    attachImages(promptIdFrom(b.dataset.id), 'ref');
   }));
   list.querySelectorAll('[data-action="quick-add-gen"]').forEach(b => b.addEventListener('click', () => {
-    attachImages(+b.dataset.id, 'gen');
+    attachImages(promptIdFrom(b.dataset.id), 'gen');
   }));
   list.querySelectorAll('[data-action="remove-img"]').forEach(b => b.addEventListener('click', async () => {
-    const id = +b.dataset.id;
+    const id = idFromStr(b.dataset.id);
     const kind = b.dataset.kind;
     const idx = +b.dataset.idx;
-    const p = (await dbGetAllPrompts()).find(x => x.id === id);
-    if (!p) return;
-    const arr = kind === 'ref' ? p.refImages : p.generatedImages;
-    arr.splice(idx, 1);
-    await dbUpdatePrompt(p);
+    const imgId = b.dataset.imgId;
+    const imgPath = b.dataset.imgPath;
+    if (cloudUser && imgId) {
+      await cloudDeleteImage(imgId, imgPath);
+    } else {
+      const all = await dbGetAllPrompts();
+      const p = all.find(x => String(x.id) === String(id));
+      if (!p) return;
+      const arr = kind === 'ref' ? p.refImages : p.generatedImages;
+      arr.splice(idx, 1);
+      await dbUpdatePrompt(p);
+    }
     renderHistory();
   }));
   list.querySelectorAll('[data-action="zoom-img"]').forEach(b => b.addEventListener('click', () => {
@@ -767,7 +896,7 @@ async function renderHistory() {
 function renderHistoryItem(p) {
   // Auto-expand if has images
   const hasImages = (p.refImages?.length || 0) + (p.generatedImages?.length || 0) > 0;
-  const expanded = expandedIds.has(p.id) || hasImages;
+  const expanded = expandedIds.has(String(p.id)) || hasImages;
   const goodCls = p.good === true ? 'good' : (p.good === false ? 'bad' : '');
   const date = new Date(p.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(p.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const previewText = p.text.length > 200 ? p.text.slice(0, 200) + '…' : p.text;
@@ -776,15 +905,18 @@ function renderHistoryItem(p) {
   const refCount = p.refImages?.length || 0;
   const genCount = p.generatedImages?.length || 0;
 
-  const refUrls = (p.refImages || []).map(b => URL.createObjectURL(b));
-  const genUrls = (p.generatedImages || []).map(b => URL.createObjectURL(b));
+  const getImgUrl = (item) => item instanceof Blob ? URL.createObjectURL(item) : (item?.url || '');
+  const getImgId = (item) => item instanceof Blob ? '' : (item?.id || '');
+  const getImgPath = (item) => item instanceof Blob ? '' : (item?.path || '');
 
-  const renderImgs = (urls, kind, label) => {
-    const thumbs = urls.map((u, i) => `
-      <div class="img-thumb">
-        <img src="${u}" data-action="zoom-img" data-src="${u}">
-        <button class="img-x" data-action="remove-img" data-id="${p.id}" data-kind="${kind}" data-idx="${i}">×</button>
-      </div>`).join('');
+  const renderImgs = (imgs, kind, label) => {
+    const thumbs = (imgs || []).map((it, i) => {
+      const url = getImgUrl(it);
+      return `<div class="img-thumb">
+        <img src="${url}" data-action="zoom-img" data-src="${url}">
+        <button class="img-x" data-action="remove-img" data-id="${p.id}" data-kind="${kind}" data-idx="${i}" data-img-id="${getImgId(it)}" data-img-path="${getImgPath(it)}">×</button>
+      </div>`;
+    }).join('');
     return `<div class="img-grid">${thumbs}
       <div class="img-thumb add" data-action="add-img" data-id="${p.id}" data-kind="${kind}" title="Adicionar ${label}"><i data-lucide="plus"></i></div>
     </div>`;
@@ -814,11 +946,11 @@ function renderHistoryItem(p) {
       <div class="item-body">
         <div class="img-section">
           <h4>Imagens de referência (${refCount})</h4>
-          ${renderImgs(refUrls, 'ref', 'referência')}
+          ${renderImgs(p.refImages, 'ref', 'referência')}
         </div>
         <div class="img-section">
           <h4>Imagens geradas (${genCount})</h4>
-          ${renderImgs(genUrls, 'gen', 'gerada')}
+          ${renderImgs(p.generatedImages, 'gen', 'gerada')}
         </div>
       </div>
     </div>`;
@@ -845,12 +977,25 @@ $('saveManualPrompt').addEventListener('click', async () => {
   renderHistory();
 });
 
-// Init
-updateConfigLabel();
-renderMessages();
-updateSendBtn();
-refreshHistoryCount();
-if (window.lucide) lucide.createIcons();
+// Init — espera Supabase carregar antes de decidir cloud vs local
+(async () => {
+  if (window.whenSupabaseReady) {
+    await new Promise(resolve => window.whenSupabaseReady(resolve));
+    await refreshCloudUser();
+    window.supabase.auth.onAuthStateChange(async (_event, session) => {
+      cloudUser = session?.user || null;
+      await refreshHistoryCount();
+      if (document.getElementById('historyModal').classList.contains('open')) {
+        await renderHistory();
+      }
+    });
+  }
+  updateConfigLabel();
+  renderMessages();
+  updateSendBtn();
+  await refreshHistoryCount();
+  if (window.lucide) lucide.createIcons();
+})();
 </script>
 </body>
 </html>
