@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Converter formato — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-status"><span class="status-dot-online"></span> Local</div>
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Converter formato</h1>
+    <p>HEIC → JPG, PNG → WebP, qualquer formato. Em lote, no navegador.</p>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <h2>1. Imagens</h2>
+        <label class="drop" id="dropImages">
+          <input type="file" id="imagesInput" accept="image/*,.heic,.heif" multiple>
+          <p>Clique ou arraste suas fotos</p>
+          <p class="hint">HEIC, JPG, PNG, WebP, BMP, GIF</p>
+        </label>
+        <div id="fileList" class="file-list"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <h2>2. Formato de saída</h2>
+        <div class="seg cols-3" id="formatSeg">
+          <button data-format="image/jpeg" class="active">JPG</button>
+          <button data-format="image/png">PNG</button>
+          <button data-format="image/webp">WebP</button>
+        </div>
+        <div class="row">
+          <label>Qualidade</label>
+          <input type="range" id="qualityRange" min="60" max="100" value="92">
+          <span class="val"><span id="qualityVal">92</span>%</span>
+        </div>
+        <div class="info-box" style="margin-top:8px;">
+          <strong>JPG:</strong> menor arquivo, ideal pra fotos.<br>
+          <strong>PNG:</strong> mantém transparência, sem perda.<br>
+          <strong>WebP:</strong> ~30% menor que JPG, mesma qualidade.
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <h2 style="margin:0 0 12px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);">Pré-visualização</h2>
+      <div class="preview-canvas" id="previewBox">
+        <div class="empty">Adicione imagens para começar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="processBtn" disabled>Baixar todas em ZIP</button>
+    <button class="ghost" id="clearBtn">Limpar tudo</button>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="status" id="statusMsg">Aguardando imagens…</div>
+  </div>
+</main>
+
+<script src="favicon.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const state = {
+  images: [],
+  selectedIdx: 0,
+  format: 'image/jpeg',
+  quality: 0.92,
+};
+
+const $ = (id) => document.getElementById(id);
+
+function setupDrop(zoneId, inputId, onFiles) {
+  const zone = $(zoneId);
+  const input = $(inputId);
+  input.addEventListener('change', (e) => { onFiles(Array.from(e.target.files || [])); e.target.value = ''; });
+  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
+    if (files.length) onFiles(files);
+  });
+}
+
+setupDrop('dropImages', 'imagesInput', async (files) => {
+  const startIdx = state.images.length;
+  for (const file of files) {
+    state.images.push({
+      file, name: file.name,
+      isHeic: /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif',
+      resultBlob: null, resultUrl: null, status: 'pending',
+    });
+  }
+  if (state.images.length && state.selectedIdx >= state.images.length) state.selectedIdx = 0;
+  renderFileList();
+  refresh();
+  for (let i = startIdx; i < state.images.length; i++) {
+    if (state.images[i].status === 'pending') {
+      state.selectedIdx = i;
+      renderFileList();
+      await processOne(i);
+    }
+  }
+});
+
+function renderFileList() {
+  const fl = $('fileList');
+  if (!state.images.length) { fl.innerHTML = ''; return; }
+  fl.innerHTML = state.images.map((it, i) => {
+    const dotCls = it.status === 'pending' ? '' : it.status === 'processing' ? 'processing' : it.status === 'done' ? 'done' : 'error';
+    return `<div class="item ${i===state.selectedIdx?'active':''}" data-i="${i}">
+      <span><span class="status-dot ${dotCls}"></span>${it.name}</span>
+      <button class="x" data-x="${i}">×</button>
+    </div>`;
+  }).join('');
+  fl.querySelectorAll('.item').forEach(el => el.addEventListener('click', e => {
+    if (e.target.matches('.x')) return;
+    state.selectedIdx = +el.dataset.i; renderFileList(); refresh();
+  }));
+  fl.querySelectorAll('.x').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const i = +b.dataset.x;
+    if (state.images[i].resultUrl) URL.revokeObjectURL(state.images[i].resultUrl);
+    state.images.splice(i, 1);
+    if (state.selectedIdx >= state.images.length) state.selectedIdx = Math.max(0, state.images.length - 1);
+    renderFileList(); refresh();
+  }));
+}
+
+$('formatSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-format]');
+  if (!b) return;
+  $('formatSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  state.format = b.dataset.format;
+  // Reprocess all so output matches new format
+  for (let i = 0; i < state.images.length; i++) {
+    state.images[i].status = 'pending';
+    if (state.images[i].resultUrl) { URL.revokeObjectURL(state.images[i].resultUrl); state.images[i].resultUrl = null; }
+  }
+  reprocessAll();
+});
+$('qualityRange').addEventListener('input', () => {
+  $('qualityVal').textContent = $('qualityRange').value;
+  state.quality = +$('qualityRange').value / 100;
+});
+$('qualityRange').addEventListener('change', () => {
+  // Reprocess on quality change (after slide ends)
+  for (let i = 0; i < state.images.length; i++) {
+    state.images[i].status = 'pending';
+    if (state.images[i].resultUrl) { URL.revokeObjectURL(state.images[i].resultUrl); state.images[i].resultUrl = null; }
+  }
+  reprocessAll();
+});
+
+async function reprocessAll() {
+  renderFileList(); refresh();
+  for (let i = 0; i < state.images.length; i++) {
+    if (state.images[i].status === 'pending') {
+      await processOne(i);
+    }
+  }
+}
+
+async function fileToBlob(file, isHeic) {
+  if (isHeic && window.heic2any) {
+    return await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
+  }
+  return file;
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { resolve({ img, url }); };
+    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+async function processOne(idx) {
+  const it = state.images[idx];
+  it.status = 'processing';
+  renderFileList();
+  if (idx === state.selectedIdx) refresh();
+
+  try {
+    const inputBlob = await fileToBlob(it.file, it.isHeic);
+    const { img, url } = await blobToImage(inputBlob);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (state.format === 'image/jpeg') {
+      // JPG não tem alpha — preenche fundo branco
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+
+    const blob = await new Promise(res => canvas.toBlob(res, state.format, state.quality));
+    if (!blob) throw new Error('Falha ao gerar blob');
+    it.resultBlob = blob;
+    it.resultUrl = URL.createObjectURL(blob);
+    it.status = 'done';
+  } catch (e) {
+    console.error('convert error', e);
+    it.status = 'error';
+    it.error = e.message || String(e);
+  }
+  renderFileList();
+  refresh();
+}
+
+function refresh() {
+  const box = $('previewBox');
+  const doneCount = state.images.filter(x => x.status === 'done').length;
+  $('processBtn').disabled = doneCount === 0;
+
+  if (!state.images.length) {
+    box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';
+    $('statusMsg').textContent = 'Aguardando imagens…';
+    return;
+  }
+
+  const it = state.images[state.selectedIdx];
+  if (!it) return;
+
+  if (it.status === 'error') {
+    box.innerHTML = `<div class="empty" style="color:#ff8094;">Erro: ${it.error || 'desconhecido'}</div>`;
+    return;
+  }
+  if (it.status === 'processing') {
+    box.innerHTML = `<div class="empty">Convertendo ${it.name}…</div>`;
+    return;
+  }
+  if (it.resultUrl) {
+    box.innerHTML = `<img src="${it.resultUrl}" alt="${it.name}">`;
+  }
+
+  if (doneCount === state.images.length) {
+    $('statusMsg').textContent = `✓ ${doneCount} imagem(ns) convertidas — clique pra baixar ZIP`;
+    $('statusMsg').classList.add('ok');
+  } else {
+    $('statusMsg').textContent = `${doneCount}/${state.images.length} processadas`;
+    $('statusMsg').classList.remove('ok');
+  }
+}
+
+$('processBtn').addEventListener('click', async () => {
+  const done = state.images.filter(x => x.status === 'done');
+  if (!done.length) return;
+  const btn = $('processBtn');
+  btn.disabled = true;
+  $('statusMsg').textContent = 'Compactando ZIP…';
+
+  const ext = state.format === 'image/png' ? 'png' : state.format === 'image/webp' ? 'webp' : 'jpg';
+  const zip = new JSZip();
+  for (const it of done) {
+    const base = it.name.replace(/\.[^.]+$/, '');
+    zip.file(`${base}.${ext}`, it.resultBlob);
+  }
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = url;
+  a.download = `imagens_convertidas_${stamp}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  $('statusMsg').textContent = `✓ ZIP com ${done.length} imagens baixado`;
+  $('statusMsg').classList.add('ok');
+  btn.disabled = false;
+});
+
+$('clearBtn').addEventListener('click', () => {
+  state.images.forEach(it => { if (it.resultUrl) URL.revokeObjectURL(it.resultUrl); });
+  state.images = [];
+  state.selectedIdx = 0;
+  $('imagesInput').value = '';
+  renderFileList(); refresh();
+});
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Chat IA — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .chat-layout {
+    display: flex; flex-direction: column;
+    flex: 1; min-height: 0;
+    padding: 0 36px 16px;
+  }
+  .quick-prompts {
+    display: flex; gap: 8px;
+    padding: 16px 0;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .quick-prompts button {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 14px;
+    color: var(--muted); font-size: 12px;
+    cursor: pointer; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .quick-prompts button:hover { color: var(--text); border-color: var(--accent-2); background: var(--panel-2); }
+  .quick-prompts button svg { width: 14px; height: 14px; }
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 16px;
+    padding: 4px 0;
+  }
+  .chat-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted); text-align: center; padding: 40px;
+  }
+  .chat-empty .icon-circle {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: rgba(91,140,255,0.12); color: var(--accent-2);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .chat-empty .icon-circle svg { width: 30px; height: 30px; }
+  .chat-empty h3 { margin: 0 0 8px; color: var(--text); font-family: 'Sora', sans-serif; }
+  .chat-message {
+    max-width: 82%; padding: 12px 16px;
+    border-radius: 14px; line-height: 1.6; font-size: 14px;
+    word-wrap: break-word;
+  }
+  .chat-message.user {
+    align-self: flex-end;
+    background: var(--accent); color: #fff;
+  }
+  .chat-message.ai {
+    align-self: flex-start;
+    background: var(--panel); border: 1px solid var(--border);
+  }
+  .chat-message.ai pre {
+    background: var(--bg); padding: 12px; border-radius: 8px;
+    overflow-x: auto; font-size: 13px; margin: 10px 0;
+  }
+  .chat-message.ai code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  .chat-message.ai pre code { background: transparent; padding: 0; }
+  .chat-message.ai ul, .chat-message.ai ol { padding-left: 22px; margin: 8px 0; }
+  .chat-message.ai p { margin: 8px 0; }
+  .chat-message.ai p:first-child { margin-top: 0; }
+  .chat-message.ai p:last-child { margin-bottom: 0; }
+  .chat-message.ai h1, .chat-message.ai h2, .chat-message.ai h3 { font-family: 'Sora', sans-serif; margin: 14px 0 8px; }
+  .chat-message.ai a { color: var(--accent-2); }
+  .chat-message.error {
+    align-self: stretch;
+    background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3);
+    color: #ff8094;
+  }
+  .chat-input-area {
+    display: flex; gap: 10px; align-items: flex-end;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--border);
+  }
+  .chat-input-area textarea {
+    flex: 1; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; color: var(--text);
+    font-family: inherit; font-size: 14px;
+    resize: none; min-height: 50px; max-height: 240px;
+    outline: none; transition: border-color .15s;
+  }
+  .chat-input-area textarea:focus { border-color: var(--accent-2); background: var(--panel-2); }
+  .chat-input-area .send-btn {
+    background: var(--accent); color: #fff; border: none;
+    width: 50px; height: 50px; border-radius: 12px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .chat-input-area .send-btn:hover:not(:disabled) { background: var(--accent-2); }
+  .chat-input-area .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .chat-input-area .send-btn svg { width: 20px; height: 20px; }
+
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  .modal.open { display: flex; }
+  .modal-content {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+    max-width: 480px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-content h3 {
+    margin: 0 0 6px; font-family: 'Sora', sans-serif;
+    font-size: 18px; font-weight: 700;
+  }
+  .modal-content .sub {
+    color: var(--muted); font-size: 13px; margin-bottom: 18px;
+  }
+  .modal-content .field { margin-bottom: 16px; }
+  .modal-content label {
+    display: block; font-size: 12px; color: var(--muted);
+    margin-bottom: 6px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .modal-content input, .modal-content select {
+    width: 100%; background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; color: var(--text); font-size: 14px;
+    outline: none;
+  }
+  .modal-content input:focus, .modal-content select:focus { border-color: var(--accent-2); }
+  .modal-content .help {
+    font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5;
+  }
+  .modal-content .help a { color: var(--accent-2); }
+  .modal-content .actions-row {
+    display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end;
+  }
+
+  .header-extras {
+    display: flex; gap: 8px; align-items: center;
+    margin-top: 12px;
+  }
+  .config-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 14px;
+    color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .config-pill:hover { border-color: var(--accent-2); color: var(--text); }
+  .config-pill.warn { color: #ffb84d; border-color: rgba(255,184,77,0.3); }
+  .config-pill svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-status"><span class="status-dot-online"></span> Local</div>
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Chat IA</h1>
+    <p>Brainstorm de prompts pra Whisk/Midjourney, legendas pra Insta/LinkedIn, ideias de conteúdo. Usa APIs gratuitas (Groq ou OpenRouter).</p>
+    <div class="header-extras">
+      <button class="config-pill" id="openSettings">
+        <i data-lucide="settings"></i>
+        <span id="configLabel">Configurar API</span>
+      </button>
+      <button class="config-pill" id="newChatBtn">
+        <i data-lucide="plus"></i>
+        Nova conversa
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-layout">
+    <div class="quick-prompts">
+      <button data-prompt="prompt-whisk"><i data-lucide="sparkles"></i> Prompt Whisk/Imagen</button>
+      <button data-prompt="prompt-mj"><i data-lucide="image"></i> Prompt Midjourney</button>
+      <button data-prompt="legendas-ig"><i data-lucide="instagram"></i> Legendas Insta</button>
+      <button data-prompt="ideias-post"><i data-lucide="lightbulb"></i> Ideias de post</button>
+      <button data-prompt="variacoes"><i data-lucide="copy"></i> Variações de prompt</button>
+      <button data-prompt="hashtags"><i data-lucide="hash"></i> Hashtags</button>
+    </div>
+
+    <div class="chat-messages" id="messages"></div>
+
+    <div class="chat-input-area">
+      <textarea id="chatInput" placeholder="Pergunte algo... Ex: 'crie um prompt do Whisk de um homem em ambiente urbano à noite'" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" disabled>
+        <i data-lucide="send"></i>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- Settings modal -->
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <h3>Configurar API de IA</h3>
+    <div class="sub">Sua chave fica salva apenas no seu navegador — nunca é enviada pra outro lugar além da API que você escolher.</div>
+
+    <div class="field">
+      <label>Provedor</label>
+      <select id="providerSel">
+        <option value="groq">Groq (mais rápido — recomendado)</option>
+        <option value="openrouter">OpenRouter</option>
+      </select>
+      <div class="help" id="providerHelp">
+        Crie chave grátis em <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>. Free tier: ~14k tokens/min.
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Chave da API</label>
+      <input type="password" id="apiKeyInput" placeholder="cole sua chave aqui (gsk_... ou sk-or-...)">
+    </div>
+
+    <div class="field">
+      <label>Modelo</label>
+      <select id="modelSel"></select>
+    </div>
+
+    <div class="actions-row">
+      <button class="ghost" id="cancelSettings">Cancelar</button>
+      <button class="primary" id="saveSettings">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="favicon.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const SYSTEM_PROMPT = `Você é um assistente especializado em criação de conteúdo visual e textual para criadores de IA.
+Ajude o usuário a:
+- Escrever prompts detalhados em INGLÊS para Whisk, Imagen, Midjourney (com lentes, iluminação, estilo, composição)
+- Criar legendas para Instagram, TikTok e LinkedIn em português brasileiro
+- Brainstorm de ideias de conteúdo
+- Gerar variações criativas de prompts existentes
+
+Seja direto, prático e responda em português. Use markdown pra listas e blocos de código quando útil.`;
+
+const QUICK_PROMPTS = {
+  'prompt-whisk': 'Crie um prompt detalhado em INGLÊS para o Whisk/Imagen gerar uma imagem de [TEMA AQUI]. Inclua: estilo fotográfico (editorial/lifestyle/cinematic), iluminação, lente (ex: 85mm), pose, expressão, ambiente, paleta de cores, profundidade de campo.',
+  'prompt-mj': 'Crie um prompt detalhado em INGLÊS para o Midjourney v6 gerar uma imagem de [TEMA AQUI]. Inclua: subject, action, environment, mood, lighting, lens, style, quality flags. Termine com --ar 4:5 --v 6.',
+  'legendas-ig': 'Sugira 5 legendas pra Instagram em português sobre [TEMA AQUI]. Variando entre: curta e impactante, longa com storytelling, divertida, emocional, e provocadora. Inclua CTA e hashtags relevantes.',
+  'ideias-post': 'Liste 10 ideias de conteúdo pra Instagram/LinkedIn sobre [TÓPICO AQUI]. Pra cada uma, dá um título e 1 frase do gancho.',
+  'variacoes': 'Tenho este prompt: "[COLE SEU PROMPT AQUI]"\n\nCrie 5 variações: 1 com ângulo diferente, 1 com iluminação noturna, 1 com paleta vibrante, 1 close-up, 1 com fundo minimalista.',
+  'hashtags': 'Sugira 30 hashtags pra um post de [TEMA AQUI] no Instagram. Mistura: 10 grandes (>1M), 10 médias (100k-1M), 10 nicho (<100k). Liste separadamente.',
+};
+
+const PROVIDERS = {
+  groq: {
+    name: 'Groq',
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    keyHelp: 'Crie chave grátis em <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>. Free tier: ~14k tokens/min.',
+    keyPrefix: 'gsk_',
+    models: [
+      { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (melhor qualidade)' },
+      { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (mais rápido)' },
+      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
+      { id: 'gemma2-9b-it', name: 'Gemma 2 9B' },
+    ],
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    keyHelp: 'Crie chave em <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Use modelos com :free no fim pra ficar grátis.',
+    keyPrefix: 'sk-or-',
+    models: [
+      { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (free)' },
+      { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (free)' },
+      { id: 'meta-llama/llama-3.2-3b-instruct:free', name: 'Llama 3.2 3B (free)' },
+      { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (free)' },
+    ],
+  },
+};
+
+const $ = (id) => document.getElementById(id);
+
+const config = {
+  provider: localStorage.getItem('chat-provider') || 'groq',
+  groqKey: localStorage.getItem('chat-key-groq') || '',
+  openrouterKey: localStorage.getItem('chat-key-openrouter') || '',
+  groqModel: localStorage.getItem('chat-model-groq') || 'llama-3.3-70b-versatile',
+  openrouterModel: localStorage.getItem('chat-model-openrouter') || 'google/gemini-2.0-flash-exp:free',
+};
+
+let messages = JSON.parse(localStorage.getItem('chat-history') || '[]');
+let isStreaming = false;
+
+function getKey() {
+  return config.provider === 'groq' ? config.groqKey : config.openrouterKey;
+}
+function getModel() {
+  return config.provider === 'groq' ? config.groqModel : config.openrouterModel;
+}
+
+function updateConfigLabel() {
+  const provider = PROVIDERS[config.provider];
+  const hasKey = !!getKey();
+  const label = $('configLabel');
+  const pill = $('openSettings');
+  if (hasKey) {
+    label.textContent = `${provider.name} · ${getModel().split('/').pop().split(':')[0]}`;
+    pill.classList.remove('warn');
+  } else {
+    label.textContent = 'Configurar API (necessário)';
+    pill.classList.add('warn');
+  }
+}
+
+function fillModelOptions() {
+  const sel = $('modelSel');
+  const models = PROVIDERS[config.provider].models;
+  sel.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  sel.value = getModel();
+}
+
+function openSettings() {
+  $('providerSel').value = config.provider;
+  $('apiKeyInput').value = getKey();
+  fillModelOptions();
+  $('providerHelp').innerHTML = PROVIDERS[config.provider].keyHelp;
+  $('settingsModal').classList.add('open');
+}
+function closeSettings() { $('settingsModal').classList.remove('open'); }
+
+$('openSettings').addEventListener('click', openSettings);
+$('cancelSettings').addEventListener('click', closeSettings);
+$('settingsModal').addEventListener('click', e => { if (e.target.id === 'settingsModal') closeSettings(); });
+
+$('providerSel').addEventListener('change', e => {
+  config.provider = e.target.value;
+  $('providerHelp').innerHTML = PROVIDERS[config.provider].keyHelp;
+  $('apiKeyInput').value = getKey();
+  fillModelOptions();
+});
+
+$('saveSettings').addEventListener('click', () => {
+  const provider = $('providerSel').value;
+  const key = $('apiKeyInput').value.trim();
+  const model = $('modelSel').value;
+  config.provider = provider;
+  if (provider === 'groq') { config.groqKey = key; config.groqModel = model; }
+  else { config.openrouterKey = key; config.openrouterModel = model; }
+  localStorage.setItem('chat-provider', provider);
+  localStorage.setItem(`chat-key-${provider}`, key);
+  localStorage.setItem(`chat-model-${provider}`, model);
+  updateConfigLabel();
+  closeSettings();
+});
+
+// Quick prompts
+document.querySelectorAll('.quick-prompts button').forEach(b => {
+  b.addEventListener('click', () => {
+    const k = b.dataset.prompt;
+    const text = QUICK_PROMPTS[k];
+    if (text) {
+      const ta = $('chatInput');
+      ta.value = text;
+      ta.focus();
+      autoResize();
+      updateSendBtn();
+    }
+  });
+});
+
+// New chat
+$('newChatBtn').addEventListener('click', () => {
+  if (messages.length && !confirm('Iniciar nova conversa? O histórico atual será apagado.')) return;
+  messages = [];
+  localStorage.setItem('chat-history', '[]');
+  renderMessages();
+});
+
+// Render messages
+function renderMessages() {
+  const box = $('messages');
+  if (!messages.length) {
+    box.innerHTML = `
+      <div class="chat-empty">
+        <div class="icon-circle"><i data-lucide="message-circle"></i></div>
+        <h3>Comece uma conversa</h3>
+        <p>Use os atalhos acima ou digite sua pergunta.<br>Configure a API antes (Groq é gratuito e bem rápido).</p>
+      </div>`;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+  box.innerHTML = messages.map(m => {
+    if (m.role === 'user') {
+      return `<div class="chat-message user">${escapeHtml(m.content)}</div>`;
+    }
+    return `<div class="chat-message ai">${marked.parse(m.content)}</div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Input handling
+const ta = $('chatInput');
+function autoResize() {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 240) + 'px';
+}
+function updateSendBtn() {
+  $('sendBtn').disabled = !ta.value.trim() || isStreaming || !getKey();
+}
+ta.addEventListener('input', () => { autoResize(); updateSendBtn(); });
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+$('sendBtn').addEventListener('click', sendMessage);
+
+async function sendMessage() {
+  const text = ta.value.trim();
+  if (!text || isStreaming) return;
+  if (!getKey()) { openSettings(); return; }
+
+  messages.push({ role: 'user', content: text });
+  ta.value = '';
+  autoResize();
+  renderMessages();
+  isStreaming = true;
+  updateSendBtn();
+
+  // Add empty AI message that we'll stream into
+  messages.push({ role: 'assistant', content: '' });
+  const aiIdx = messages.length - 1;
+  renderMessages();
+
+  try {
+    const provider = PROVIDERS[config.provider];
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getKey()}`,
+    };
+    if (config.provider === 'openrouter') {
+      headers['HTTP-Referer'] = location.origin;
+      headers['X-Title'] = 'Innova AI Studio';
+    }
+    const body = {
+      model: getModel(),
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages.filter(m => m.content || m === messages[aiIdx]).slice(0, aiIdx).filter(m => m.content),
+      ],
+      stream: true,
+      temperature: 0.7,
+    };
+
+    const res = await fetch(provider.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 300)}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content;
+          if (delta) {
+            messages[aiIdx].content += delta;
+            const box = $('messages');
+            const aiEls = box.querySelectorAll('.chat-message.ai');
+            const last = aiEls[aiEls.length - 1];
+            if (last) {
+              last.innerHTML = marked.parse(messages[aiIdx].content);
+              box.scrollTop = box.scrollHeight;
+            }
+          }
+        } catch (e) { /* ignore parse errors */ }
+      }
+    }
+  } catch (e) {
+    console.error('chat error', e);
+    messages[aiIdx] = {
+      role: 'error',
+      content: `Erro: ${e.message || e}`,
+    };
+    const box = $('messages');
+    box.innerHTML = messages.map(m => {
+      if (m.role === 'user') return `<div class="chat-message user">${escapeHtml(m.content)}</div>`;
+      if (m.role === 'error') return `<div class="chat-message error">⚠ ${escapeHtml(m.content)}</div>`;
+      return `<div class="chat-message ai">${marked.parse(m.content)}</div>`;
+    }).join('');
+  }
+
+  // Persist (skip error messages)
+  const persistable = messages.filter(m => m.role === 'user' || m.role === 'assistant');
+  localStorage.setItem('chat-history', JSON.stringify(persistable));
+
+  isStreaming = false;
+  updateSendBtn();
+  ta.focus();
+}
+
+// Init
+updateConfigLabel();
+renderMessages();
+updateSendBtn();
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

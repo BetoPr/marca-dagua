@@ -15,6 +15,16 @@
       items: [
         { href: 'marca-dagua.html', icon: 'droplet', label: "Marca d'água" },
         { href: 'remove-bg.html', icon: 'scissors', label: 'Remover fundo' },
+        { href: 'comprimir.html', icon: 'package', label: 'Comprimir' },
+        { href: 'converter.html', icon: 'repeat', label: 'Converter formato' },
+      ],
+    },
+    {
+      label: 'IA',
+      icon: 'sparkles',
+      color: 'purple',
+      items: [
+        { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA' },
       ],
     },
     {
@@ -24,7 +34,6 @@
       items: [
         { href: '#', icon: 'maximize-2', label: 'Redimensionar', disabled: true },
         { href: '#', icon: 'tag', label: 'Renomear', disabled: true },
-        { href: '#', icon: 'package', label: 'Comprimir', disabled: true },
         { href: '#', icon: 'frame', label: 'Mockups', disabled: true },
       ],
     },

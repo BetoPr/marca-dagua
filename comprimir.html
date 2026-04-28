@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Comprimir imagens — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-status"><span class="status-dot-online"></span> Local</div>
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Comprimir imagens</h1>
+    <p>Reduz o peso das fotos mantendo qualidade visual. Ideal pra subir em sites, e-mail e redes sem deixar lento.</p>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <h2>1. Imagens</h2>
+        <label class="drop" id="dropImages">
+          <input type="file" id="imagesInput" accept="image/*" multiple>
+          <p>Clique ou arraste suas fotos</p>
+          <p class="hint">JPG, PNG, WebP</p>
+        </label>
+        <div id="fileList" class="file-list"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <h2>2. Configurações</h2>
+
+        <div class="row">
+          <label>Tamanho alvo</label>
+          <input type="range" id="sizeRange" min="0.1" max="5" step="0.1" value="1">
+          <span class="val"><span id="sizeVal">1.0</span> MB</span>
+        </div>
+
+        <div class="row">
+          <label>Qualidade</label>
+          <input type="range" id="qualityRange" min="40" max="95" value="80">
+          <span class="val"><span id="qualityVal">80</span>%</span>
+        </div>
+
+        <div class="row">
+          <label>Máx. lado</label>
+          <input type="range" id="maxDimRange" min="800" max="4000" step="100" value="2400">
+          <span class="val"><span id="maxDimVal">2400</span>px</span>
+        </div>
+
+        <div class="row">
+          <label>Formato</label>
+          <select id="formatSel">
+            <option value="auto">Auto (manter)</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/webp">WebP (menor)</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <h2>Resultado</h2>
+        <div class="info-box">
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Original total:</span><strong id="origTotal" style="color:var(--text);">—</strong></div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Comprimido:</span><strong id="compTotal" style="color:var(--text);">—</strong></div>
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-top:1px solid var(--border); margin-top:4px; padding-top:8px;"><span>Economia:</span><strong id="savedTotal" style="color:var(--ok);">—</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px;">
+        <h2 style="margin:0; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);">Pré-visualização</h2>
+        <div class="seg cols-2" id="viewSeg" style="margin:0; max-width:240px; flex:1;">
+          <button data-view="original" class="active">Original</button>
+          <button data-view="result">Comprimido</button>
+        </div>
+      </div>
+      <div class="preview-canvas" id="previewBox">
+        <div class="empty">Adicione imagens para começar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="processBtn" disabled>Baixar todas em ZIP</button>
+    <button class="ghost" id="clearBtn">Limpar tudo</button>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="status" id="statusMsg">Aguardando imagens…</div>
+  </div>
+</main>
+
+<script src="favicon.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const state = {
+  images: [],
+  selectedIdx: 0,
+  view: 'original',
+  targetMB: 1,
+  quality: 0.8,
+  maxDim: 2400,
+  format: 'auto',
+};
+
+const $ = (id) => document.getElementById(id);
+const fmtBytes = (b) => b > 1024*1024 ? (b/1024/1024).toFixed(2)+' MB' : (b/1024).toFixed(0)+' KB';
+
+function setupDrop(zoneId, inputId, onFiles) {
+  const zone = $(zoneId);
+  const input = $(inputId);
+  input.addEventListener('change', (e) => { onFiles(Array.from(e.target.files || [])); e.target.value = ''; });
+  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+    if (files.length) onFiles(files);
+  });
+}
+
+let autoSwitched = false;
+
+setupDrop('dropImages', 'imagesInput', async (files) => {
+  const startIdx = state.images.length;
+  for (const file of files) {
+    state.images.push({
+      file, name: file.name, originalUrl: URL.createObjectURL(file),
+      originalSize: file.size, resultBlob: null, resultUrl: null,
+      resultSize: 0, status: 'pending',
+    });
+  }
+  if (state.images.length && state.selectedIdx >= state.images.length) state.selectedIdx = 0;
+  renderFileList();
+  refresh();
+  for (let i = startIdx; i < state.images.length; i++) {
+    if (state.images[i].status === 'pending') {
+      state.selectedIdx = i;
+      renderFileList();
+      await processOne(i);
+      if (!autoSwitched && state.images[i].status === 'done') {
+        autoSwitched = true;
+        $('viewSeg').querySelector('[data-view="result"]').click();
+      }
+    }
+  }
+});
+
+function renderFileList() {
+  const fl = $('fileList');
+  if (!state.images.length) { fl.innerHTML = ''; return; }
+  fl.innerHTML = state.images.map((it, i) => {
+    const dotCls = it.status === 'pending' ? '' : it.status === 'processing' ? 'processing' : it.status === 'done' ? 'done' : 'error';
+    const sub = it.status === 'done' ? ` — ${fmtBytes(it.originalSize)} → ${fmtBytes(it.resultSize)}` : '';
+    return `<div class="item ${i===state.selectedIdx?'active':''}" data-i="${i}">
+      <span><span class="status-dot ${dotCls}"></span>${it.name}${sub}</span>
+      <button class="x" data-x="${i}">×</button>
+    </div>`;
+  }).join('');
+  fl.querySelectorAll('.item').forEach(el => el.addEventListener('click', e => {
+    if (e.target.matches('.x')) return;
+    state.selectedIdx = +el.dataset.i; renderFileList(); refresh();
+  }));
+  fl.querySelectorAll('.x').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const i = +b.dataset.x;
+    URL.revokeObjectURL(state.images[i].originalUrl);
+    if (state.images[i].resultUrl) URL.revokeObjectURL(state.images[i].resultUrl);
+    state.images.splice(i, 1);
+    if (state.selectedIdx >= state.images.length) state.selectedIdx = Math.max(0, state.images.length - 1);
+    renderFileList(); refresh();
+  }));
+}
+
+function bindRange(id, key, transform = v => +v, label) {
+  const r = $(id), v = $(id.replace('Range','Val'));
+  r.addEventListener('input', () => {
+    v.textContent = label ? label(r.value) : r.value;
+    state[key] = transform(r.value);
+  });
+}
+bindRange('sizeRange', 'targetMB', v => +v, v => (+v).toFixed(1));
+bindRange('qualityRange', 'quality', v => v/100);
+bindRange('maxDimRange', 'maxDim');
+$('formatSel').addEventListener('change', e => { state.format = e.target.value; });
+
+$('viewSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-view]');
+  if (!b) return;
+  $('viewSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  state.view = b.dataset.view;
+  refresh();
+});
+
+async function processOne(idx) {
+  const it = state.images[idx];
+  it.status = 'processing';
+  renderFileList();
+  if (idx === state.selectedIdx) refresh();
+
+  const opts = {
+    maxSizeMB: state.targetMB,
+    maxWidthOrHeight: state.maxDim,
+    initialQuality: state.quality,
+    useWebWorker: true,
+  };
+  if (state.format !== 'auto') opts.fileType = state.format;
+
+  try {
+    const compressed = await imageCompression(it.file, opts);
+    it.resultBlob = compressed;
+    it.resultUrl = URL.createObjectURL(compressed);
+    it.resultSize = compressed.size;
+    it.status = 'done';
+  } catch (e) {
+    console.error('compress error', e);
+    it.status = 'error';
+    it.error = e.message || String(e);
+  }
+  renderFileList();
+  refresh();
+}
+
+function refresh() {
+  const box = $('previewBox');
+  const doneCount = state.images.filter(x => x.status === 'done').length;
+  $('processBtn').disabled = doneCount === 0;
+
+  // stats
+  const orig = state.images.reduce((s, x) => s + (x.originalSize || 0), 0);
+  const comp = state.images.reduce((s, x) => s + (x.resultSize || 0), 0);
+  const saved = orig - comp;
+  $('origTotal').textContent = orig ? fmtBytes(orig) : '—';
+  $('compTotal').textContent = comp ? fmtBytes(comp) : '—';
+  $('savedTotal').textContent = saved > 0 ? `${fmtBytes(saved)} (-${Math.round(saved/orig*100)}%)` : '—';
+
+  if (!state.images.length) {
+    box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';
+    $('statusMsg').textContent = 'Aguardando imagens…';
+    return;
+  }
+
+  const it = state.images[state.selectedIdx];
+  if (!it) return;
+
+  if (it.status === 'error') {
+    box.innerHTML = `<div class="empty" style="color:#ff8094;">Erro: ${it.error || 'desconhecido'}</div>`;
+    return;
+  }
+  if (it.status === 'processing') {
+    box.innerHTML = `<div class="empty">Comprimindo ${it.name}…</div>`;
+    return;
+  }
+
+  const url = (state.view === 'result' && it.resultUrl) ? it.resultUrl : it.originalUrl;
+  box.innerHTML = `<img src="${url}" alt="${it.name}">`;
+
+  if (doneCount === state.images.length) {
+    $('statusMsg').textContent = `✓ ${doneCount} imagem(ns) comprimidas — clique pra baixar ZIP`;
+    $('statusMsg').classList.add('ok');
+  } else {
+    $('statusMsg').textContent = `${doneCount}/${state.images.length} processadas`;
+    $('statusMsg').classList.remove('ok');
+  }
+}
+
+$('processBtn').addEventListener('click', async () => {
+  const done = state.images.filter(x => x.status === 'done');
+  if (!done.length) return;
+  const btn = $('processBtn');
+  btn.disabled = true;
+  $('statusMsg').textContent = 'Compactando ZIP…';
+
+  const zip = new JSZip();
+  for (const it of done) {
+    const ext = it.resultBlob.type.includes('webp') ? 'webp' : it.resultBlob.type.includes('png') ? 'png' : 'jpg';
+    const base = it.name.replace(/\.[^.]+$/, '');
+    zip.file(`${base}_comprimido.${ext}`, it.resultBlob);
+  }
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = url;
+  a.download = `imagens_comprimidas_${stamp}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  $('statusMsg').textContent = `✓ ZIP com ${done.length} imagens baixado`;
+  $('statusMsg').classList.add('ok');
+  btn.disabled = false;
+});
+
+$('clearBtn').addEventListener('click', () => {
+  state.images.forEach(it => {
+    URL.revokeObjectURL(it.originalUrl);
+    if (it.resultUrl) URL.revokeObjectURL(it.resultUrl);
+  });
+  state.images = [];
+  state.selectedIdx = 0;
+  $('imagesInput').value = '';
+  renderFileList(); refresh();
+});
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
