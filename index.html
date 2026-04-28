@@ -15,9 +15,31 @@
 <aside class="sidebar"></aside>
 
 <main class="main">
-  <div class="hero">
-    <h1>Innova & AI Studio</h1>
-    <p>Suite de ferramentas pra quem cria com inteligência artificial. Marque, edite, redimensione e organize suas imagens em lote — tudo no navegador, sem nada subir pra internet.</p>
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar ferramentas..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-status"><span class="status-dot-online"></span> Local</div>
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="hero-card">
+    <div class="hero-left">
+      <div class="hero-avatar">I</div>
+      <div class="hero-text">
+        <h1>Bem-vindo ao Innova & AI Studio</h1>
+        <p>Suite de ferramentas para quem cria com inteligência artificial</p>
+        <span class="hero-badge">100% local · sem login</span>
+      </div>
+    </div>
+    <div class="hero-icon-box">
+      <i data-lucide="sparkles"></i>
+    </div>
   </div>
 
   <div class="section-title">Ferramentas disponíveis</div>
@@ -79,6 +101,23 @@
 <script src="sidebar.js"></script>
 <script>
   if (window.lucide) lucide.createIcons();
+
+  // Busca filtra os cards de ferramentas em tempo real
+  document.getElementById('topSearch')?.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.tool-card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = !q || text.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Atalho Ctrl+K foca a busca
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      document.getElementById('topSearch')?.focus();
+    }
+  });
 </script>
 </body>
 </html>
