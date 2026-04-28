@@ -93,17 +93,18 @@
           <div class="sub">Tema atual</div>
         </span>
       </button>
-      <button class="footer-item" id="accountBtn">
-        <span class="icon-circle user-avatar">A</span>
+      <a class="footer-item" id="accountBtn" href="login.html" style="text-decoration:none;">
+        <span class="icon-circle user-avatar" id="accountAvatar">?</span>
         <span class="info">
-          <div class="title">Conta</div>
-          <div class="sub">Local · sem login</div>
+          <div class="title" id="accountTitle">Entrar</div>
+          <div class="sub" id="accountSub">Sincronizar histórico</div>
         </span>
-      </button>
+      </a>
     </div>
   `;
 
   aside.innerHTML = html;
+  setupAuthFooter();
 
   // Render icons
   if (window.lucide) lucide.createIcons();
@@ -152,4 +153,40 @@
     localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
     setToggleIcon(isCollapsed);
   });
+
+  // Estado de login no rodapé (atualiza quando supabase-client carregar)
+  function setupAuthFooter() {
+    const apply = (user) => {
+      const btn = document.getElementById('accountBtn');
+      const avatar = document.getElementById('accountAvatar');
+      const title = document.getElementById('accountTitle');
+      const sub = document.getElementById('accountSub');
+      if (!btn) return;
+      if (user) {
+        const name = user.user_metadata?.display_name || (user.email || '?').split('@')[0];
+        avatar.textContent = (name[0] || '?').toUpperCase();
+        title.textContent = name;
+        sub.textContent = user.email || '';
+        btn.href = '#';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          if (confirm('Sair da conta?')) window.innovaAuth?.signOut();
+        };
+      } else {
+        avatar.textContent = '?';
+        title.textContent = 'Entrar';
+        sub.textContent = 'Sincronizar histórico';
+        btn.href = 'login.html';
+        btn.onclick = null;
+      }
+    };
+
+    if (window.whenSupabaseReady) {
+      window.whenSupabaseReady(async (sb) => {
+        const { data: { user } } = await sb.auth.getUser();
+        apply(user);
+        sb.auth.onAuthStateChange((_event, session) => apply(session?.user || null));
+      });
+    }
+  }
 })();
