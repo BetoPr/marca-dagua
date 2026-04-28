@@ -2,604 +2,79 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Innova & AI — Marca d'água</title>
+<title>Innova & AI Studio</title>
 <link rel="icon" type="image/png" href="logo.png">
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<link rel="stylesheet" href="shared.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0f1115;
-    --panel: #161a22;
-    --panel-2: #1d222c;
-    --border: #262d3a;
-    --text: #e7ebf3;
-    --muted: #8b94a7;
-    --accent: #5b8cff;
-    --accent-2: #7aa2ff;
-    --ok: #36c98a;
-    --danger: #ff5d6c;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
-    background: var(--bg); color: var(--text); min-height: 100vh;
-  }
-  header {
-    padding: 18px 28px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: flex-start;
-    background: linear-gradient(180deg, rgba(91,140,255,0.06) 0%, transparent 100%);
-  }
-  .brand { display: flex; align-items: center; gap: 16px; }
-  .brand img {
-    height: 48px; width: auto; display: block;
-    filter: drop-shadow(0 2px 12px rgba(91,140,255,0.25));
-  }
-  .brand-text {
-    font-family: 'Sora', system-ui, sans-serif;
-    display: flex; align-items: baseline; gap: 8px;
-    line-height: 1; user-select: none;
-  }
-  .brand-text .b1 {
-    font-weight: 800; font-size: 26px; letter-spacing: 0.12em;
-    background: linear-gradient(135deg, #c8dcff 0%, #7aa2ff 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .brand-text .b-amp {
-    font-weight: 300; font-size: 22px; font-style: italic;
-    color: #5b8cff;
-    transform: translateY(-1px);
-  }
-  .brand-text .b2 {
-    font-weight: 800; font-size: 26px; letter-spacing: 0.18em;
-    background: linear-gradient(135deg, #5b8cff 0%, #7dd3ff 60%, #a78bfa 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .layout {
-    display: grid; grid-template-columns: 360px 1fr; gap: 24px;
-    padding: 24px 28px; max-width: 1400px; margin: 0 auto;
-  }
-  .panel {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px;
-  }
-  .panel h2 {
-    margin: 0 0 14px; font-size: 13px; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--muted); font-weight: 600;
-  }
-  .drop {
-    display: block; width: 100%;
-    border: 2px dashed var(--border); border-radius: 10px;
-    padding: 22px; text-align: center; cursor: pointer;
-    transition: border-color .15s, background .15s;
-  }
-  .drop:hover, .drop.over { border-color: var(--accent); background: var(--panel-2); }
-  .drop p { margin: 4px 0; }
-  .drop .hint { color: var(--muted); font-size: 12px; }
-  .row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-  .row label { flex: 0 0 90px; color: var(--muted); font-size: 13px; }
-  .row input[type="range"] { flex: 1; }
-  .row .val { flex: 0 0 50px; text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
-  .pos-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-    width: 100%; max-width: 180px; margin: 8px 0;
-  }
-  .pos-grid button {
-    aspect-ratio: 1; background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 6px; cursor: pointer; color: transparent;
-    transition: all .12s;
-  }
-  .pos-grid button:hover { border-color: var(--accent-2); }
-  .pos-grid button.active {
-    background: var(--accent); border-color: var(--accent);
-  }
-  .seg {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
-    background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 3px; margin-bottom: 14px;
-  }
-  .seg button {
-    background: transparent; color: var(--muted); border: none;
-    padding: 8px; border-radius: 6px; cursor: pointer;
-    font-size: 13px; font-weight: 500;
-  }
-  .seg button.active { background: var(--accent); color: #fff; }
-  .hidden { display: none !important; }
-  .preview-wrap {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px; min-height: 400px;
-    display: flex; flex-direction: column;
-  }
-  .preview-canvas {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    background: repeating-conic-gradient(#1a1f29 0% 25%, #141821 0% 50%) 50% / 20px 20px;
-    border-radius: 8px; overflow: hidden; min-height: 360px;
-  }
-  .preview-canvas canvas { max-width: 100%; max-height: 70vh; display: block; }
-  .preview-canvas .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
-  .file-list {
-    margin-top: 10px; max-height: 140px; overflow-y: auto;
-    font-size: 13px; color: var(--muted);
-  }
-  .file-list .item {
-    padding: 4px 8px; border-radius: 4px; display: flex;
-    justify-content: space-between; align-items: center; gap: 8px;
-  }
-  .file-list .item:hover { background: var(--panel-2); color: var(--text); }
-  .file-list .item .x {
-    background: none; border: none; color: var(--muted); cursor: pointer;
-    font-size: 16px; line-height: 1;
-  }
-  .file-list .item .x:hover { color: var(--danger); }
-  .logo-preview {
-    margin-top: 10px; padding: 8px; background: var(--panel-2);
-    border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 12px;
-  }
-  .logo-preview img { max-width: 60px; max-height: 40px; background: #fff3; border-radius: 4px; padding: 2px; }
-  .actions { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
-  button.primary {
-    background: var(--accent); color: #fff; border: none;
-    padding: 10px 18px; border-radius: 8px; font-weight: 600;
-    cursor: pointer; font-size: 14px;
-  }
-  button.primary:hover:not(:disabled) { background: var(--accent-2); }
-  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.ghost {
-    background: transparent; color: var(--text); border: 1px solid var(--border);
-    padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px;
-  }
-  button.ghost:hover { border-color: var(--accent); }
-  .progress { flex: 1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
-  .progress > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
-  .status { color: var(--muted); font-size: 13px; }
-  .status.ok { color: var(--ok); }
-  input[type="file"] { display: none; }
-  select, input[type="number"] {
-    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
-    padding: 6px 10px; border-radius: 6px; font-size: 13px;
-  }
-</style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <div class="brand-text">
-      <span class="b1">INNOVA</span>
-      <span class="b-amp">&amp;</span>
-      <span class="b2">AI</span>
-    </div>
-  </div>
-</header>
+<aside class="sidebar"></aside>
 
-<div class="layout">
-
-  <div>
-    <div class="panel">
-      <h2>1. Logo</h2>
-      <label class="drop" id="dropLogo">
-        <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp">
-        <p>Clique ou arraste seu logo</p>
-        <p class="hint">PNG com transparência funciona melhor</p>
-      </label>
-      <div id="logoPreview" class="logo-preview" style="display:none;"></div>
-    </div>
-
-    <div class="panel" style="margin-top:14px;">
-      <h2>2. Imagens</h2>
-      <label class="drop" id="dropImages">
-        <input type="file" id="imagesInput" accept="image/*" multiple>
-        <p>Clique ou arraste suas fotos</p>
-        <p class="hint">JPG, PNG, WebP — quantas quiser</p>
-      </label>
-      <div id="fileList" class="file-list"></div>
-    </div>
-
-    <div class="panel" style="margin-top:14px;">
-      <h2>3. Ajustes</h2>
-
-      <div class="seg" id="modeSeg">
-        <button data-mode="single" class="active">Único</button>
-        <button data-mode="tile">Mosaico</button>
-      </div>
-
-      <div id="singleControls">
-        <div class="row"><label>Posição</label></div>
-        <div class="pos-grid" id="posGrid">
-          <button data-pos="tl" title="Sup. esquerda"></button>
-          <button data-pos="tc" title="Sup. centro"></button>
-          <button data-pos="tr" title="Sup. direita"></button>
-          <button data-pos="ml" title="Meio esquerda"></button>
-          <button data-pos="mc" title="Centro"></button>
-          <button data-pos="mr" title="Meio direita"></button>
-          <button data-pos="bl" title="Inf. esquerda"></button>
-          <button data-pos="bc" title="Inf. centro"></button>
-          <button data-pos="br" class="active" title="Inf. direita"></button>
-        </div>
-        <div class="row">
-          <label>Margem</label>
-          <input type="range" id="marginRange" min="0" max="10" value="3">
-          <span class="val"><span id="marginVal">3</span>%</span>
-        </div>
-      </div>
-
-      <div id="tileControls" class="hidden">
-        <div class="row">
-          <label>Espaçamento</label>
-          <input type="range" id="gapRange" min="0" max="40" value="12">
-          <span class="val"><span id="gapVal">12</span>%</span>
-        </div>
-        <div class="row">
-          <label>Rotação</label>
-          <input type="range" id="rotRange" min="-90" max="90" value="-30">
-          <span class="val"><span id="rotVal">-30</span>°</span>
-        </div>
-      </div>
-
-      <div class="row">
-        <label>Tamanho</label>
-        <input type="range" id="sizeRange" min="3" max="50" value="18">
-        <span class="val"><span id="sizeVal">18</span>%</span>
-      </div>
-
-      <div class="row">
-        <label>Opacidade</label>
-        <input type="range" id="opacityRange" min="10" max="100" value="80">
-        <span class="val"><span id="opacityVal">80</span>%</span>
-      </div>
-
-      <div class="row">
-        <label>Formato</label>
-        <select id="formatSel">
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/png">PNG</option>
-          <option value="image/webp">WebP</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <label>Qualidade</label>
-        <input type="range" id="qualityRange" min="60" max="100" value="92">
-        <span class="val"><span id="qualityVal">92</span>%</span>
-      </div>
-    </div>
+<main class="main">
+  <div class="hero">
+    <h1>Innova & AI Studio</h1>
+    <p>Suite de ferramentas pra quem cria com inteligência artificial. Marque, edite, redimensione e organize suas imagens em lote — tudo no navegador, sem nada subir pra internet.</p>
   </div>
 
-  <div class="preview-wrap">
-    <h2 style="margin:0 0 12px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);">Pré-visualização</h2>
-    <div class="preview-canvas" id="previewBox">
-      <div class="empty">Adicione um logo e ao menos uma imagem para ver o preview</div>
+  <div class="section-title">Ferramentas disponíveis</div>
+  <div class="tool-grid">
+
+    <a href="marca-dagua.html" class="tool-card">
+      <span class="tag ready">Disponível</span>
+      <div class="icon">💧</div>
+      <h3>Marca d'água em lote</h3>
+      <p>Aplica seu logo em várias fotos de uma vez. Modo único (canto da imagem) ou mosaico (espalhado e rotacionado).</p>
+    </a>
+
+    <a href="remove-bg.html" class="tool-card">
+      <span class="tag ready">Disponível</span>
+      <div class="icon">✂️</div>
+      <h3>Remover fundo</h3>
+      <p>Tira o fundo das suas fotos automaticamente com IA local. Em lote ou uma a uma — resultado em PNG transparente.</p>
+    </a>
+
+    <div class="tool-card disabled">
+      <span class="tag soon">Em breve</span>
+      <div class="icon">📐</div>
+      <h3>Redimensionar para redes</h3>
+      <p>Uma imagem vira 8 formatos prontos: feed Insta, Stories, Reel cover, FB, LinkedIn, TikTok, YouTube...</p>
     </div>
+
+    <div class="tool-card disabled">
+      <span class="tag soon">Em breve</span>
+      <div class="icon">🏷️</div>
+      <h3>Renomear em lote</h3>
+      <p>Padrão automático tipo <code>cliente-001.jpg</code>, <code>cliente-002.jpg</code>... renomeia centenas em segundos.</p>
+    </div>
+
+    <div class="tool-card disabled">
+      <span class="tag soon">Em breve</span>
+      <div class="icon">🗜️</div>
+      <h3>Comprimir imagens</h3>
+      <p>Reduz peso mantendo qualidade visual. Ideal pra uploads em sites e redes sociais.</p>
+    </div>
+
+    <div class="tool-card disabled">
+      <span class="tag soon">Em breve</span>
+      <div class="icon">🖼️</div>
+      <h3>Mockups automáticos</h3>
+      <p>Coloca sua foto/arte em moldura, celular, notebook ou outdoor — pronto pra apresentação.</p>
+    </div>
+
   </div>
 
-</div>
+  <div class="section-title" style="margin-top:36px;">Como funciona</div>
+  <div style="padding: 16px 36px 48px; max-width: 720px; color: var(--muted); font-size: 14px; line-height: 1.7;">
+    Todas as ferramentas rodam <strong style="color:var(--text);">100% no seu navegador</strong>. Suas imagens nunca são enviadas pra um servidor — você arrasta, processa, baixa. Funciona até offline depois do primeiro carregamento.
+    <br><br>
+    Escolha uma ferramenta na barra lateral ou nos cards acima pra começar.
+  </div>
+</main>
 
-<div class="actions">
-  <button class="primary" id="processBtn" disabled>Processar e baixar ZIP</button>
-  <button class="ghost" id="clearBtn">Limpar tudo</button>
-  <div class="progress"><div id="progressBar"></div></div>
-  <div class="status" id="statusMsg">Aguardando arquivos…</div>
-</div>
-
-<script>
-// --- Favicon com fundo (S sobre quadrado azul arredondado, p/ ficar visível na aba) ---
-(function brandedFavicon() {
-  const img = new Image();
-  img.onload = () => {
-    try {
-      const w = img.naturalWidth, h = img.naturalHeight;
-      const tmp = document.createElement('canvas');
-      tmp.width = w; tmp.height = h;
-      const tctx = tmp.getContext('2d');
-      tctx.drawImage(img, 0, 0);
-      const data = tctx.getImageData(0, 0, w, h).data;
-      let minX = w, minY = h, maxX = 0, maxY = 0, found = false;
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          if (data[(y * w + x) * 4 + 3] > 12) {
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-            found = true;
-          }
-        }
-      }
-      if (!found) return;
-      const cw = maxX - minX + 1, ch = maxY - minY + 1;
-      const side = Math.max(cw, ch);
-      const offX = minX - (side - cw) / 2;
-      const offY = minY - (side - ch) / 2;
-
-      const SIZE = 128;
-      const fav = document.createElement('canvas');
-      fav.width = fav.height = SIZE;
-      const fctx = fav.getContext('2d');
-      fctx.imageSmoothingQuality = 'high';
-
-      // Fundo arredondado com gradiente azul
-      const r = 28;
-      const grad = fctx.createLinearGradient(0, 0, SIZE, SIZE);
-      grad.addColorStop(0, '#5b8cff');
-      grad.addColorStop(1, '#2a4cb5');
-      fctx.fillStyle = grad;
-      fctx.beginPath();
-      fctx.moveTo(r, 0);
-      fctx.lineTo(SIZE - r, 0);
-      fctx.quadraticCurveTo(SIZE, 0, SIZE, r);
-      fctx.lineTo(SIZE, SIZE - r);
-      fctx.quadraticCurveTo(SIZE, SIZE, SIZE - r, SIZE);
-      fctx.lineTo(r, SIZE);
-      fctx.quadraticCurveTo(0, SIZE, 0, SIZE - r);
-      fctx.lineTo(0, r);
-      fctx.quadraticCurveTo(0, 0, r, 0);
-      fctx.closePath();
-      fctx.fill();
-
-      // Logo S sobre o fundo, com pequena margem interna
-      const pad = SIZE * 0.14;
-      const inner = SIZE - pad * 2;
-      fctx.drawImage(img, offX, offY, side, side, pad, pad, inner, inner);
-
-      let link = document.querySelector('link[rel="icon"]');
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
-      link.type = 'image/png';
-      link.href = fav.toDataURL('image/png');
-    } catch (e) { /* canvas tainted — mantém favicon original */ }
-  };
-  img.src = 'logo.png';
-})();
-
-const state = {
-  logo: null,        // { img: HTMLImageElement, name: string }
-  images: [],        // [{ file, img, name }]
-  mode: 'single',    // 'single' | 'tile'
-  pos: 'br',
-  sizePct: 18,
-  opacity: 0.8,
-  marginPct: 3,
-  gapPct: 12,
-  rotation: -30,
-  format: 'image/jpeg',
-  quality: 0.92,
-};
-
-const $ = (id) => document.getElementById(id);
-
-// --- File drop helpers ---
-function setupDrop(zoneId, inputId, onFiles) {
-  const zone = $(zoneId);
-  const input = $(inputId);
-  zone.addEventListener('click', () => input.click());
-  input.addEventListener('change', (e) => onFiles(Array.from(e.target.files || [])));
-  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
-    e.preventDefault(); zone.classList.add('over');
-  }));
-  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
-    e.preventDefault(); zone.classList.remove('over');
-  }));
-  zone.addEventListener('drop', e => {
-    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
-    if (files.length) onFiles(files);
-  });
-}
-
-function loadImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-// --- Logo ---
-setupDrop('dropLogo', 'logoInput', async (files) => {
-  if (!files[0]) return;
-  const img = await loadImage(files[0]);
-  state.logo = { img, name: files[0].name };
-  const lp = $('logoPreview');
-  lp.style.display = 'flex';
-  lp.innerHTML = `<img src="${img.src}"><span>${files[0].name}</span>`;
-  refresh();
-});
-
-// --- Images ---
-setupDrop('dropImages', 'imagesInput', async (files) => {
-  for (const file of files) {
-    try {
-      const img = await loadImage(file);
-      state.images.push({ file, img, name: file.name });
-    } catch (e) { console.warn('skip', file.name, e); }
-  }
-  renderFileList();
-  refresh();
-});
-
-function renderFileList() {
-  const fl = $('fileList');
-  if (!state.images.length) { fl.innerHTML = ''; return; }
-  fl.innerHTML = state.images.map((it, i) =>
-    `<div class="item"><span>${it.name}</span><button class="x" data-i="${i}">×</button></div>`
-  ).join('');
-  fl.querySelectorAll('.x').forEach(b => b.onclick = () => {
-    const i = +b.dataset.i;
-    state.images.splice(i, 1);
-    renderFileList(); refresh();
-  });
-}
-
-// --- Position grid ---
-$('posGrid').addEventListener('click', e => {
-  const b = e.target.closest('button[data-pos]');
-  if (!b) return;
-  $('posGrid').querySelectorAll('button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
-  state.pos = b.dataset.pos;
-  refresh();
-});
-
-// --- Sliders / selects ---
-function bindRange(id, key, transform = v => +v) {
-  const r = $(id), v = $(id.replace('Range','Val'));
-  r.addEventListener('input', () => {
-    v.textContent = r.value;
-    state[key] = transform(r.value);
-    refresh();
-  });
-}
-bindRange('sizeRange', 'sizePct');
-bindRange('opacityRange', 'opacity', v => v/100);
-bindRange('marginRange', 'marginPct');
-bindRange('gapRange', 'gapPct');
-bindRange('rotRange', 'rotation');
-bindRange('qualityRange', 'quality', v => v/100);
-$('formatSel').addEventListener('change', e => { state.format = e.target.value; });
-
-// --- Mode toggle ---
-$('modeSeg').addEventListener('click', e => {
-  const b = e.target.closest('button[data-mode]');
-  if (!b) return;
-  $('modeSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
-  state.mode = b.dataset.mode;
-  $('singleControls').classList.toggle('hidden', state.mode !== 'single');
-  $('tileControls').classList.toggle('hidden', state.mode !== 'tile');
-  refresh();
-});
-
-// --- Compose watermark on canvas ---
-function compose(img, logo, opts) {
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-
-  const logoW = (canvas.width * opts.sizePct) / 100;
-  const ratio = logo.naturalHeight / logo.naturalWidth;
-  const logoH = logoW * ratio;
-
-  ctx.globalAlpha = opts.opacity;
-
-  if (opts.mode === 'tile') {
-    const gap = (canvas.width * opts.gapPct) / 100;
-    const stepX = logoW + gap;
-    const stepY = logoH + gap;
-    const angle = (opts.rotation * Math.PI) / 180;
-
-    // Rotate around image center; oversample the area so rotated tiles
-    // still cover every corner of the canvas.
-    const diag = Math.sqrt(canvas.width ** 2 + canvas.height ** 2);
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(angle);
-
-    const halfW = diag / 2 + stepX;
-    const halfH = diag / 2 + stepY;
-    // Offset so tiles are centered around (0,0) after rotation
-    const startX = -halfW + (((-halfW) % stepX) + stepX) % stepX;
-    const startY = -halfH + (((-halfH) % stepY) + stepY) % stepY;
-
-    for (let y = startY; y < halfH; y += stepY) {
-      for (let x = startX; x < halfW; x += stepX) {
-        ctx.drawImage(logo, x, y, logoW, logoH);
-      }
-    }
-    ctx.restore();
-  } else {
-    const margin = (canvas.width * opts.marginPct) / 100;
-    let x = 0, y = 0;
-    const py = opts.pos[0]; // t/m/b
-    const px = opts.pos[1]; // l/c/r
-    if (px === 'l') x = margin;
-    if (px === 'c') x = (canvas.width - logoW) / 2;
-    if (px === 'r') x = canvas.width - logoW - margin;
-    if (py === 't') y = margin;
-    if (py === 'm') y = (canvas.height - logoH) / 2;
-    if (py === 'b') y = canvas.height - logoH - margin;
-    ctx.drawImage(logo, x, y, logoW, logoH);
-  }
-
-  ctx.globalAlpha = 1;
-  return canvas;
-}
-
-// --- Preview ---
-function refresh() {
-  const box = $('previewBox');
-  const canPreview = state.logo && state.images.length;
-  $('processBtn').disabled = !canPreview;
-
-  if (!canPreview) {
-    box.innerHTML = '<div class="empty">Adicione um logo e ao menos uma imagem para ver o preview</div>';
-    $('statusMsg').textContent = 'Aguardando arquivos…';
-    return;
-  }
-  const canvas = compose(state.images[0].img, state.logo.img, state);
-  box.innerHTML = '';
-  box.appendChild(canvas);
-  $('statusMsg').textContent = `${state.images.length} imagem(ns) prontas pra processar`;
-  $('statusMsg').classList.remove('ok');
-}
-
-// --- Process all → ZIP ---
-async function canvasToBlob(canvas, type, quality) {
-  return new Promise(res => canvas.toBlob(res, type, quality));
-}
-
-function outputName(originalName, format) {
-  const ext = format === 'image/png' ? 'png' : (format === 'image/webp' ? 'webp' : 'jpg');
-  const base = originalName.replace(/\.[^.]+$/, '');
-  return `${base}_marca.${ext}`;
-}
-
-$('processBtn').addEventListener('click', async () => {
-  if (!state.logo || !state.images.length) return;
-  const btn = $('processBtn');
-  btn.disabled = true;
-  const bar = $('progressBar');
-  const status = $('statusMsg');
-  status.classList.remove('ok');
-
-  const zip = new JSZip();
-  for (let i = 0; i < state.images.length; i++) {
-    const it = state.images[i];
-    status.textContent = `Processando ${i+1}/${state.images.length} — ${it.name}`;
-    const canvas = compose(it.img, state.logo.img, state);
-    const blob = await canvasToBlob(canvas, state.format, state.quality);
-    zip.file(outputName(it.name, state.format), blob);
-    bar.style.width = `${((i+1)/state.images.length)*100}%`;
-  }
-
-  status.textContent = 'Compactando ZIP…';
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(zipBlob);
-  const a = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-  a.href = url;
-  a.download = `imagens_com_marca_${stamp}.zip`;
-  a.click();
-  URL.revokeObjectURL(url);
-
-  status.textContent = `✓ ${state.images.length} imagens processadas e baixadas`;
-  status.classList.add('ok');
-  btn.disabled = false;
-  setTimeout(() => bar.style.width = '0', 1200);
-});
-
-$('clearBtn').addEventListener('click', () => {
-  state.logo = null;
-  state.images = [];
-  $('logoPreview').style.display = 'none';
-  $('logoInput').value = '';
-  $('imagesInput').value = '';
-  renderFileList();
-  refresh();
-});
-</script>
+<script src="favicon.js"></script>
+<script src="sidebar.js"></script>
 </body>
 </html>

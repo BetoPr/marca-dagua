@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Remover fundo — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <div class="page-header">
+    <h1>Remover fundo</h1>
+    <p>Tira o fundo das suas fotos automaticamente. Em lote ou uma a uma — IA roda local no navegador.</p>
+  </div>
+
+  <div class="layout">
+
+    <div>
+      <div class="panel">
+        <h2>1. Imagens</h2>
+        <label class="drop" id="dropImages">
+          <input type="file" id="imagesInput" accept="image/*" multiple>
+          <p>Clique ou arraste suas fotos</p>
+          <p class="hint">JPG, PNG, WebP — quantas quiser</p>
+        </label>
+        <div id="fileList" class="file-list"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <h2>2. Qualidade</h2>
+        <div class="seg cols-3" id="qualitySeg">
+          <button data-model="isnet_quint8">Rápido</button>
+          <button data-model="isnet_fp16" class="active">Equilibrado</button>
+          <button data-model="isnet">Alta</button>
+        </div>
+        <div class="info-box">
+          <strong>Rápido:</strong> ~3s/imagem, qualidade boa.<br>
+          <strong>Equilibrado:</strong> ~6s/imagem, qualidade ótima.<br>
+          <strong>Alta:</strong> ~12s/imagem, melhor qualidade.
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <h2>3. Como funciona</h2>
+        <div class="info-box">
+          A primeira vez baixa o modelo de IA (~40-80MB dependendo da qualidade). Depois fica cacheado e processa em segundos. <strong>Tudo offline</strong>: nenhuma imagem sai do seu navegador.
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px;">
+        <h2 style="margin:0; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);">Pré-visualização</h2>
+        <div class="seg cols-2" id="viewSeg" style="margin:0; max-width:240px; flex:1;">
+          <button data-view="original" class="active">Original</button>
+          <button data-view="result">Sem fundo</button>
+        </div>
+      </div>
+      <div class="preview-canvas" id="previewBox">
+        <div class="empty">Adicione imagens para começar</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="processBtn" disabled>Remover fundo e baixar ZIP</button>
+    <button class="ghost" id="clearBtn">Limpar tudo</button>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="status" id="statusMsg">Aguardando imagens…</div>
+  </div>
+</main>
+
+<script src="favicon.js"></script>
+<script src="sidebar.js"></script>
+<script type="module">
+import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.4.5';
+
+const state = {
+  images: [],          // [{ file, name, originalUrl, resultBlob, resultUrl, status }]
+  selectedIdx: 0,
+  view: 'original',    // 'original' | 'result'
+  model: 'isnet_fp16',
+};
+
+const $ = (id) => document.getElementById(id);
+
+// === FILE DROP ===
+function setupDrop(zoneId, inputId, onFiles) {
+  const zone = $(zoneId);
+  const input = $(inputId);
+  zone.addEventListener('click', () => input.click());
+  input.addEventListener('change', (e) => onFiles(Array.from(e.target.files || [])));
+  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); zone.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); zone.classList.remove('over');
+  }));
+  zone.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+    if (files.length) onFiles(files);
+  });
+}
+
+setupDrop('dropImages', 'imagesInput', async (files) => {
+  for (const file of files) {
+    state.images.push({
+      file,
+      name: file.name,
+      originalUrl: URL.createObjectURL(file),
+      resultBlob: null,
+      resultUrl: null,
+      status: 'pending',
+    });
+  }
+  if (state.images.length && state.selectedIdx >= state.images.length) state.selectedIdx = 0;
+  renderFileList();
+  refresh();
+});
+
+function renderFileList() {
+  const fl = $('fileList');
+  if (!state.images.length) { fl.innerHTML = ''; return; }
+  fl.innerHTML = state.images.map((it, i) => {
+    const isActive = i === state.selectedIdx ? 'active' : '';
+    const dotCls = it.status === 'pending' ? '' :
+                   it.status === 'processing' ? 'processing' :
+                   it.status === 'done' ? 'done' : 'error';
+    return `<div class="item ${isActive}" data-i="${i}">
+      <span><span class="status-dot ${dotCls}"></span>${it.name}</span>
+      <button class="x" data-x="${i}">×</button>
+    </div>`;
+  }).join('');
+  fl.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.matches('.x')) return;
+      state.selectedIdx = +el.dataset.i;
+      renderFileList();
+      refresh();
+    });
+  });
+  fl.querySelectorAll('.x').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const i = +b.dataset.x;
+    const it = state.images[i];
+    URL.revokeObjectURL(it.originalUrl);
+    if (it.resultUrl) URL.revokeObjectURL(it.resultUrl);
+    state.images.splice(i, 1);
+    if (state.selectedIdx >= state.images.length) state.selectedIdx = Math.max(0, state.images.length - 1);
+    renderFileList();
+    refresh();
+  }));
+}
+
+// === QUALITY SELECTOR ===
+$('qualitySeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-model]');
+  if (!b) return;
+  $('qualitySeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  state.model = b.dataset.model;
+});
+
+// === VIEW TOGGLE ===
+$('viewSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-view]');
+  if (!b) return;
+  $('viewSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  state.view = b.dataset.view;
+  refresh();
+});
+
+// === PREVIEW ===
+function refresh() {
+  const box = $('previewBox');
+  $('processBtn').disabled = !state.images.length;
+
+  if (!state.images.length) {
+    box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';
+    $('statusMsg').textContent = 'Aguardando imagens…';
+    return;
+  }
+
+  const it = state.images[state.selectedIdx];
+  if (!it) return;
+
+  let url;
+  if (state.view === 'result' && it.resultUrl) {
+    url = it.resultUrl;
+  } else if (state.view === 'result' && !it.resultUrl) {
+    box.innerHTML = '<div class="empty">Esta imagem ainda não foi processada.<br>Clique em "Remover fundo" abaixo.</div>';
+    return;
+  } else {
+    url = it.originalUrl;
+  }
+  box.innerHTML = `<img src="${url}" alt="${it.name}">`;
+
+  const done = state.images.filter(x => x.status === 'done').length;
+  if (done === state.images.length && done > 0) {
+    $('statusMsg').textContent = `✓ ${done} imagem(ns) processadas — pronto pra baixar`;
+    $('statusMsg').classList.add('ok');
+  } else if (done > 0) {
+    $('statusMsg').textContent = `${done}/${state.images.length} processadas`;
+    $('statusMsg').classList.remove('ok');
+  } else {
+    $('statusMsg').textContent = `${state.images.length} imagem(ns) prontas pra processar`;
+    $('statusMsg').classList.remove('ok');
+  }
+}
+
+// === PROCESS ===
+let modelLoaded = false;
+
+async function processOne(idx, onModelProgress) {
+  const it = state.images[idx];
+  it.status = 'processing';
+  renderFileList();
+  if (idx === state.selectedIdx) refresh();
+
+  try {
+    const blob = await removeBackground(it.file, {
+      model: state.model,
+      output: { format: 'image/png' },
+      progress: (key, current, total) => {
+        if (!modelLoaded && key.startsWith('fetch:')) {
+          const pct = total ? Math.round((current / total) * 100) : 0;
+          onModelProgress?.(pct, key);
+        }
+      },
+    });
+    modelLoaded = true;
+    it.resultBlob = blob;
+    it.resultUrl = URL.createObjectURL(blob);
+    it.status = 'done';
+  } catch (e) {
+    console.error('bg-remove error', e);
+    it.status = 'error';
+    it.error = e.message || String(e);
+  }
+  renderFileList();
+  if (idx === state.selectedIdx) refresh();
+}
+
+$('processBtn').addEventListener('click', async () => {
+  if (!state.images.length) return;
+  const btn = $('processBtn');
+  btn.disabled = true;
+  const bar = $('progressBar');
+  const status = $('statusMsg');
+  status.classList.remove('ok');
+
+  const pending = state.images.map((it, i) => ({ it, i })).filter(x => x.it.status !== 'done');
+
+  if (!modelLoaded) {
+    status.textContent = 'Baixando modelo de IA (primeira vez, ~80MB)…';
+  }
+
+  let processed = 0;
+  for (const { it, i } of pending) {
+    status.textContent = `Processando ${processed + 1}/${pending.length} — ${it.name}`;
+    await processOne(i, (pct, key) => {
+      status.textContent = `Baixando modelo… ${pct}% (${key.split(':').pop()})`;
+    });
+    processed++;
+    bar.style.width = `${(processed / pending.length) * 100}%`;
+  }
+
+  // Auto-switch view to "result" so user sees the output
+  if (state.view === 'original' && state.images.some(x => x.status === 'done')) {
+    $('viewSeg').querySelector('[data-view="result"]').click();
+  }
+
+  // Build ZIP
+  const done = state.images.filter(x => x.status === 'done');
+  if (done.length) {
+    status.textContent = 'Compactando ZIP…';
+    const zip = new JSZip();
+    for (const it of done) {
+      const baseName = it.name.replace(/\.[^.]+$/, '');
+      zip.file(`${baseName}_sem_fundo.png`, it.resultBlob);
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    a.href = url;
+    a.download = `imagens_sem_fundo_${stamp}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const errors = state.images.filter(x => x.status === 'error').length;
+  if (errors) {
+    status.textContent = `✓ ${done.length} processadas, ${errors} com erro`;
+    status.classList.add('warn');
+  } else {
+    status.textContent = `✓ ${done.length} imagens processadas e baixadas`;
+    status.classList.add('ok');
+  }
+  btn.disabled = false;
+  setTimeout(() => bar.style.width = '0', 1200);
+});
+
+$('clearBtn').addEventListener('click', () => {
+  state.images.forEach(it => {
+    URL.revokeObjectURL(it.originalUrl);
+    if (it.resultUrl) URL.revokeObjectURL(it.resultUrl);
+  });
+  state.images = [];
+  state.selectedIdx = 0;
+  $('imagesInput').value = '';
+  renderFileList();
+  refresh();
+});
+</script>
+</body>
+</html>
