@@ -84,6 +84,8 @@
     html += `</div>`;
   });
 
+  // Esconde o botão de conta na homepage; só mostra em tools onde faz sentido (chat, etc.)
+  const isHome = path === 'index.html' || path === '';
   html += `</nav>
     <div class="sidebar-footer">
       <button class="footer-item" id="themeToggle">
@@ -93,13 +95,14 @@
           <div class="sub">Tema atual</div>
         </span>
       </button>
+      ${!isHome ? `
       <a class="footer-item" id="accountBtn" href="login.html" style="text-decoration:none;">
         <span class="icon-circle user-avatar" id="accountAvatar">?</span>
         <span class="info">
           <div class="title" id="accountTitle">Entrar</div>
           <div class="sub" id="accountSub">Sincronizar histórico</div>
         </span>
-      </a>
+      </a>` : ''}
     </div>
   `;
 
@@ -154,8 +157,9 @@
     setToggleIcon(isCollapsed);
   });
 
-  // Estado de login no rodapé (atualiza quando supabase-client carregar)
+  // Estado de login no rodapé (só roda se o botão existir — ele é escondido na homepage)
   function setupAuthFooter() {
+    if (!document.getElementById('accountBtn')) return;
     const apply = (user) => {
       const btn = document.getElementById('accountBtn');
       const avatar = document.getElementById('accountAvatar');
