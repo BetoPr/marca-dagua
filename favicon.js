@@ -33,8 +33,11 @@
       fctx.imageSmoothingQuality = 'high';
 
       const r = 28;
-      // Fundo preto com cantos arredondados
-      fctx.fillStyle = '#000000';
+      // Fundo azul-marinho muito escuro (gradiente sutil)
+      const bgGrad = fctx.createLinearGradient(0, 0, SIZE, SIZE);
+      bgGrad.addColorStop(0, '#0F172A');
+      bgGrad.addColorStop(1, '#0B1220');
+      fctx.fillStyle = bgGrad;
       fctx.beginPath();
       fctx.moveTo(r, 0);
       fctx.lineTo(SIZE - r, 0);
