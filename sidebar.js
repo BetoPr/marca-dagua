@@ -87,8 +87,6 @@
     html += `</div>`;
   });
 
-  // Esconde o botão de conta na homepage; só mostra em tools onde faz sentido (chat, etc.)
-  const isHome = path === 'index.html' || path === '';
   const isLight = document.body.classList.contains('light-mode');
   html += `</nav>
     <div class="sidebar-footer">
@@ -99,14 +97,13 @@
           <div class="sub">Clique pra alternar</div>
         </span>
       </button>
-      ${!isHome ? `
       <button class="footer-item" id="accountBtn" type="button">
         <span class="icon-circle user-avatar" id="accountAvatar">?</span>
         <span class="info">
           <div class="title" id="accountTitle">Entrar</div>
           <div class="sub" id="accountSub">Sincronizar histórico</div>
         </span>
-      </button>` : ''}
+      </button>
     </div>
   `;
 
@@ -215,25 +212,31 @@
       }
     };
 
-    sidebarBtn?.addEventListener('click', (e) => {
+    const handleClick = async (e) => {
       e.preventDefault();
-      if (currentUser) openProfileModal(currentUser);
+      // Pega o user do supabase agora, não confia em closure que pode estar stale
+      let user = currentUser;
+      if (!user && window.supabase) {
+        try {
+          const { data } = await window.supabase.auth.getUser();
+          user = data?.user || null;
+          currentUser = user;
+        } catch {}
+      }
+      if (user) openProfileModal(user);
       else location.href = 'login.html';
-    });
+    };
+    sidebarBtn?.addEventListener('click', handleClick);
+    topbarAvatar?.addEventListener('click', handleClick);
 
-    topbarAvatar?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (currentUser) openProfileModal(currentUser);
-      else location.href = 'login.html';
-    });
-
-    if (window.whenSupabaseReady) {
-      window.whenSupabaseReady(async (sb) => {
-        const { data: { user } } = await sb.auth.getUser();
-        apply(user);
-        sb.auth.onAuthStateChange((_event, session) => apply(session?.user || null));
-      });
-    }
+    const initAuth = async () => {
+      if (!window.supabase) return;
+      const { data: { user } } = await window.supabase.auth.getUser();
+      apply(user);
+      window.supabase.auth.onAuthStateChange((_event, session) => apply(session?.user || null));
+    };
+    if (window.supabase) initAuth();
+    else document.addEventListener('supabase-ready', initAuth, { once: true });
   }
 
   async function loadAvatarUrl(user) {
