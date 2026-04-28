@@ -161,6 +161,7 @@
 
   <div class="actions">
     <button class="primary" id="processBtn" disabled>Processar e baixar ZIP</button>
+    <button class="primary" id="downloadAllBtn" disabled style="background:var(--panel-2); color:var(--text); border:1px solid var(--border);">Baixar individuais</button>
     <button class="ghost" id="clearBtn">Limpar tudo</button>
     <div class="progress"><div id="progressBar"></div></div>
     <div class="status" id="statusMsg">Aguardando arquivos…</div>
@@ -398,6 +399,7 @@ function refresh() {
   const needsLogo = state.mode !== 'text';
   const canPreview = (needsLogo ? state.logo : true) && state.images.length;
   $('processBtn').disabled = !canPreview;
+  $('downloadAllBtn').disabled = !canPreview;
 
   if (!canPreview) {
     box.innerHTML = `<div class="empty">${needsLogo ? "Adicione um logo e ao menos uma imagem" : "Adicione ao menos uma imagem"} para ver o preview</div>`;
@@ -455,6 +457,33 @@ $('processBtn').addEventListener('click', async () => {
   status.classList.add('ok');
   btn.disabled = false;
   setTimeout(() => bar.style.width = '0', 1200);
+});
+
+$('downloadAllBtn').addEventListener('click', async () => {
+  const needsLogo = state.mode !== 'text';
+  if (needsLogo && !state.logo) return;
+  if (!state.images.length) return;
+  $('downloadAllBtn').disabled = true;
+  const status = $('statusMsg');
+  status.classList.remove('ok');
+  for (let i = 0; i < state.images.length; i++) {
+    const it = state.images[i];
+    status.textContent = `Baixando ${i+1}/${state.images.length} — ${it.name}`;
+    const canvas = compose(it.img, state.logo?.img, state);
+    const blob = await canvasToBlob(canvas, state.format, state.quality);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = outputName(it.name, state.format);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    if (i < state.images.length - 1) await new Promise(r => setTimeout(r, 200));
+  }
+  status.textContent = `✓ ${state.images.length} arquivo(s) baixado(s) individualmente`;
+  status.classList.add('ok');
+  $('downloadAllBtn').disabled = false;
 });
 
 $('clearBtn').addEventListener('click', () => {

@@ -240,12 +240,24 @@
   <div class="modal-content wide">
     <h3>Histórico de prompts</h3>
     <div class="sub">Marque os prompts que deram bom resultado. Anexe a imagem de referência usada e as imagens geradas pra validar depois.</div>
-    <div class="history-tabs" id="historyTabs">
-      <button data-filter="all" class="active">Todos</button>
-      <button data-filter="good">Bons</button>
-      <button data-filter="bad">Ruins</button>
-      <button data-filter="unmarked">Sem marcação</button>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+      <div class="history-tabs" id="historyTabs" style="flex:1; margin:0;">
+        <button data-filter="all" class="active">Todos</button>
+        <button data-filter="good">Bons</button>
+        <button data-filter="bad">Ruins</button>
+        <button data-filter="unmarked">Sem marcação</button>
+      </div>
+      <button class="primary" id="newManualPromptBtn" style="padding:8px 14px; font-size:13px;"><i data-lucide="plus"></i> Novo prompt manual</button>
     </div>
+
+    <div id="manualPromptForm" class="hidden" style="background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px;">
+      <textarea id="manualPromptText" placeholder="Cole ou digite o prompt aqui..." style="width:100%; min-height:100px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px; font-family:inherit; font-size:13px; resize:vertical; outline:none;"></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+        <button class="ghost" id="cancelManualPrompt">Cancelar</button>
+        <button class="primary" id="saveManualPrompt">Salvar</button>
+      </div>
+    </div>
+
     <div class="history-list" id="historyList"></div>
     <div class="actions-row">
       <button class="ghost" id="closeHistory">Fechar</button>
@@ -705,9 +717,7 @@ async function renderHistory() {
     await refreshHistoryCount();
     renderHistory();
   }));
-  list.querySelectorAll('[data-action="add-img"]').forEach(b => b.addEventListener('click', async () => {
-    const id = +b.dataset.id;
-    const kind = b.dataset.kind;
+  const attachImages = (id, kind) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -719,9 +729,20 @@ async function renderHistory() {
       const arr = kind === 'ref' ? p.refImages : p.generatedImages;
       for (const f of files) arr.push(f);
       await dbUpdatePrompt(p);
+      expandedIds.add(id);
       renderHistory();
     };
     input.click();
+  };
+
+  list.querySelectorAll('[data-action="add-img"]').forEach(b => b.addEventListener('click', () => {
+    attachImages(+b.dataset.id, b.dataset.kind);
+  }));
+  list.querySelectorAll('[data-action="quick-add-ref"]').forEach(b => b.addEventListener('click', () => {
+    attachImages(+b.dataset.id, 'ref');
+  }));
+  list.querySelectorAll('[data-action="quick-add-gen"]').forEach(b => b.addEventListener('click', () => {
+    attachImages(+b.dataset.id, 'gen');
   }));
   list.querySelectorAll('[data-action="remove-img"]').forEach(b => b.addEventListener('click', async () => {
     const id = +b.dataset.id;
@@ -743,25 +764,33 @@ async function renderHistory() {
 }
 
 function renderHistoryItem(p) {
-  const expanded = expandedIds.has(p.id);
+  // Auto-expand if has images
+  const hasImages = (p.refImages?.length || 0) + (p.generatedImages?.length || 0) > 0;
+  const expanded = expandedIds.has(p.id) || hasImages;
   const goodCls = p.good === true ? 'good' : (p.good === false ? 'bad' : '');
   const date = new Date(p.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(p.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const previewText = p.text.length > 200 ? p.text.slice(0, 200) + '…' : p.text;
   const fullText = expanded ? p.text : previewText;
 
+  const refCount = p.refImages?.length || 0;
+  const genCount = p.generatedImages?.length || 0;
+
   const refUrls = (p.refImages || []).map(b => URL.createObjectURL(b));
   const genUrls = (p.generatedImages || []).map(b => URL.createObjectURL(b));
 
-  const renderImgs = (urls, kind) => {
+  const renderImgs = (urls, kind, label) => {
     const thumbs = urls.map((u, i) => `
       <div class="img-thumb">
         <img src="${u}" data-action="zoom-img" data-src="${u}">
         <button class="img-x" data-action="remove-img" data-id="${p.id}" data-kind="${kind}" data-idx="${i}">×</button>
       </div>`).join('');
     return `<div class="img-grid">${thumbs}
-      <div class="img-thumb add" data-action="add-img" data-id="${p.id}" data-kind="${kind}"><i data-lucide="plus"></i></div>
+      <div class="img-thumb add" data-action="add-img" data-id="${p.id}" data-kind="${kind}" title="Adicionar ${label}"><i data-lucide="plus"></i></div>
     </div>`;
   };
+
+  const imgCounts = (refCount + genCount > 0) ?
+    `<span style="font-size:11px; color:var(--muted); display:inline-flex; align-items:center; gap:4px;"><i data-lucide="image" style="width:12px;height:12px;"></i> ${refCount + genCount}</span>` : '';
 
   return `
     <div class="history-item ${goodCls} ${expanded ? 'expanded' : ''}">
@@ -770,26 +799,50 @@ function renderHistoryItem(p) {
         <button class="check ${p.good === false ? 'bad' : ''}" data-action="check" data-id="${p.id}" data-value="bad" title="Marcar como ruim"><i data-lucide="x"></i></button>
         <div class="text">${escapeHtml(fullText)}</div>
         <div class="actions">
+          <button class="icon-btn" data-action="quick-add-ref" data-id="${p.id}" title="Adicionar imagem de referência"><i data-lucide="image-plus"></i></button>
+          <button class="icon-btn" data-action="quick-add-gen" data-id="${p.id}" title="Adicionar imagem gerada"><i data-lucide="sparkles"></i></button>
           <button class="icon-btn" data-action="copy" data-id="${p.id}" title="Copiar"><i data-lucide="copy"></i></button>
-          <button class="icon-btn" data-action="expand" data-id="${p.id}" title="Expandir"><i data-lucide="${expanded ? 'chevron-up' : 'chevron-down'}"></i></button>
+          <button class="icon-btn" data-action="expand" data-id="${p.id}" title="Expandir/Recolher"><i data-lucide="${expanded ? 'chevron-up' : 'chevron-down'}"></i></button>
           <button class="icon-btn" data-action="delete" data-id="${p.id}" title="Apagar"><i data-lucide="trash-2"></i></button>
         </div>
-        <div class="date">${date}</div>
+        <div class="date" style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+          ${imgCounts}
+          <span>${date}</span>
+        </div>
       </div>
       <div class="item-body">
         <div class="img-section">
-          <h4>Imagens de referência</h4>
-          ${renderImgs(refUrls, 'ref')}
+          <h4>Imagens de referência (${refCount})</h4>
+          ${renderImgs(refUrls, 'ref', 'referência')}
         </div>
         <div class="img-section">
-          <h4>Imagens geradas</h4>
-          ${renderImgs(genUrls, 'gen')}
+          <h4>Imagens geradas (${genCount})</h4>
+          ${renderImgs(genUrls, 'gen', 'gerada')}
         </div>
       </div>
     </div>`;
 }
 
 $('imgZoom').addEventListener('click', () => $('imgZoom').classList.remove('open'));
+
+// Manual prompt creation
+$('newManualPromptBtn').addEventListener('click', () => {
+  $('manualPromptForm').classList.toggle('hidden');
+  $('manualPromptText').focus();
+});
+$('cancelManualPrompt').addEventListener('click', () => {
+  $('manualPromptForm').classList.add('hidden');
+  $('manualPromptText').value = '';
+});
+$('saveManualPrompt').addEventListener('click', async () => {
+  const text = $('manualPromptText').value.trim();
+  if (!text) return;
+  await dbAddPrompt({ text, timestamp: Date.now(), good: null, refImages: [], generatedImages: [] });
+  await refreshHistoryCount();
+  $('manualPromptText').value = '';
+  $('manualPromptForm').classList.add('hidden');
+  renderHistory();
+});
 
 // Init
 updateConfigLabel();

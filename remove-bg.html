@@ -89,6 +89,7 @@
 
   <div class="actions">
     <button class="primary" id="processBtn" disabled>Baixar todas em ZIP</button>
+    <button class="primary" id="downloadAllBtn" disabled style="background:var(--panel-2); color:var(--text); border:1px solid var(--border);">Baixar individuais</button>
     <button class="ghost" id="clearBtn">Limpar tudo</button>
     <div class="progress"><div id="progressBar"></div></div>
     <div class="status" id="statusMsg">Aguardando imagens…</div>
@@ -267,6 +268,7 @@ function refresh() {
   const box = $('previewBox');
   const doneCount = state.images.filter(x => x.status === 'done').length;
   $('processBtn').disabled = doneCount === 0;
+  $('downloadAllBtn').disabled = doneCount === 0;
 
   if (!state.images.length) {
     box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';
@@ -386,6 +388,27 @@ $('processBtn').addEventListener('click', async () => {
   status.textContent = `✓ ZIP com ${done.length} imagem(ns) baixado`;
   status.classList.add('ok');
   btn.disabled = false;
+});
+
+$('downloadAllBtn').addEventListener('click', async () => {
+  const done = state.images.filter(x => x.status === 'done');
+  if (!done.length) return;
+  $('downloadAllBtn').disabled = true;
+  $('statusMsg').textContent = `Baixando ${done.length} arquivo(s)…`;
+  for (let i = 0; i < done.length; i++) {
+    const it = done[i];
+    const base = it.name.replace(/\.[^.]+$/, '');
+    const a = document.createElement('a');
+    a.href = it.resultUrl;
+    a.download = `${base}_sem_fundo.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (i < done.length - 1) await new Promise(r => setTimeout(r, 200));
+  }
+  $('statusMsg').textContent = `✓ ${done.length} arquivo(s) baixado(s) individualmente`;
+  $('statusMsg').classList.add('ok');
+  $('downloadAllBtn').disabled = false;
 });
 
 $('clearBtn').addEventListener('click', () => {
