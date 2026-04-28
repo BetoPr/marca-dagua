@@ -434,10 +434,15 @@ body.sidebar-collapsed .sidebar-footer .footer-item { padding: 10px 12px; justif
 }
 .file-list .item:hover, .file-list .item.active { background: var(--panel-2); color: var(--text); }
 .file-list .item.active { color: var(--accent-2); }
-.file-list .item .x {
-  background: none; border: none; color: var(--muted); cursor: pointer;
-  font-size: 16px; line-height: 1;
+.file-list .item .actions { display: flex; gap: 4px; align-items: center; }
+.file-list .item .x, .file-list .item .dl {
+  background: none; border: none; cursor: pointer;
+  padding: 2px 4px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 16px;
 }
+.file-list .item .dl svg { width: 14px; height: 14px; }
+.file-list .item .dl:hover { color: var(--ok); }
 .file-list .item .x:hover { color: var(--danger); }
 .file-list .item .status-dot {
   display: inline-block; width: 8px; height: 8px; border-radius: 50%;

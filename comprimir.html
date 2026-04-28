@@ -79,14 +79,6 @@
         </div>
       </div>
 
-      <div class="panel" style="margin-top:14px;">
-        <h2>Resultado</h2>
-        <div class="info-box">
-          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Original total:</span><strong id="origTotal" style="color:var(--text);">—</strong></div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Comprimido:</span><strong id="compTotal" style="color:var(--text);">—</strong></div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-top:1px solid var(--border); margin-top:4px; padding-top:8px;"><span>Economia:</span><strong id="savedTotal" style="color:var(--ok);">—</strong></div>
-        </div>
-      </div>
     </div>
 
     <div class="preview-wrap">
@@ -172,14 +164,27 @@ function renderFileList() {
   fl.innerHTML = state.images.map((it, i) => {
     const dotCls = it.status === 'pending' ? '' : it.status === 'processing' ? 'processing' : it.status === 'done' ? 'done' : 'error';
     const sub = it.status === 'done' ? ` — ${fmtBytes(it.originalSize)} → ${fmtBytes(it.resultSize)}` : '';
+    const dlBtn = it.status === 'done' ? `<button class="dl" data-dl="${i}" title="Baixar esta"><i data-lucide="download"></i></button>` : '';
     return `<div class="item ${i===state.selectedIdx?'active':''}" data-i="${i}">
       <span><span class="status-dot ${dotCls}"></span>${it.name}${sub}</span>
-      <button class="x" data-x="${i}">×</button>
+      <span class="actions">${dlBtn}<button class="x" data-x="${i}">×</button></span>
     </div>`;
   }).join('');
   fl.querySelectorAll('.item').forEach(el => el.addEventListener('click', e => {
-    if (e.target.matches('.x')) return;
+    if (e.target.closest('.x') || e.target.closest('.dl')) return;
     state.selectedIdx = +el.dataset.i; renderFileList(); refresh();
+  }));
+  fl.querySelectorAll('.dl').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const i = +b.dataset.dl;
+    const it = state.images[i];
+    if (!it.resultBlob) return;
+    const ext = it.resultBlob.type.includes('webp') ? 'webp' : it.resultBlob.type.includes('png') ? 'png' : 'jpg';
+    const base = it.name.replace(/\.[^.]+$/, '');
+    const a = document.createElement('a');
+    a.href = it.resultUrl;
+    a.download = `${base}_comprimido.${ext}`;
+    a.click();
   }));
   fl.querySelectorAll('.x').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
@@ -190,6 +195,7 @@ function renderFileList() {
     if (state.selectedIdx >= state.images.length) state.selectedIdx = Math.max(0, state.images.length - 1);
     renderFileList(); refresh();
   }));
+  if (window.lucide) lucide.createIcons();
 }
 
 function bindRange(id, key, transform = v => +v, label) {
@@ -246,14 +252,6 @@ function refresh() {
   const box = $('previewBox');
   const doneCount = state.images.filter(x => x.status === 'done').length;
   $('processBtn').disabled = doneCount === 0;
-
-  // stats
-  const orig = state.images.reduce((s, x) => s + (x.originalSize || 0), 0);
-  const comp = state.images.reduce((s, x) => s + (x.resultSize || 0), 0);
-  const saved = orig - comp;
-  $('origTotal').textContent = orig ? fmtBytes(orig) : '—';
-  $('compTotal').textContent = comp ? fmtBytes(comp) : '—';
-  $('savedTotal').textContent = saved > 0 ? `${fmtBytes(saved)} (-${Math.round(saved/orig*100)}%)` : '—';
 
   if (!state.images.length) {
     box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';

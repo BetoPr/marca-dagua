@@ -204,19 +204,31 @@ function renderFileList() {
     const dotCls = it.status === 'pending' ? '' :
                    it.status === 'processing' ? 'processing' :
                    it.status === 'done' ? 'done' : 'error';
+    const dlBtn = it.status === 'done' ? `<button class="dl" data-dl="${i}" title="Baixar esta"><i data-lucide="download"></i></button>` : '';
     return `<div class="item ${isActive}" data-i="${i}">
       <span><span class="status-dot ${dotCls}"></span>${it.name}</span>
-      <button class="x" data-x="${i}">×</button>
+      <span class="actions">${dlBtn}<button class="x" data-x="${i}">×</button></span>
     </div>`;
   }).join('');
   fl.querySelectorAll('.item').forEach(el => {
     el.addEventListener('click', (e) => {
-      if (e.target.matches('.x')) return;
+      if (e.target.closest('.x') || e.target.closest('.dl')) return;
       state.selectedIdx = +el.dataset.i;
       renderFileList();
       refresh();
     });
   });
+  fl.querySelectorAll('.dl').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const i = +b.dataset.dl;
+    const it = state.images[i];
+    if (!it.resultBlob) return;
+    const base = it.name.replace(/\.[^.]+$/, '');
+    const a = document.createElement('a');
+    a.href = it.resultUrl;
+    a.download = `${base}_sem_fundo.png`;
+    a.click();
+  }));
   fl.querySelectorAll('.x').forEach(b => b.addEventListener('click', (e) => {
     e.stopPropagation();
     const i = +b.dataset.x;
@@ -228,6 +240,7 @@ function renderFileList() {
     renderFileList();
     refresh();
   }));
+  if (window.lucide) lucide.createIcons();
 }
 
 // === QUALITY SELECTOR ===

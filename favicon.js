@@ -33,10 +33,8 @@
       fctx.imageSmoothingQuality = 'high';
 
       const r = 28;
-      const grad = fctx.createLinearGradient(0, 0, SIZE, SIZE);
-      grad.addColorStop(0, '#5b8cff');
-      grad.addColorStop(1, '#2a4cb5');
-      fctx.fillStyle = grad;
+      // Fundo preto com cantos arredondados
+      fctx.fillStyle = '#000000';
       fctx.beginPath();
       fctx.moveTo(r, 0);
       fctx.lineTo(SIZE - r, 0);
@@ -49,8 +47,20 @@
       fctx.quadraticCurveTo(0, 0, r, 0);
       fctx.closePath();
       fctx.fill();
+      fctx.save();
+      fctx.clip();
 
-      const pad = SIZE * 0.14;
+      // Gradiente radial branco em volta da logo (centro brilhante, beirada preta)
+      const radial = fctx.createRadialGradient(SIZE/2, SIZE/2, SIZE * 0.04, SIZE/2, SIZE/2, SIZE * 0.55);
+      radial.addColorStop(0, 'rgba(255,255,255,0.55)');
+      radial.addColorStop(0.5, 'rgba(255,255,255,0.18)');
+      radial.addColorStop(1, 'rgba(255,255,255,0)');
+      fctx.fillStyle = radial;
+      fctx.fillRect(0, 0, SIZE, SIZE);
+      fctx.restore();
+
+      // Logo S sobre o glow
+      const pad = SIZE * 0.16;
       const inner = SIZE - pad * 2;
       fctx.drawImage(img, offX, offY, side, side, pad, pad, inner, inner);
 

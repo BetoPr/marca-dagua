@@ -11,154 +11,105 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-  .chat-layout {
-    display: flex; flex-direction: column;
-    flex: 1; min-height: 0;
-    padding: 0 36px 16px;
-  }
-  .quick-prompts {
-    display: flex; gap: 8px;
-    padding: 16px 0;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-  .quick-prompts button {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 999px; padding: 7px 14px;
-    color: var(--muted); font-size: 12px;
-    cursor: pointer; transition: all .15s;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
+  .chat-layout { display:flex; flex-direction:column; flex:1; min-height:0; padding: 0 36px 16px; }
+  .templates-row { padding: 14px 0 6px; display: flex; gap: 10px; align-items: center; }
+  .templates-row label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .templates-row select { flex: 1; max-width: 420px; padding: 8px 12px; border-radius: 8px; }
+  .quick-prompts { display: flex; gap: 8px; padding: 10px 0 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .quick-prompts button { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
   .quick-prompts button:hover { color: var(--text); border-color: var(--accent-2); background: var(--panel-2); }
   .quick-prompts button svg { width: 14px; height: 14px; }
-  .chat-messages {
-    flex: 1; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 16px;
-    padding: 4px 0;
-  }
-  .chat-empty {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--muted); text-align: center; padding: 40px;
-  }
-  .chat-empty .icon-circle {
-    width: 64px; height: 64px; border-radius: 18px;
-    background: rgba(255,255,255,0.08); color: var(--accent-2);
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 16px;
-  }
-  .chat-empty .icon-circle svg { width: 30px; height: 30px; }
-  .chat-empty h3 { margin: 0 0 8px; color: var(--text); font-family: 'Sora', sans-serif; }
-  .chat-message {
-    max-width: 82%; padding: 12px 16px;
-    border-radius: 14px; line-height: 1.6; font-size: 14px;
-    word-wrap: break-word;
-  }
-  .chat-message.user {
-    align-self: flex-end;
-    background: var(--accent); color: var(--bg);
-    font-weight: 500;
-  }
-  .chat-message.ai {
-    align-self: flex-start;
-    background: var(--panel); border: 1px solid var(--border);
-  }
-  .chat-message.ai pre {
-    background: var(--bg); padding: 12px; border-radius: 8px;
-    overflow-x: auto; font-size: 13px; margin: 10px 0;
-  }
+  .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 4px 0; }
+  .chat-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:40px; }
+  .chat-empty .icon-circle { width:64px; height:64px; border-radius:18px; background:rgba(255,255,255,0.08); color:var(--accent-2); display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .chat-empty .icon-circle svg { width:30px; height:30px; }
+  .chat-empty h3 { margin:0 0 8px; color:var(--text); font-family:'Sora',sans-serif; }
+  .chat-message { max-width: 82%; padding: 12px 16px; border-radius: 14px; line-height: 1.6; font-size: 14px; word-wrap: break-word; position: relative; }
+  .chat-message.user { align-self: flex-end; background: var(--accent); color: var(--bg); font-weight: 500; }
+  .chat-message.ai { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
+  .chat-message.ai pre { background: var(--bg); padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 13px; margin: 10px 0; }
   .chat-message.ai code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
   .chat-message.ai pre code { background: transparent; padding: 0; }
   .chat-message.ai ul, .chat-message.ai ol { padding-left: 22px; margin: 8px 0; }
   .chat-message.ai p { margin: 8px 0; }
   .chat-message.ai p:first-child { margin-top: 0; }
   .chat-message.ai p:last-child { margin-bottom: 0; }
-  .chat-message.ai h1, .chat-message.ai h2, .chat-message.ai h3 { font-family: 'Sora', sans-serif; margin: 14px 0 8px; }
   .chat-message.ai a { color: var(--accent-2); }
-  .chat-message.error {
-    align-self: stretch;
-    background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3);
-    color: #ff8094;
-  }
-  .chat-input-area {
-    display: flex; gap: 10px; align-items: flex-end;
-    padding: 14px 0 0;
-    border-top: 1px solid var(--border);
-  }
-  .chat-input-area textarea {
-    flex: 1; background: var(--panel);
-    border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 14px; color: var(--text);
-    font-family: inherit; font-size: 14px;
-    resize: none; min-height: 50px; max-height: 240px;
-    outline: none; transition: border-color .15s;
-  }
+  .chat-message.error { align-self: stretch; background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3); color: #ff8094; }
+  .msg-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .msg-actions button { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+  .msg-actions button:hover { color: var(--text); border-color: var(--accent-2); }
+  .msg-actions button svg { width: 12px; height: 12px; }
+  .chat-input-area { display: flex; gap: 10px; align-items: flex-end; padding: 14px 0 0; border-top: 1px solid var(--border); }
+  .chat-input-area textarea { flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 14px; resize: none; min-height: 50px; max-height: 240px; outline: none; transition: border-color .15s; }
   .chat-input-area textarea:focus { border-color: var(--accent-2); background: var(--panel-2); }
-  .chat-input-area .send-btn {
-    background: var(--accent); color: var(--bg); border: none;
-    width: 50px; height: 50px; border-radius: 12px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
+  .chat-input-area .send-btn { background: var(--accent); color: var(--bg); border: none; width: 50px; height: 50px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
   .chat-input-area .send-btn:hover:not(:disabled) { background: var(--accent-2); }
   .chat-input-area .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .chat-input-area .send-btn svg { width: 20px; height: 20px; }
 
-  .modal {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    display: none; align-items: center; justify-content: center;
-    z-index: 100; padding: 20px;
-  }
+  /* Modals */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal.open { display: flex; }
-  .modal-content {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px;
-    max-width: 480px; width: 100%;
-    max-height: 90vh; overflow-y: auto;
-  }
-  .modal-content h3 {
-    margin: 0 0 6px; font-family: 'Sora', sans-serif;
-    font-size: 18px; font-weight: 700;
-  }
-  .modal-content .sub {
-    color: var(--muted); font-size: 13px; margin-bottom: 18px;
-  }
+  .modal-content { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-content.wide { max-width: 800px; }
+  .modal-content h3 { margin: 0 0 6px; font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .modal-content .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
   .modal-content .field { margin-bottom: 16px; }
-  .modal-content label {
-    display: block; font-size: 12px; color: var(--muted);
-    margin-bottom: 6px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
-  .modal-content input, .modal-content select {
-    width: 100%; background: var(--panel-2);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 9px 12px; color: var(--text); font-size: 14px;
-    outline: none;
-  }
+  .modal-content label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .modal-content input, .modal-content select { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; }
   .modal-content input:focus, .modal-content select:focus { border-color: var(--accent-2); }
-  .modal-content .help {
-    font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5;
-  }
+  .modal-content .help { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
   .modal-content .help a { color: var(--accent-2); }
-  .modal-content .actions-row {
-    display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end;
-  }
+  .modal-content .actions-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 
-  .header-extras {
-    display: flex; gap: 8px; align-items: center;
-    margin-top: 12px;
-  }
-  .config-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 999px; padding: 6px 14px;
-    color: var(--muted); font-size: 12px; cursor: pointer;
-    transition: all .15s;
-  }
+  .header-extras { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .config-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; }
   .config-pill:hover { border-color: var(--accent-2); color: var(--text); }
   .config-pill.warn { color: #ffb84d; border-color: rgba(255,184,77,0.3); }
   .config-pill svg { width: 14px; height: 14px; }
+
+  /* History list */
+  .history-tabs { display: flex; gap: 6px; margin-bottom: 14px; padding: 4px; background: var(--panel-2); border-radius: 10px; border: 1px solid var(--border); }
+  .history-tabs button { flex: 1; background: transparent; border: none; color: var(--muted); padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .history-tabs button.active { background: var(--accent); color: var(--bg); font-weight: 600; }
+  .history-list { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+  .history-item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .history-item.good { border-color: rgba(54,201,138,0.3); }
+  .history-item.bad { border-color: rgba(255,93,108,0.3); }
+  .history-item .item-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+  .history-item .item-head .check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent; transition: all .15s;
+  }
+  .history-item .item-head .check.good { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .history-item .item-head .check.bad { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .history-item .item-head .check svg { width: 14px; height: 14px; }
+  .history-item .item-head .text { flex: 1; font-size: 13px; line-height: 1.5; color: var(--text); white-space: pre-wrap; word-wrap: break-word; }
+  .history-item .item-head .date { color: var(--muted); font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+  .history-item .item-head .actions { display: flex; gap: 4px; }
+  .history-item .item-head .icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+  .history-item .item-head .icon-btn:hover { color: var(--text); }
+  .history-item .item-head .icon-btn svg { width: 14px; height: 14px; }
+  .history-item .item-body { display: none; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 8px; }
+  .history-item.expanded .item-body { display: block; }
+  .img-section { margin-top: 10px; }
+  .img-section h4 { margin: 0 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+  .img-thumb { position: relative; aspect-ratio: 1; background: var(--bg); border-radius: 6px; overflow: hidden; cursor: pointer; }
+  .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .img-thumb .img-x { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border: none; color: #fff; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
+  .img-thumb.add { display: flex; align-items: center; justify-content: center; border: 1.5px dashed var(--border); color: var(--muted); transition: all .15s; }
+  .img-thumb.add:hover { border-color: var(--accent-2); color: var(--text); }
+  .img-thumb.add svg { width: 20px; height: 20px; }
+  .empty-history { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+  .img-zoom { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 200; cursor: zoom-out; }
+  .img-zoom.open { display: flex; }
+  .img-zoom img { max-width: 92%; max-height: 92%; object-fit: contain; }
 </style>
 </head>
 <body>
@@ -181,11 +132,15 @@
 
   <div class="page-header">
     <h1>Chat IA</h1>
-    <p>Brainstorm de prompts pra Whisk/Midjourney, legendas pra Insta/LinkedIn, ideias de conteúdo. Usa APIs gratuitas (Groq ou OpenRouter).</p>
+    <p>Brainstorm de prompts pra Whisk/Midjourney/OpenAI Imagen, legendas, ideias. Escolha um modelo de pose abaixo ou digite seu pedido.</p>
     <div class="header-extras">
       <button class="config-pill" id="openSettings">
         <i data-lucide="settings"></i>
         <span id="configLabel">Configurar API</span>
+      </button>
+      <button class="config-pill" id="openHistory">
+        <i data-lucide="bookmark"></i>
+        <span>Histórico (<span id="historyCount">0</span>)</span>
       </button>
       <button class="config-pill" id="newChatBtn">
         <i data-lucide="plus"></i>
@@ -195,6 +150,42 @@
   </div>
 
   <div class="chat-layout">
+    <div class="templates-row">
+      <label>Modelos prontos:</label>
+      <select id="templateSelect">
+        <option value="">— escolha um modelo de pose/ensaio —</option>
+        <optgroup label="Posições masculinas">
+          <option value="m-editorial">Editorial — confiante (estúdio dramático)</option>
+          <option value="m-lifestyle-outdoor">Lifestyle ao ar livre (golden hour)</option>
+          <option value="m-closeup">Close-up retrato (intenso)</option>
+          <option value="m-corporativo">Corporativo (terno, ambiente luxuoso)</option>
+          <option value="m-streetwear">Streetwear urbano</option>
+          <option value="m-fitness">Fitness / esportivo</option>
+          <option value="m-praia">Praia / verão</option>
+          <option value="m-cafe">Café aconchegante</option>
+        </optgroup>
+        <optgroup label="Posições femininas">
+          <option value="f-editorial">Editorial — confiante (estúdio dramático)</option>
+          <option value="f-lifestyle-outdoor">Lifestyle ao ar livre (golden hour)</option>
+          <option value="f-romantica">Romântica / etérea</option>
+          <option value="f-fashion">Fashion / haute couture</option>
+          <option value="f-fitness">Fitness / esportivo</option>
+          <option value="f-praia">Praia / verão</option>
+          <option value="f-cafe">Café aconchegante</option>
+          <option value="f-corporativa">Corporativa (executiva)</option>
+        </optgroup>
+        <optgroup label="Ensaios e cenários">
+          <option value="e-estudio-min">Estúdio minimalista</option>
+          <option value="e-urbano-noite">Urbano noturno (neon)</option>
+          <option value="e-natureza">Natureza (luz natural)</option>
+          <option value="e-inverno">Inverno (frio, neve)</option>
+          <option value="e-estudio-dramatico">Estúdio dramático (chiaroscuro)</option>
+          <option value="e-lifestyle-casa">Lifestyle em casa (aconchegante)</option>
+          <option value="e-rooftop">Rooftop com skyline</option>
+        </optgroup>
+      </select>
+    </div>
+
     <div class="quick-prompts">
       <button data-prompt="prompt-whisk"><i data-lucide="sparkles"></i> Prompt Whisk/Imagen</button>
       <button data-prompt="prompt-mj"><i data-lucide="image"></i> Prompt Midjourney</button>
@@ -220,28 +211,23 @@
   <div class="modal-content">
     <h3>Configurar API de IA</h3>
     <div class="sub">Sua chave fica salva apenas no seu navegador — nunca é enviada pra outro lugar além da API que você escolher.</div>
-
     <div class="field">
       <label>Provedor</label>
       <select id="providerSel">
-        <option value="groq">Groq (mais rápido — recomendado)</option>
+        <option value="groq">Groq (mais rápido + gratuito)</option>
         <option value="openrouter">OpenRouter</option>
+        <option value="openai">OpenAI (pago, melhor qualidade)</option>
       </select>
-      <div class="help" id="providerHelp">
-        Crie chave grátis em <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>. Free tier: ~14k tokens/min.
-      </div>
+      <div class="help" id="providerHelp"></div>
     </div>
-
     <div class="field">
       <label>Chave da API</label>
-      <input type="password" id="apiKeyInput" placeholder="cole sua chave aqui (gsk_... ou sk-or-...)">
+      <input type="password" id="apiKeyInput" placeholder="cole sua chave aqui">
     </div>
-
     <div class="field">
       <label>Modelo</label>
       <select id="modelSel"></select>
     </div>
-
     <div class="actions-row">
       <button class="ghost" id="cancelSettings">Cancelar</button>
       <button class="primary" id="saveSettings">Salvar</button>
@@ -249,15 +235,35 @@
   </div>
 </div>
 
+<!-- History modal -->
+<div class="modal" id="historyModal">
+  <div class="modal-content wide">
+    <h3>Histórico de prompts</h3>
+    <div class="sub">Marque os prompts que deram bom resultado. Anexe a imagem de referência usada e as imagens geradas pra validar depois.</div>
+    <div class="history-tabs" id="historyTabs">
+      <button data-filter="all" class="active">Todos</button>
+      <button data-filter="good">Bons</button>
+      <button data-filter="bad">Ruins</button>
+      <button data-filter="unmarked">Sem marcação</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <div class="actions-row">
+      <button class="ghost" id="closeHistory">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="img-zoom" id="imgZoom"><img id="imgZoomSrc" src=""></div>
+
 <script src="favicon.js"></script>
 <script src="sidebar.js"></script>
 <script>
-const SYSTEM_PROMPT = `Você é um assistente especializado em criação de conteúdo visual e textual para criadores de IA.
+const SYSTEM_PROMPT = `Você é um assistente especializado em criação de conteúdo visual para criadores que usam IA (Whisk, Midjourney, Imagen, DALL-E).
 Ajude o usuário a:
-- Escrever prompts detalhados em INGLÊS para Whisk, Imagen, Midjourney (com lentes, iluminação, estilo, composição)
-- Criar legendas para Instagram, TikTok e LinkedIn em português brasileiro
-- Brainstorm de ideias de conteúdo
-- Gerar variações criativas de prompts existentes
+- Escrever prompts detalhados em INGLÊS para geração de imagens, com lentes (35mm/50mm/85mm), iluminação, estilo, composição, profundidade de campo
+- Refinar prompts existentes (sugerir melhorias, alternativas)
+- Criar legendas para Instagram/TikTok/LinkedIn em português brasileiro
+- Brainstorm de ideias de conteúdo visual
 
 Seja direto, prático e responda em português. Use markdown pra listas e blocos de código quando útil.`;
 
@@ -270,15 +276,43 @@ const QUICK_PROMPTS = {
   'hashtags': 'Sugira 30 hashtags pra um post de [TEMA AQUI] no Instagram. Mistura: 10 grandes (>1M), 10 médias (100k-1M), 10 nicho (<100k). Liste separadamente.',
 };
 
+const TEMPLATES = {
+  // Posições masculinas
+  'm-editorial': 'high-end editorial portrait of a confident man, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial details, realistic skin texture, high resolution photography, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic',
+  'm-lifestyle-outdoor': 'lifestyle photo of athletic man outdoors during golden hour, soft warm golden light illuminating the body, casual elegant clothing, natural walking pose, modern urban background, candid lifestyle photography, warm tones, sense of freedom and movement, 35mm lens',
+  'm-closeup': 'close-up portrait of a man with well-groomed beard, soft directional side lighting, blurred neutral background, intense gaze directly at camera, realistic photography, high definition skin detail, cool balanced tones with cinematic contrast, 100mm macro lens',
+  'm-corporativo': 'elegant man wearing tailored black suit, luxurious modern interior environment, soft sophisticated three-point lighting, seated with confident upright posture, cinematic aesthetic, neutral and golden color palette, high-end editorial photography style',
+  'm-streetwear': 'young man in modern streetwear outfit, urban scenario with subtle graffiti and concrete texture, natural overcast lighting, relaxed pose leaning against wall, authentic confident expression, vibrant colors and high contrast, 35mm lens',
+  'm-fitness': 'muscular athletic man in workout attire, modern gym environment with dramatic side lighting, intense exercise pose with visible sweat and motion, dynamic composition, fitness magazine cover style, high contrast lighting',
+  'm-praia': 'man at beach during sunset, ocean waves and sand in background, casual summer outfit or shirtless physique, golden hour warm lighting with rim glow, relaxed vacation pose, 50mm lens, lifestyle photography',
+  'm-cafe': 'man sitting at modern wooden cafe table, warm interior lighting from pendant lights, holding ceramic coffee cup, casual smart outfit, soft natural window light filling background, intimate lifestyle composition, 50mm lens at f/2',
+  // Posições femininas
+  'f-editorial': 'high-end editorial portrait of a confident woman, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial features, realistic skin texture, high resolution photography, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic',
+  'f-lifestyle-outdoor': 'lifestyle photo of woman outdoors during golden hour, soft warm golden light, casual elegant outfit, natural walking pose, modern urban or natural background, candid lifestyle photography, warm tones, sense of freedom, 35mm lens',
+  'f-romantica': 'romantic portrait of woman with soft genuine expression, dreamy soft lighting with pastel hues, flowing dress or natural hair movement, blurred natural background, ethereal mood, 85mm lens, soft focus background',
+  'f-fashion': 'fashion model woman in haute couture outfit, dramatic studio backdrop, professional editorial three-point lighting, dynamic confident pose, magazine quality production, high fashion photography aesthetic',
+  'f-fitness': 'fit toned woman in athletic wear, gym or outdoor workout setting, dynamic motion captured, strong confident pose, motivational fitness photography aesthetic, high definition skin and muscle detail',
+  'f-praia': 'woman at beach during sunset, ocean and sand background, summer casual outfit or beachwear, golden hour warm lighting, lifestyle and travel photography aesthetic, sun-kissed warm skin tones',
+  'f-cafe': 'woman at cozy modern cafe, holding ceramic mug, soft natural window light, intimate atmosphere with subtle bokeh, casual stylish outfit, lifestyle editorial photography, 50mm lens at f/2',
+  'f-corporativa': 'professional woman in business attire, modern executive office or upscale interior, confident pose, soft sophisticated lighting, executive editorial style, neutral color palette',
+  // Ensaios
+  'e-estudio-min': 'minimalist studio environment, plain neutral colored backdrop, professional studio lighting with single soft key light from 45 degrees, clean composition with negative space, fashion editorial style',
+  'e-urbano-noite': 'urban night cityscape, neon signs and city lights creating colorful bokeh, dramatic moody atmosphere, cinematic lighting with practical light sources, modern fashion photography style',
+  'e-natureza': 'natural outdoor environment with lush green trees, dappled sunlight filtering through leaves, organic relaxed mood, soft naturalistic lighting, lifestyle photography aesthetic',
+  'e-inverno': 'winter scenery with snow or cold misty environment, layered cozy warm clothing, cool blue tones throughout, dramatic atmospheric overcast lighting, cinematic mood',
+  'e-estudio-dramatico': 'dramatic studio with strong single directional lighting, deep dark shadows, moody black background, cinematic noir style, sharp contrast, dramatic chiaroscuro',
+  'e-lifestyle-casa': 'cozy modern home interior, warm artificial lamp lighting, casual relaxed setting, intimate lifestyle photography, mid-century modern decor with plants',
+  'e-rooftop': 'rooftop setting with city skyline visible, dusk or golden hour lighting, modern urban backdrop, contemporary fashion photography style, expansive view',
+};
+
 const PROVIDERS = {
   groq: {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     keyHelp: 'Crie chave grátis em <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>. Free tier: ~14k tokens/min.',
-    keyPrefix: 'gsk_',
     models: [
       { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (melhor qualidade)' },
-      { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (mais rápido)' },
+      { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (instant)' },
       { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
       { id: 'gemma2-9b-it', name: 'Gemma 2 9B' },
     ],
@@ -287,12 +321,22 @@ const PROVIDERS = {
     name: 'OpenRouter',
     endpoint: 'https://openrouter.ai/api/v1/chat/completions',
     keyHelp: 'Crie chave em <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Use modelos com :free no fim pra ficar grátis.',
-    keyPrefix: 'sk-or-',
     models: [
       { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (free)' },
       { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (free)' },
       { id: 'meta-llama/llama-3.2-3b-instruct:free', name: 'Llama 3.2 3B (free)' },
       { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (free)' },
+    ],
+  },
+  openai: {
+    name: 'OpenAI',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    keyHelp: 'Crie chave em <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>. Pago — ~$0.15-5 por 1M tokens. <strong>GPT-4o</strong> é o melhor pra prompts criativos.',
+    models: [
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (rápido + barato)' },
+      { id: 'gpt-4o', name: 'GPT-4o (recomendado pra prompts)' },
+      { id: 'o1-mini', name: 'o1-mini (raciocínio)' },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
     ],
   },
 };
@@ -303,19 +347,17 @@ const config = {
   provider: localStorage.getItem('chat-provider') || 'groq',
   groqKey: localStorage.getItem('chat-key-groq') || '',
   openrouterKey: localStorage.getItem('chat-key-openrouter') || '',
+  openaiKey: localStorage.getItem('chat-key-openai') || '',
   groqModel: localStorage.getItem('chat-model-groq') || 'llama-3.3-70b-versatile',
   openrouterModel: localStorage.getItem('chat-model-openrouter') || 'google/gemini-2.0-flash-exp:free',
+  openaiModel: localStorage.getItem('chat-model-openai') || 'gpt-4o',
 };
 
 let messages = JSON.parse(localStorage.getItem('chat-history') || '[]');
 let isStreaming = false;
 
-function getKey() {
-  return config.provider === 'groq' ? config.groqKey : config.openrouterKey;
-}
-function getModel() {
-  return config.provider === 'groq' ? config.groqModel : config.openrouterModel;
-}
+function getKey() { return config[config.provider + 'Key']; }
+function getModel() { return config[config.provider + 'Model']; }
 
 function updateConfigLabel() {
   const provider = PROVIDERS[config.provider];
@@ -363,8 +405,8 @@ $('saveSettings').addEventListener('click', () => {
   const key = $('apiKeyInput').value.trim();
   const model = $('modelSel').value;
   config.provider = provider;
-  if (provider === 'groq') { config.groqKey = key; config.groqModel = model; }
-  else { config.openrouterKey = key; config.openrouterModel = model; }
+  config[provider + 'Key'] = key;
+  config[provider + 'Model'] = model;
   localStorage.setItem('chat-provider', provider);
   localStorage.setItem(`chat-key-${provider}`, key);
   localStorage.setItem(`chat-model-${provider}`, model);
@@ -387,6 +429,18 @@ document.querySelectorAll('.quick-prompts button').forEach(b => {
   });
 });
 
+// Templates dropdown
+$('templateSelect').addEventListener('change', e => {
+  const v = e.target.value;
+  if (!v) return;
+  const ta = $('chatInput');
+  ta.value = `Refine este prompt em INGLÊS para o Whisk/Imagen, ajustando detalhes ou adicionando o que pedir abaixo:\n\n${TEMPLATES[v]}\n\n[escreva aqui o que quer customizar — cores, idade, tipo físico, etc.]`;
+  ta.focus();
+  autoResize();
+  updateSendBtn();
+  e.target.value = '';
+});
+
 // New chat
 $('newChatBtn').addEventListener('click', () => {
   if (messages.length && !confirm('Iniciar nova conversa? O histórico atual será apagado.')) return;
@@ -395,7 +449,7 @@ $('newChatBtn').addEventListener('click', () => {
   renderMessages();
 });
 
-// Render messages
+// === Render messages ===
 function renderMessages() {
   const box = $('messages');
   if (!messages.length) {
@@ -403,55 +457,64 @@ function renderMessages() {
       <div class="chat-empty">
         <div class="icon-circle"><i data-lucide="message-circle"></i></div>
         <h3>Comece uma conversa</h3>
-        <p>Use os atalhos acima ou digite sua pergunta.<br>Configure a API antes (Groq é gratuito e bem rápido).</p>
+        <p>Use os modelos prontos acima ou os atalhos.<br>Configure a API antes (Groq é gratuito).</p>
       </div>`;
     if (window.lucide) lucide.createIcons();
     return;
   }
-  box.innerHTML = messages.map(m => {
+  box.innerHTML = messages.map((m, i) => {
     if (m.role === 'user') {
       return `<div class="chat-message user">${escapeHtml(m.content)}</div>`;
     }
-    return `<div class="chat-message ai">${marked.parse(m.content)}</div>`;
+    if (m.role === 'error') {
+      return `<div class="chat-message error">⚠ ${escapeHtml(m.content)}</div>`;
+    }
+    const html = marked.parse(m.content);
+    const actions = m.content && !isStreaming ? `<div class="msg-actions">
+      <button data-act="save" data-i="${i}"><i data-lucide="bookmark-plus"></i> Salvar como prompt</button>
+      <button data-act="copy" data-i="${i}"><i data-lucide="copy"></i> Copiar</button>
+    </div>` : '';
+    return `<div class="chat-message ai">${html}${actions}</div>`;
   }).join('');
+
+  box.querySelectorAll('[data-act="save"]').forEach(b => b.addEventListener('click', async () => {
+    const i = +b.dataset.i;
+    const text = messages[i].content;
+    await dbAddPrompt({ text, timestamp: Date.now(), good: null, refImages: [], generatedImages: [] });
+    await refreshHistoryCount();
+    b.innerHTML = '<i data-lucide="check"></i> Salvo!';
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => { b.innerHTML = '<i data-lucide="bookmark-plus"></i> Salvar como prompt'; if (window.lucide) lucide.createIcons(); }, 1800);
+  }));
+  box.querySelectorAll('[data-act="copy"]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.i;
+    navigator.clipboard.writeText(messages[i].content);
+    b.innerHTML = '<i data-lucide="check"></i> Copiado!';
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => { b.innerHTML = '<i data-lucide="copy"></i> Copiar'; if (window.lucide) lucide.createIcons(); }, 1500);
+  }));
+
+  if (window.lucide) lucide.createIcons();
   box.scrollTop = box.scrollHeight;
 }
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-// Input handling
+// === Input ===
 const ta = $('chatInput');
-function autoResize() {
-  ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 240) + 'px';
-}
-function updateSendBtn() {
-  $('sendBtn').disabled = !ta.value.trim() || isStreaming || !getKey();
-}
+function autoResize() { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 240) + 'px'; }
+function updateSendBtn() { $('sendBtn').disabled = !ta.value.trim() || isStreaming || !getKey(); }
 ta.addEventListener('input', () => { autoResize(); updateSendBtn(); });
-ta.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
+ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 $('sendBtn').addEventListener('click', sendMessage);
 
 async function sendMessage() {
   const text = ta.value.trim();
   if (!text || isStreaming) return;
   if (!getKey()) { openSettings(); return; }
-
   messages.push({ role: 'user', content: text });
-  ta.value = '';
-  autoResize();
+  ta.value = ''; autoResize();
   renderMessages();
-  isStreaming = true;
-  updateSendBtn();
-
-  // Add empty AI message that we'll stream into
+  isStreaming = true; updateSendBtn();
   messages.push({ role: 'assistant', content: '' });
   const aiIdx = messages.length - 1;
   renderMessages();
@@ -468,29 +531,18 @@ async function sendMessage() {
     }
     const body = {
       model: getModel(),
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.filter(m => m.content || m === messages[aiIdx]).slice(0, aiIdx).filter(m => m.content),
-      ],
+      messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.slice(0, aiIdx).filter(m => m.content)],
       stream: true,
       temperature: 0.7,
     };
-
-    const res = await fetch(provider.endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
-
+    const res = await fetch(provider.endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
     if (!res.ok) {
       const errText = await res.text();
       throw new Error(`HTTP ${res.status}: ${errText.slice(0, 300)}`);
     }
-
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -514,36 +566,236 @@ async function sendMessage() {
               box.scrollTop = box.scrollHeight;
             }
           }
-        } catch (e) { /* ignore parse errors */ }
+        } catch (_) {}
       }
     }
   } catch (e) {
     console.error('chat error', e);
-    messages[aiIdx] = {
-      role: 'error',
-      content: `Erro: ${e.message || e}`,
-    };
-    const box = $('messages');
-    box.innerHTML = messages.map(m => {
-      if (m.role === 'user') return `<div class="chat-message user">${escapeHtml(m.content)}</div>`;
-      if (m.role === 'error') return `<div class="chat-message error">⚠ ${escapeHtml(m.content)}</div>`;
-      return `<div class="chat-message ai">${marked.parse(m.content)}</div>`;
-    }).join('');
+    messages[aiIdx] = { role: 'error', content: `${e.message || e}` };
   }
-
-  // Persist (skip error messages)
   const persistable = messages.filter(m => m.role === 'user' || m.role === 'assistant');
   localStorage.setItem('chat-history', JSON.stringify(persistable));
-
   isStreaming = false;
   updateSendBtn();
+  renderMessages();
   ta.focus();
 }
+
+// === IndexedDB ===
+const DB_NAME = 'innova-prompts';
+const STORE = 'prompts';
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        const store = db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('timestamp', 'timestamp');
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function dbAddPrompt(p) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const r = tx.objectStore(STORE).add(p);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function dbUpdatePrompt(p) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(p);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbDeletePrompt(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbGetAllPrompts() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const r = tx.objectStore(STORE).getAll();
+    r.onsuccess = () => resolve(r.result.sort((a,b) => b.timestamp - a.timestamp));
+    r.onerror = () => reject(r.error);
+  });
+}
+
+// === History modal ===
+let historyFilter = 'all';
+let expandedIds = new Set();
+
+async function refreshHistoryCount() {
+  const all = await dbGetAllPrompts();
+  $('historyCount').textContent = all.length;
+}
+
+$('openHistory').addEventListener('click', async () => {
+  await renderHistory();
+  $('historyModal').classList.add('open');
+});
+$('closeHistory').addEventListener('click', () => $('historyModal').classList.remove('open'));
+$('historyModal').addEventListener('click', e => { if (e.target.id === 'historyModal') $('historyModal').classList.remove('open'); });
+
+$('historyTabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-filter]');
+  if (!b) return;
+  $('historyTabs').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  historyFilter = b.dataset.filter;
+  renderHistory();
+});
+
+async function renderHistory() {
+  const all = await dbGetAllPrompts();
+  const filtered = all.filter(p => {
+    if (historyFilter === 'all') return true;
+    if (historyFilter === 'good') return p.good === true;
+    if (historyFilter === 'bad') return p.good === false;
+    if (historyFilter === 'unmarked') return p.good == null;
+    return true;
+  });
+  const list = $('historyList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-history">Nenhum prompt nesta categoria.</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(p => renderHistoryItem(p)).join('');
+
+  // Hookup interactions
+  list.querySelectorAll('[data-action="check"]').forEach(b => b.addEventListener('click', async () => {
+    const id = +b.dataset.id;
+    const value = b.dataset.value === 'good' ? true : false;
+    const p = (await dbGetAllPrompts()).find(x => x.id === id);
+    if (!p) return;
+    p.good = (p.good === value) ? null : value;
+    await dbUpdatePrompt(p);
+    renderHistory();
+  }));
+  list.querySelectorAll('[data-action="expand"]').forEach(b => b.addEventListener('click', () => {
+    const id = +b.dataset.id;
+    if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+    renderHistory();
+  }));
+  list.querySelectorAll('[data-action="copy"]').forEach(b => b.addEventListener('click', async () => {
+    const id = +b.dataset.id;
+    const p = (await dbGetAllPrompts()).find(x => x.id === id);
+    if (p) navigator.clipboard.writeText(p.text);
+    b.innerHTML = '<i data-lucide="check"></i>';
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => { b.innerHTML = '<i data-lucide="copy"></i>'; if (window.lucide) lucide.createIcons(); }, 1200);
+  }));
+  list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Apagar este prompt?')) return;
+    await dbDeletePrompt(+b.dataset.id);
+    await refreshHistoryCount();
+    renderHistory();
+  }));
+  list.querySelectorAll('[data-action="add-img"]').forEach(b => b.addEventListener('click', async () => {
+    const id = +b.dataset.id;
+    const kind = b.dataset.kind;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      const p = (await dbGetAllPrompts()).find(x => x.id === id);
+      if (!p) return;
+      const arr = kind === 'ref' ? p.refImages : p.generatedImages;
+      for (const f of files) arr.push(f);
+      await dbUpdatePrompt(p);
+      renderHistory();
+    };
+    input.click();
+  }));
+  list.querySelectorAll('[data-action="remove-img"]').forEach(b => b.addEventListener('click', async () => {
+    const id = +b.dataset.id;
+    const kind = b.dataset.kind;
+    const idx = +b.dataset.idx;
+    const p = (await dbGetAllPrompts()).find(x => x.id === id);
+    if (!p) return;
+    const arr = kind === 'ref' ? p.refImages : p.generatedImages;
+    arr.splice(idx, 1);
+    await dbUpdatePrompt(p);
+    renderHistory();
+  }));
+  list.querySelectorAll('[data-action="zoom-img"]').forEach(b => b.addEventListener('click', () => {
+    $('imgZoomSrc').src = b.dataset.src;
+    $('imgZoom').classList.add('open');
+  }));
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function renderHistoryItem(p) {
+  const expanded = expandedIds.has(p.id);
+  const goodCls = p.good === true ? 'good' : (p.good === false ? 'bad' : '');
+  const date = new Date(p.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(p.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const previewText = p.text.length > 200 ? p.text.slice(0, 200) + '…' : p.text;
+  const fullText = expanded ? p.text : previewText;
+
+  const refUrls = (p.refImages || []).map(b => URL.createObjectURL(b));
+  const genUrls = (p.generatedImages || []).map(b => URL.createObjectURL(b));
+
+  const renderImgs = (urls, kind) => {
+    const thumbs = urls.map((u, i) => `
+      <div class="img-thumb">
+        <img src="${u}" data-action="zoom-img" data-src="${u}">
+        <button class="img-x" data-action="remove-img" data-id="${p.id}" data-kind="${kind}" data-idx="${i}">×</button>
+      </div>`).join('');
+    return `<div class="img-grid">${thumbs}
+      <div class="img-thumb add" data-action="add-img" data-id="${p.id}" data-kind="${kind}"><i data-lucide="plus"></i></div>
+    </div>`;
+  };
+
+  return `
+    <div class="history-item ${goodCls} ${expanded ? 'expanded' : ''}">
+      <div class="item-head">
+        <button class="check ${p.good === true ? 'good' : ''}" data-action="check" data-id="${p.id}" data-value="good" title="Marcar como bom"><i data-lucide="check"></i></button>
+        <button class="check ${p.good === false ? 'bad' : ''}" data-action="check" data-id="${p.id}" data-value="bad" title="Marcar como ruim"><i data-lucide="x"></i></button>
+        <div class="text">${escapeHtml(fullText)}</div>
+        <div class="actions">
+          <button class="icon-btn" data-action="copy" data-id="${p.id}" title="Copiar"><i data-lucide="copy"></i></button>
+          <button class="icon-btn" data-action="expand" data-id="${p.id}" title="Expandir"><i data-lucide="${expanded ? 'chevron-up' : 'chevron-down'}"></i></button>
+          <button class="icon-btn" data-action="delete" data-id="${p.id}" title="Apagar"><i data-lucide="trash-2"></i></button>
+        </div>
+        <div class="date">${date}</div>
+      </div>
+      <div class="item-body">
+        <div class="img-section">
+          <h4>Imagens de referência</h4>
+          ${renderImgs(refUrls, 'ref')}
+        </div>
+        <div class="img-section">
+          <h4>Imagens geradas</h4>
+          ${renderImgs(genUrls, 'gen')}
+        </div>
+      </div>
+    </div>`;
+}
+
+$('imgZoom').addEventListener('click', () => $('imgZoom').classList.remove('open'));
 
 // Init
 updateConfigLabel();
 renderMessages();
 updateSendBtn();
+refreshHistoryCount();
 if (window.lucide) lucide.createIcons();
 </script>
 </body>
