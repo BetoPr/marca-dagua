@@ -98,7 +98,7 @@
 
 <script src="favicon.js"></script>
 <script type="module" src="supabase-client.js"></script>
-<script>
+<script type="module">
 const $ = id => document.getElementById(id);
 const showAlert = (msg, type = 'error') => {
   const a = $('alert');
@@ -106,11 +106,18 @@ const showAlert = (msg, type = 'error') => {
   a.textContent = msg;
 };
 
-window.whenSupabaseReady(async (supabase) => {
-  // Se já tá logado, redireciona pra home
+// Espera o cliente Supabase ficar pronto (módulos rodam em ordem garantida)
+async function waitForSupabase() {
+  if (window.supabase) return window.supabase;
+  await new Promise(resolve => document.addEventListener('supabase-ready', resolve, { once: true }));
+  return window.supabase;
+}
+
+(async () => {
+  const supabase = await waitForSupabase();
   const { data: { session } } = await supabase.auth.getSession();
   if (session) location.href = 'index.html';
-});
+})();
 
 $('loginForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -121,7 +128,8 @@ $('loginForm').addEventListener('submit', async e => {
   btn.textContent = 'Entrando…';
 
   try {
-    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    const supabase = await waitForSupabase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     showAlert('✓ Logado com sucesso, redirecionando…', 'success');
     setTimeout(() => location.href = 'index.html', 600);
