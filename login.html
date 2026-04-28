@@ -106,11 +106,16 @@ const showAlert = (msg, type = 'error') => {
   a.textContent = msg;
 };
 
-// Espera o cliente Supabase ficar pronto (módulos rodam em ordem garantida)
-async function waitForSupabase() {
+console.log('[login] script module carregado');
+
+// Espera o cliente Supabase ficar pronto, com timeout pra dar erro se travar
+async function waitForSupabase(timeoutMs = 10000) {
   if (window.supabase) return window.supabase;
-  await new Promise(resolve => document.addEventListener('supabase-ready', resolve, { once: true }));
-  return window.supabase;
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('Supabase não carregou em 10s. Verifica conexão e recarrega (Ctrl+Shift+R).')), timeoutMs);
+    document.addEventListener('supabase-ready', () => { clearTimeout(t); resolve(window.supabase); }, { once: true });
+    if (window.supabase) { clearTimeout(t); resolve(window.supabase); }
+  });
 }
 
 (async () => {
