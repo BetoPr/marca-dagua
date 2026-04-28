@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -18,6 +19,11 @@
   <div class="page-header">
     <h1>Remover fundo</h1>
     <p>Tira o fundo das suas fotos automaticamente. Em lote ou uma a uma — IA roda local no navegador.</p>
+  </div>
+
+  <div id="fileWarning" class="hidden" style="margin: 16px 36px 0; padding: 14px 18px; background: rgba(255,184,77,0.1); border: 1px solid rgba(255,184,77,0.3); border-radius: 10px; color: #ffb84d; font-size: 13px;">
+    <strong>⚠ Aviso:</strong> esta ferramenta não funciona quando o arquivo é aberto direto do explorador (file://). A IA precisa de Fetch API + Web Workers, que o Chrome bloqueia nesse modo.<br>
+    <strong>Solução:</strong> use o site no GitHub Pages (<code>https://betopr.github.io/marca-dagua/remove-bg.html</code>) ou rode um servidor local.
   </div>
 
   <div class="layout">
@@ -35,15 +41,13 @@
 
       <div class="panel" style="margin-top:14px;">
         <h2>2. Qualidade</h2>
-        <div class="seg cols-3" id="qualitySeg">
-          <button data-model="isnet_quint8">Rápido</button>
-          <button data-model="isnet_fp16" class="active">Equilibrado</button>
-          <button data-model="isnet">Alta</button>
+        <div class="seg cols-2" id="qualitySeg">
+          <button data-model="small">Rápido</button>
+          <button data-model="medium" class="active">Qualidade</button>
         </div>
         <div class="info-box">
-          <strong>Rápido:</strong> ~3s/imagem, qualidade boa.<br>
-          <strong>Equilibrado:</strong> ~6s/imagem, qualidade ótima.<br>
-          <strong>Alta:</strong> ~12s/imagem, melhor qualidade.
+          <strong>Rápido:</strong> ~3s/imagem, modelo menor (~40MB).<br>
+          <strong>Qualidade:</strong> ~8s/imagem, melhor resultado (~80MB).
         </div>
       </div>
 
@@ -71,7 +75,7 @@
   </div>
 
   <div class="actions">
-    <button class="primary" id="processBtn" disabled>Remover fundo e baixar ZIP</button>
+    <button class="primary" id="processBtn" disabled>Baixar todas em ZIP</button>
     <button class="ghost" id="clearBtn">Limpar tudo</button>
     <div class="progress"><div id="progressBar"></div></div>
     <div class="status" id="statusMsg">Aguardando imagens…</div>
@@ -81,13 +85,44 @@
 <script src="favicon.js"></script>
 <script src="sidebar.js"></script>
 <script type="module">
-import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.4.5';
+// Detecta file:// e mostra aviso (o imgly precisa de https/http)
+if (location.protocol === 'file:') {
+  document.getElementById('fileWarning').classList.remove('hidden');
+}
+
+let removeBackground;
+let libError = null;
+const IMGLY_VERSION = '1.4.5';
+const IMGLY_PUBLIC_PATH = `https://staticimgly.com/@imgly/background-removal-data/${IMGLY_VERSION}/dist/`;
+
+const sources = [
+  `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${IMGLY_VERSION}/+esm`,
+  `https://esm.sh/@imgly/background-removal@${IMGLY_VERSION}`,
+  `https://unpkg.com/@imgly/background-removal@${IMGLY_VERSION}/dist/browser.mjs`,
+];
+for (const url of sources) {
+  try {
+    const mod = await import(url);
+    if (mod && typeof mod.removeBackground === 'function') {
+      removeBackground = mod.removeBackground;
+      console.log('[bg-remove] ✓ Biblioteca carregada de:', url);
+      break;
+    }
+  } catch (e) {
+    console.warn('[bg-remove] Falhou', url, e.message || e);
+    libError = e.message || String(e);
+  }
+}
+if (!removeBackground) {
+  document.getElementById('statusMsg').textContent = `Erro: biblioteca não carregou (${libError || 'rede'})`;
+  document.getElementById('statusMsg').classList.add('warn');
+}
 
 const state = {
   images: [],          // [{ file, name, originalUrl, resultBlob, resultUrl, status }]
   selectedIdx: 0,
   view: 'original',    // 'original' | 'result'
-  model: 'isnet_fp16',
+  model: 'medium',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -96,8 +131,10 @@ const $ = (id) => document.getElementById(id);
 function setupDrop(zoneId, inputId, onFiles) {
   const zone = $(zoneId);
   const input = $(inputId);
-  zone.addEventListener('click', () => input.click());
-  input.addEventListener('change', (e) => onFiles(Array.from(e.target.files || [])));
+  input.addEventListener('change', (e) => {
+    onFiles(Array.from(e.target.files || []));
+    e.target.value = '';
+  });
   ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
     e.preventDefault(); zone.classList.add('over');
   }));
@@ -110,7 +147,10 @@ function setupDrop(zoneId, inputId, onFiles) {
   });
 }
 
+let autoSwitchedToResult = false;
+
 setupDrop('dropImages', 'imagesInput', async (files) => {
+  const startIdx = state.images.length;
   for (const file of files) {
     state.images.push({
       file,
@@ -124,6 +164,23 @@ setupDrop('dropImages', 'imagesInput', async (files) => {
   if (state.images.length && state.selectedIdx >= state.images.length) state.selectedIdx = 0;
   renderFileList();
   refresh();
+
+  // Auto-processa as novas imagens em sequência
+  for (let i = startIdx; i < state.images.length; i++) {
+    if (state.images[i].status === 'pending') {
+      // Selecionar essa imagem pra ver progresso
+      state.selectedIdx = i;
+      renderFileList();
+      await processOne(i, (pct, key) => {
+        $('statusMsg').textContent = `Baixando modelo IA… ${pct}%`;
+      });
+      // Auto-troca pra "Sem fundo" depois da primeira processada
+      if (!autoSwitchedToResult && state.images[i].status === 'done') {
+        autoSwitchedToResult = true;
+        $('viewSeg').querySelector('[data-view="result"]').click();
+      }
+    }
+  }
 });
 
 function renderFileList() {
@@ -182,7 +239,8 @@ $('viewSeg').addEventListener('click', e => {
 // === PREVIEW ===
 function refresh() {
   const box = $('previewBox');
-  $('processBtn').disabled = !state.images.length;
+  const doneCount = state.images.filter(x => x.status === 'done').length;
+  $('processBtn').disabled = doneCount === 0;
 
   if (!state.images.length) {
     box.innerHTML = '<div class="empty">Adicione imagens para começar</div>';
@@ -193,26 +251,37 @@ function refresh() {
   const it = state.images[state.selectedIdx];
   if (!it) return;
 
+  if (it.status === 'error') {
+    box.innerHTML = `<div class="empty" style="color:#ff8094; padding:32px; max-width:500px;">
+      <strong style="font-size:15px;">Erro ao processar esta imagem</strong><br><br>
+      <code style="background:rgba(255,93,108,0.1); padding:8px 12px; border-radius:6px; display:inline-block; font-size:12px; word-break:break-word; max-width:100%;">${(it.error || 'Desconhecido').replace(/</g, '&lt;')}</code><br><br>
+      <small style="color:var(--muted);">Abra o console (F12 → Console) e me copie a mensagem completa pra eu ajustar.</small>
+    </div>`;
+    return;
+  }
+
+  if (it.status === 'processing') {
+    box.innerHTML = `<div class="empty">⏳ Processando "${it.name}"…<br><small>Primeira vez baixa o modelo (~80MB)</small></div>`;
+    return;
+  }
+
   let url;
   if (state.view === 'result' && it.resultUrl) {
     url = it.resultUrl;
   } else if (state.view === 'result' && !it.resultUrl) {
-    box.innerHTML = '<div class="empty">Esta imagem ainda não foi processada.<br>Clique em "Remover fundo" abaixo.</div>';
+    box.innerHTML = '<div class="empty">Aguardando processamento…</div>';
     return;
   } else {
     url = it.originalUrl;
   }
   box.innerHTML = `<img src="${url}" alt="${it.name}">`;
 
-  const done = state.images.filter(x => x.status === 'done').length;
-  if (done === state.images.length && done > 0) {
-    $('statusMsg').textContent = `✓ ${done} imagem(ns) processadas — pronto pra baixar`;
+  const total = state.images.length;
+  if (doneCount === total) {
+    $('statusMsg').textContent = `✓ ${doneCount} imagem(ns) prontas — clique pra baixar ZIP`;
     $('statusMsg').classList.add('ok');
-  } else if (done > 0) {
-    $('statusMsg').textContent = `${done}/${state.images.length} processadas`;
-    $('statusMsg').classList.remove('ok');
-  } else {
-    $('statusMsg').textContent = `${state.images.length} imagem(ns) prontas pra processar`;
+  } else if (doneCount > 0) {
+    $('statusMsg').textContent = `${doneCount}/${total} processadas`;
     $('statusMsg').classList.remove('ok');
   }
 }
@@ -222,92 +291,75 @@ let modelLoaded = false;
 
 async function processOne(idx, onModelProgress) {
   const it = state.images[idx];
+  if (!removeBackground) {
+    it.status = 'error';
+    it.error = `Biblioteca não carregou: ${libError || 'CDN bloqueado'}`;
+    renderFileList();
+    if (idx === state.selectedIdx) refresh();
+    return;
+  }
   it.status = 'processing';
   renderFileList();
   if (idx === state.selectedIdx) refresh();
 
+  console.log(`[bg-remove] Processando ${it.name} com modelo ${state.model}`);
   try {
     const blob = await removeBackground(it.file, {
       model: state.model,
+      publicPath: IMGLY_PUBLIC_PATH,
       output: { format: 'image/png' },
       progress: (key, current, total) => {
-        if (!modelLoaded && key.startsWith('fetch:')) {
-          const pct = total ? Math.round((current / total) * 100) : 0;
-          onModelProgress?.(pct, key);
-        }
+        try {
+          if (typeof key === 'string' && key.startsWith('fetch:')) {
+            const pct = total ? Math.round((current / total) * 100) : 0;
+            onModelProgress?.(pct, key);
+          }
+        } catch (_) {}
       },
     });
     modelLoaded = true;
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('Resultado inválido (não é Blob)');
+    }
     it.resultBlob = blob;
     it.resultUrl = URL.createObjectURL(blob);
     it.status = 'done';
+    console.log(`[bg-remove] ✓ ${it.name} processado, tamanho ${blob.size} bytes`);
   } catch (e) {
-    console.error('bg-remove error', e);
+    console.error(`[bg-remove] ✗ Erro processando ${it.name}:`, e);
     it.status = 'error';
-    it.error = e.message || String(e);
+    it.error = (e && e.message) ? e.message : String(e);
   }
   renderFileList();
   if (idx === state.selectedIdx) refresh();
 }
 
 $('processBtn').addEventListener('click', async () => {
-  if (!state.images.length) return;
+  const done = state.images.filter(x => x.status === 'done');
+  if (!done.length) return;
   const btn = $('processBtn');
   btn.disabled = true;
-  const bar = $('progressBar');
   const status = $('statusMsg');
-  status.classList.remove('ok');
+  status.classList.remove('ok', 'warn');
+  status.textContent = 'Compactando ZIP…';
 
-  const pending = state.images.map((it, i) => ({ it, i })).filter(x => x.it.status !== 'done');
-
-  if (!modelLoaded) {
-    status.textContent = 'Baixando modelo de IA (primeira vez, ~80MB)…';
+  const zip = new JSZip();
+  for (const it of done) {
+    const baseName = it.name.replace(/\.[^.]+$/, '');
+    zip.file(`${baseName}_sem_fundo.png`, it.resultBlob);
   }
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = url;
+  a.download = `imagens_sem_fundo_${stamp}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
 
-  let processed = 0;
-  for (const { it, i } of pending) {
-    status.textContent = `Processando ${processed + 1}/${pending.length} — ${it.name}`;
-    await processOne(i, (pct, key) => {
-      status.textContent = `Baixando modelo… ${pct}% (${key.split(':').pop()})`;
-    });
-    processed++;
-    bar.style.width = `${(processed / pending.length) * 100}%`;
-  }
-
-  // Auto-switch view to "result" so user sees the output
-  if (state.view === 'original' && state.images.some(x => x.status === 'done')) {
-    $('viewSeg').querySelector('[data-view="result"]').click();
-  }
-
-  // Build ZIP
-  const done = state.images.filter(x => x.status === 'done');
-  if (done.length) {
-    status.textContent = 'Compactando ZIP…';
-    const zip = new JSZip();
-    for (const it of done) {
-      const baseName = it.name.replace(/\.[^.]+$/, '');
-      zip.file(`${baseName}_sem_fundo.png`, it.resultBlob);
-    }
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement('a');
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-    a.href = url;
-    a.download = `imagens_sem_fundo_${stamp}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  const errors = state.images.filter(x => x.status === 'error').length;
-  if (errors) {
-    status.textContent = `✓ ${done.length} processadas, ${errors} com erro`;
-    status.classList.add('warn');
-  } else {
-    status.textContent = `✓ ${done.length} imagens processadas e baixadas`;
-    status.classList.add('ok');
-  }
+  status.textContent = `✓ ZIP com ${done.length} imagem(ns) baixado`;
+  status.classList.add('ok');
   btn.disabled = false;
-  setTimeout(() => bar.style.width = '0', 1200);
 });
 
 $('clearBtn').addEventListener('click', () => {

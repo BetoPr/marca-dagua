@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -24,42 +25,42 @@
 
     <a href="marca-dagua.html" class="tool-card">
       <span class="tag ready">Disponível</span>
-      <div class="icon">💧</div>
+      <div class="icon-box blue"><i data-lucide="droplet"></i></div>
       <h3>Marca d'água em lote</h3>
       <p>Aplica seu logo em várias fotos de uma vez. Modo único (canto da imagem) ou mosaico (espalhado e rotacionado).</p>
     </a>
 
     <a href="remove-bg.html" class="tool-card">
       <span class="tag ready">Disponível</span>
-      <div class="icon">✂️</div>
+      <div class="icon-box purple"><i data-lucide="scissors"></i></div>
       <h3>Remover fundo</h3>
       <p>Tira o fundo das suas fotos automaticamente com IA local. Em lote ou uma a uma — resultado em PNG transparente.</p>
     </a>
 
     <div class="tool-card disabled">
       <span class="tag soon">Em breve</span>
-      <div class="icon">📐</div>
+      <div class="icon-box gray"><i data-lucide="maximize-2"></i></div>
       <h3>Redimensionar para redes</h3>
       <p>Uma imagem vira 8 formatos prontos: feed Insta, Stories, Reel cover, FB, LinkedIn, TikTok, YouTube...</p>
     </div>
 
     <div class="tool-card disabled">
       <span class="tag soon">Em breve</span>
-      <div class="icon">🏷️</div>
+      <div class="icon-box gray"><i data-lucide="tag"></i></div>
       <h3>Renomear em lote</h3>
-      <p>Padrão automático tipo <code>cliente-001.jpg</code>, <code>cliente-002.jpg</code>... renomeia centenas em segundos.</p>
+      <p>Padrão automático tipo cliente-001.jpg, cliente-002.jpg... renomeia centenas em segundos.</p>
     </div>
 
     <div class="tool-card disabled">
       <span class="tag soon">Em breve</span>
-      <div class="icon">🗜️</div>
+      <div class="icon-box gray"><i data-lucide="package"></i></div>
       <h3>Comprimir imagens</h3>
       <p>Reduz peso mantendo qualidade visual. Ideal pra uploads em sites e redes sociais.</p>
     </div>
 
     <div class="tool-card disabled">
       <span class="tag soon">Em breve</span>
-      <div class="icon">🖼️</div>
+      <div class="icon-box gray"><i data-lucide="frame"></i></div>
       <h3>Mockups automáticos</h3>
       <p>Coloca sua foto/arte em moldura, celular, notebook ou outdoor — pronto pra apresentação.</p>
     </div>
@@ -76,5 +77,8 @@
 
 <script src="favicon.js"></script>
 <script src="sidebar.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
 </body>
 </html>
