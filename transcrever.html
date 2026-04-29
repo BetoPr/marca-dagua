@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Transcrever áudio/vídeo — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .upload-zone { padding: 40px 20px; text-align: center; }
+  .file-info { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+  .file-info .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--bg); color: var(--accent-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .file-info .ic svg { width: 20px; height: 20px; }
+  .file-info .meta { flex: 1; min-width: 0; }
+  .file-info .meta .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-info .meta .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .file-info .x { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 4px; }
+  .file-info .x:hover { color: var(--danger); }
+
+  .result-wrap { display: flex; flex-direction: column; flex: 1; }
+  .result-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:40px; }
+  .result-empty .ic { width:64px; height:64px; border-radius:18px; background:rgba(125,211,252,0.14); color:#7dd3fc; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .result-empty .ic svg { width:30px; height:30px; }
+
+  .result-tabs { display: flex; gap: 4px; padding: 4px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; }
+  .result-tabs button { flex: 1; background: transparent; border: none; color: var(--muted); padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .result-tabs button.active { background: var(--accent); color: var(--bg); }
+  .result-text { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.65; color: var(--text); overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; min-height: 300px; max-height: calc(100vh - 360px); font-family: 'Segoe UI', system-ui, sans-serif; }
+  .segment { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .segment .ts { color: var(--accent-2); font-weight: 600; font-size: 11px; font-family: ui-monospace, monospace; margin-right: 8px; }
+  .segment .txt { color: var(--text); }
+
+  .result-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .result-actions button { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .result-actions button:hover { border-color: var(--accent-2); }
+  .result-actions button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .result-actions button.primary:hover { background: var(--accent-2); }
+  .result-actions button svg { width: 14px; height: 14px; }
+
+  .progress-bar { width: 100%; height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; margin-top: 12px; display: none; }
+  .progress-bar.active { display: block; }
+  .progress-bar > div { height: 100%; background: var(--accent); width: 0; animation: indet 1.4s linear infinite; }
+  @keyframes indet { 0% { transform: translateX(-100%); width: 40%; } 50% { width: 60%; } 100% { transform: translateX(250%); width: 40%; } }
+
+  .api-warn { background: rgba(255,184,77,0.08); border: 1px solid rgba(255,184,77,0.3); color: #ffb84d; padding: 11px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 14px; line-height: 1.5; }
+  .api-warn a { color: #ffb84d; text-decoration: underline; cursor: pointer; }
+
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal.open { display: flex; }
+  .modal-content { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 460px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-content h3 { margin: 0 0 6px; font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .modal-content .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .modal-content .field { margin-bottom: 14px; }
+  .modal-content label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .modal-content input, .modal-content select { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; outline: none; }
+  .modal-content .help { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .modal-content .help a { color: var(--accent-2); }
+  .modal-content .actions-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Transcrever áudio/vídeo</h1>
+    <p>MP3, MP4, WAV, M4A → texto em segundos com Whisper Large v3 via Groq. Grátis. Suporta português, inglês e mais 50 idiomas.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div id="apiWarn" class="api-warn" style="display:none;">
+        Configure sua chave Groq pra começar. <a id="warnConfig">Abrir configuração →</a>
+      </div>
+
+      <h2>Arquivo</h2>
+      <label class="drop upload-zone" for="fileInput" id="dropZone">
+        <i data-lucide="upload-cloud" style="width:32px;height:32px;color:var(--accent-2);margin-bottom:8px;"></i>
+        <p>Arraste ou clique pra enviar</p>
+        <p class="hint">MP3, MP4, M4A, WAV, WebM · máx 25MB</p>
+      </label>
+      <input type="file" id="fileInput" accept="audio/*,video/*">
+      <div id="fileInfo" class="file-info hidden">
+        <div class="ic"><i data-lucide="file-audio"></i></div>
+        <div class="meta">
+          <div class="name" id="fileName">—</div>
+          <div class="sub" id="fileMeta">—</div>
+        </div>
+        <button class="x" id="fileClear" title="Remover"><i data-lucide="x"></i></button>
+      </div>
+
+      <h2 style="margin-top:18px;">Modelo</h2>
+      <select id="modelSel" style="width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px;">
+        <option value="whisper-large-v3-turbo">Whisper Large v3 Turbo (rápido, recomendado)</option>
+        <option value="whisper-large-v3">Whisper Large v3 (mais preciso, ~3x mais lento)</option>
+        <option value="distil-whisper-large-v3-en">Distil Whisper EN (só inglês, mais rápido)</option>
+      </select>
+
+      <h2 style="margin-top:14px;">Idioma</h2>
+      <select id="langSel" style="width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px;">
+        <option value="">Auto-detectar</option>
+        <option value="pt" selected>Português</option>
+        <option value="en">Inglês</option>
+        <option value="es">Espanhol</option>
+        <option value="fr">Francês</option>
+        <option value="it">Italiano</option>
+        <option value="de">Alemão</option>
+      </select>
+
+      <h2 style="margin-top:14px;">Detalhe da saída</h2>
+      <div class="seg cols-2">
+        <button data-fmt="text" class="active">Texto corrido</button>
+        <button data-fmt="segments">Com timestamps</button>
+      </div>
+
+      <button class="primary gen-btn" id="transcribeBtn" style="width:100%; padding:12px; margin-top:16px; font-weight:700;"><i data-lucide="mic"></i> Transcrever</button>
+      <button class="ghost" id="openConfig" style="width:100%; margin-top:8px;"><i data-lucide="settings"></i> Configurar chave Groq</button>
+
+      <div class="progress-bar" id="progress"><div></div></div>
+      <div class="status" id="status" style="margin-top:8px;">Pronto</div>
+    </div>
+
+    <div class="preview-wrap" style="padding: 18px;">
+      <div class="result-wrap">
+        <div id="resultEmpty" class="result-empty">
+          <div class="ic"><i data-lucide="file-text"></i></div>
+          <h3 style="margin:0 0 8px; color:var(--text); font-family:'Sora',sans-serif;">Nada transcrito ainda</h3>
+          <p style="margin:0; max-width:340px; font-size:13px;">Configure sua chave Groq, envie o áudio/vídeo e clique em Transcrever.</p>
+        </div>
+
+        <div id="resultPanel" class="hidden">
+          <div class="result-tabs">
+            <button data-view="text" class="active">Texto</button>
+            <button data-view="segments">Por trechos</button>
+            <button data-view="srt">SRT</button>
+          </div>
+          <div class="result-text" id="resultArea"></div>
+          <div class="result-actions">
+            <button id="copyBtn"><i data-lucide="copy"></i> Copiar</button>
+            <button id="downloadTxtBtn"><i data-lucide="download"></i> Baixar .txt</button>
+            <button id="downloadSrtBtn"><i data-lucide="download"></i> Baixar .srt</button>
+            <button id="saveBtn"><i data-lucide="bookmark"></i> Salvar no histórico</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="configModal">
+  <div class="modal-content">
+    <h3>Configurar Groq</h3>
+    <div class="sub">Sua chave fica salva só no seu navegador (localStorage). Mesmo storage do Chat IA — se já configurou lá, já deve estar preenchido.</div>
+    <div class="field">
+      <label for="apiKey">Chave da API (Groq)</label>
+      <input type="password" id="apiKey" placeholder="gsk_...">
+      <div class="help">
+        Pegue grátis em <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>. Sem cartão. Whisper grátis com rate limit generoso (centenas de transcrições/dia).
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="ghost" id="cancelConfig">Cancelar</button>
+      <button class="primary" id="saveConfig">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const KEY_STORAGE = 'chat-key-groq'; // mesmo storage do chat-ia
+let currentFile = null;
+let result = null; // { text, segments, language, duration }
+let currentView = 'text';
+let detailMode = 'text';
+
+function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
+
+function checkKey() {
+  $('apiWarn').style.display = getApiKey() ? 'none' : 'block';
+}
+checkKey();
+
+// === Modal ===
+function openConfigModal() {
+  $('apiKey').value = getApiKey();
+  $('configModal').classList.add('open');
+}
+$('openConfig').addEventListener('click', openConfigModal);
+$('warnConfig').addEventListener('click', openConfigModal);
+$('cancelConfig').addEventListener('click', () => $('configModal').classList.remove('open'));
+$('configModal').addEventListener('click', e => { if (e.target.id === 'configModal') $('configModal').classList.remove('open'); });
+$('saveConfig').addEventListener('click', () => {
+  setApiKey($('apiKey').value.trim());
+  $('configModal').classList.remove('open');
+  checkKey();
+});
+
+// === File upload ===
+$('fileInput').addEventListener('change', e => {
+  const f = e.target.files?.[0];
+  if (f) setFile(f);
+});
+
+const dropZone = $('dropZone');
+['dragenter', 'dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault(); dropZone.classList.add('over');
+}));
+['dragleave', 'drop'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+}));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files?.[0];
+  if (f && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) setFile(f);
+});
+
+function setFile(f) {
+  if (f.size > 25 * 1024 * 1024) {
+    alert('Arquivo muito grande. Limite Groq: 25MB.\nTamanho atual: ' + (f.size / 1024 / 1024).toFixed(1) + 'MB.\n\nDica: comprima o áudio em /comprimir antes (se for vídeo, extraia o áudio em outro app).');
+    return;
+  }
+  currentFile = f;
+  $('fileName').textContent = f.name;
+  $('fileMeta').textContent = `${f.type || 'desconhecido'} · ${(f.size / 1024 / 1024).toFixed(2)}MB`;
+  $('fileInfo').classList.remove('hidden');
+}
+
+$('fileClear').addEventListener('click', () => {
+  currentFile = null;
+  $('fileInput').value = '';
+  $('fileInfo').classList.add('hidden');
+});
+
+// === Detail mode ===
+document.querySelectorAll('.seg.cols-2 button[data-fmt]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg.cols-2 button[data-fmt]').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  detailMode = b.dataset.fmt;
+}));
+
+// === Transcribe ===
+$('transcribeBtn').addEventListener('click', async () => {
+  const apiKey = getApiKey();
+  if (!apiKey) { alert('Configure sua chave Groq.'); openConfigModal(); return; }
+  if (!currentFile) { alert('Envie um arquivo.'); return; }
+
+  $('transcribeBtn').disabled = true;
+  $('progress').classList.add('active');
+  $('status').textContent = 'Enviando…';
+
+  try {
+    const form = new FormData();
+    form.append('file', currentFile);
+    form.append('model', $('modelSel').value);
+    if ($('langSel').value) form.append('language', $('langSel').value);
+    form.append('response_format', detailMode === 'segments' ? 'verbose_json' : 'json');
+    form.append('temperature', '0');
+
+    $('status').textContent = 'Transcrevendo…';
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: form,
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      let msg = `Erro ${res.status}`;
+      try { msg = JSON.parse(t).error?.message || msg; } catch {}
+      if (res.status === 401) msg = 'Chave Groq inválida.';
+      if (res.status === 429) msg = 'Rate limit Groq atingido. Espere alguns segundos.';
+      if (res.status === 413) msg = 'Arquivo muito grande pra Groq (limite 25MB).';
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    result = {
+      text: data.text || '',
+      segments: data.segments || [],
+      language: data.language,
+      duration: data.duration,
+    };
+
+    $('resultEmpty').classList.add('hidden');
+    $('resultPanel').classList.remove('hidden');
+    renderResult();
+
+    const dur = result.duration ? `${result.duration.toFixed(0)}s` : '';
+    const lang = result.language ? ` · ${result.language}` : '';
+    $('status').textContent = `✓ Transcrito${lang}${dur ? ' · ' + dur : ''}`;
+  } catch (err) {
+    $('status').textContent = '✗ ' + (err.message || 'Erro');
+    alert('Erro ao transcrever: ' + (err.message || err));
+  } finally {
+    $('transcribeBtn').disabled = false;
+    $('progress').classList.remove('active');
+  }
+});
+
+// === Result rendering ===
+document.querySelectorAll('.result-tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.result-tabs button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  currentView = b.dataset.view;
+  renderResult();
+}));
+
+function renderResult() {
+  if (!result) return;
+  const area = $('resultArea');
+  if (currentView === 'text') {
+    area.textContent = result.text;
+  } else if (currentView === 'segments') {
+    if (!result.segments.length) {
+      area.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;">Sem timestamps. Re-transcreva selecionando "Com timestamps".</div>';
+      return;
+    }
+    area.innerHTML = result.segments.map(s => `
+      <div class="segment">
+        <span class="ts">${formatTime(s.start)} → ${formatTime(s.end)}</span>
+        <span class="txt">${escapeHtml(s.text.trim())}</span>
+      </div>
+    `).join('');
+  } else if (currentView === 'srt') {
+    area.textContent = toSRT(result.segments) || result.text;
+  }
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(2);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(5, '0')}`;
+}
+
+function toSRT(segments) {
+  if (!segments?.length) return '';
+  return segments.map((s, i) => {
+    return `${i + 1}\n${srtTime(s.start)} --> ${srtTime(s.end)}\n${s.text.trim()}\n`;
+  }).join('\n');
+}
+
+function srtTime(t) {
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = Math.floor(t % 60);
+  const ms = Math.round((t - Math.floor(t)) * 1000);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// === Action buttons ===
+$('copyBtn').addEventListener('click', () => {
+  if (!result) return;
+  const text = currentView === 'srt' ? toSRT(result.segments) : result.text;
+  navigator.clipboard.writeText(text || '');
+  $('status').textContent = '✓ Copiado';
+});
+
+$('downloadTxtBtn').addEventListener('click', () => {
+  if (!result) return;
+  downloadText(result.text, baseFileName() + '.txt');
+});
+
+$('downloadSrtBtn').addEventListener('click', () => {
+  if (!result) return;
+  const srt = toSRT(result.segments);
+  if (!srt) { alert('SRT precisa de timestamps. Transcreva com "Com timestamps".'); return; }
+  downloadText(srt, baseFileName() + '.srt');
+});
+
+$('saveBtn').addEventListener('click', async () => {
+  if (!result || !result.text) return;
+  if (!window.supabase) { alert('Faça login pra salvar no histórico.'); return; }
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) { alert('Faça login pra salvar no histórico.'); return; }
+  $('saveBtn').disabled = true;
+  $('saveBtn').innerHTML = '<i data-lucide="loader"></i> Salvando…';
+  if (window.lucide) lucide.createIcons();
+  try {
+    const text = `[${currentFile?.name || 'audio'}]\n\n${result.text}`;
+    const { error } = await window.supabase.from('prompts').insert({
+      user_id: user.id,
+      text: text.slice(0, 50000),
+      source: 'transcricao',
+      tags: [result.language || 'pt'],
+    });
+    if (error) throw error;
+    $('saveBtn').innerHTML = '<i data-lucide="check"></i> Salvo';
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    $('saveBtn').disabled = false;
+    $('saveBtn').innerHTML = '<i data-lucide="bookmark"></i> Salvar no histórico';
+    if (window.lucide) lucide.createIcons();
+    alert('Erro ao salvar: ' + (err.message || err));
+  }
+});
+
+function baseFileName() {
+  return (currentFile?.name || 'transcricao').replace(/\.[^.]+$/, '');
+}
+
+function downloadText(text, name) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

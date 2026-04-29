@@ -27,6 +27,7 @@
       items: [
         { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA' },
         { href: 'gerar-imagem.html', icon: 'wand-2', label: 'Gerar Imagem' },
+        { href: 'transcrever.html', icon: 'mic', label: 'Transcrever' },
       ],
     },
     {
