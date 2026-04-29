@@ -89,11 +89,19 @@
   <div class="gen-layout">
     <div class="panel">
       <div id="apiWarn" class="api-warn" style="display:none;">
-        Configure sua chave do Gemini pra começar. <a id="warnConfig">Abrir configuração →</a>
+        Configure sua chave pra começar. <a id="warnConfig">Abrir configuração →</a>
       </div>
 
+      <h2>Provider</h2>
+      <div class="seg cols-3" id="providerSeg">
+        <button data-provider="gemini" class="active">Gemini</button>
+        <button data-provider="hf">HuggingFace</button>
+        <button data-provider="pollinations">Pollinations</button>
+      </div>
+      <div id="providerNote" style="font-size:11px; color:var(--muted); margin: -8px 0 14px; line-height:1.5;"></div>
+
       <h2>Foto de referência</h2>
-      <div style="font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.5;">Opcional. Envie uma foto do rosto pra ele aparecer nas geradas.</div>
+      <div id="refNote" style="font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.5;">Opcional. Envie uma foto do rosto pra ele aparecer nas geradas.</div>
       <label class="drop" for="refPhoto" id="refDrop">
         <p>Clique pra enviar foto</p>
         <p class="hint">JPG/PNG · max 4MB</p>
@@ -136,7 +144,7 @@
       </div>
 
       <button class="primary gen-btn" id="generateBtn"><i data-lucide="wand-2"></i> Gerar</button>
-      <button class="ghost" id="openConfig" style="width:100%; margin-top:8px;"><i data-lucide="settings"></i> Configurar chave Gemini</button>
+      <button class="ghost" id="openConfig" style="width:100%; margin-top:8px;"><i data-lucide="settings"></i> Configurar chaves</button>
     </div>
 
     <div class="results-wrap">
@@ -152,30 +160,59 @@
 
 <div class="modal" id="configModal">
   <div class="modal-content">
-    <h3>Configurar Gemini</h3>
-    <div class="sub">Sua chave fica salva só no seu navegador (localStorage). Free tier do Google AI Studio: ~1500 requisições/dia.</div>
+    <h3>Configurar Providers</h3>
+    <div class="sub">As chaves ficam só no seu navegador (localStorage). Pollinations não precisa de chave.</div>
+
+    <div style="background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.3); padding:10px 12px; border-radius:8px; margin-bottom:18px;">
+      <div style="font-size:12px; font-weight:700; color:#a78bfa; margin-bottom:4px;">GEMINI (Google)</div>
+      <div style="font-size:11px; color:var(--muted); line-height:1.5;">Único provider que aceita foto de referência (consistência de rosto). Free tier limitado (~10-20 imgs/dia pra image-gen no Brasil).</div>
+    </div>
+
     <div class="field">
-      <label for="apiKey">Chave da API (Google AI Studio)</label>
+      <label for="apiKey">Chave Gemini (Google AI Studio)</label>
       <input type="password" id="apiKey" placeholder="AIza...">
       <div class="help">
-        Pegue grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>. Não precisa cartão. Imagens geradas têm watermark invisível (SynthID).
+        Pegue grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
       </div>
     </div>
     <div class="field">
-      <label for="apiModel">Modelo</label>
+      <label for="apiModel">Modelo Gemini</label>
       <select id="apiModel" style="width:100%; background:var(--panel-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 13px; font-size:14px; outline:none;">
-        <option value="gemini-2.0-flash-preview-image-generation">Gemini 2.0 Flash Image (free, recomendado)</option>
-        <option value="gemini-2.0-flash-exp-image-generation">Gemini 2.0 Flash Exp Image</option>
-        <option value="gemini-2.5-flash-image-preview">Gemini 2.5 Flash Image Preview (Nano Banana)</option>
-        <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>
+        <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image (recomendado)</option>
+        <option value="gemini-2.5-flash-image-preview">Gemini 2.5 Flash Image Preview</option>
+        <option value="gemini-2.0-flash-preview-image-generation">Gemini 2.0 Flash Image</option>
+        <option value="gemini-2.0-flash-exp-image-generation">Gemini 2.0 Flash Exp</option>
       </select>
-      <div class="help">
-        Se um modelo der 404, troca pra outro. O 2.0 funciona no free tier sem billing.
-      </div>
     </div>
     <div class="field">
       <button class="ghost" id="listModelsBtn" style="width:100%;"><i data-lucide="list"></i> Listar modelos disponíveis (debug)</button>
       <div id="modelsList" style="font-size:11px; color:var(--muted); margin-top:8px; max-height:160px; overflow:auto; line-height:1.5;"></div>
+    </div>
+
+    <div style="background:rgba(255,184,77,0.08); border:1px solid rgba(255,184,77,0.3); padding:10px 12px; border-radius:8px; margin: 18px 0;">
+      <div style="font-size:12px; font-weight:700; color:#ffb84d; margin-bottom:4px;">HUGGINGFACE</div>
+      <div style="font-size:11px; color:var(--muted); line-height:1.5;">Modelos FLUX grátis (~1000 req/dia). Só texto pra imagem (não usa foto de ref).</div>
+    </div>
+
+    <div class="field">
+      <label for="hfKey">Token HuggingFace</label>
+      <input type="password" id="hfKey" placeholder="hf_...">
+      <div class="help">
+        Pegue grátis em <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> (criar token "Read").
+      </div>
+    </div>
+    <div class="field">
+      <label for="hfModel">Modelo HuggingFace</label>
+      <select id="hfModel" style="width:100%; background:var(--panel-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 13px; font-size:14px; outline:none;">
+        <option value="black-forest-labs/FLUX.1-schnell">FLUX.1 Schnell (rápido, ~3s)</option>
+        <option value="black-forest-labs/FLUX.1-dev">FLUX.1 Dev (qualidade, ~10s)</option>
+        <option value="stabilityai/stable-diffusion-3.5-large">SD 3.5 Large</option>
+      </select>
+    </div>
+
+    <div style="background:rgba(54,201,138,0.08); border:1px solid rgba(54,201,138,0.3); padding:10px 12px; border-radius:8px; margin-top:18px;">
+      <div style="font-size:12px; font-weight:700; color:var(--ok); margin-bottom:4px;">POLLINATIONS</div>
+      <div style="font-size:11px; color:var(--muted); line-height:1.5;">Sem chave. Ilimitado. FLUX.1. Só texto pra imagem. Plug-and-play.</div>
     </div>
     <div class="actions-row">
       <button class="ghost" id="cancelConfig">Cancelar</button>
@@ -202,24 +239,65 @@ let selectedQty = 1;
 let refImageBase64 = null;
 let refImageMime = 'image/jpeg';
 
-// === API key storage ===
+// === Storage ===
 const KEY_STORAGE = 'innova-gemini-key';
 const MODEL_STORAGE = 'innova-gemini-model';
-const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation';
+const HF_KEY_STORAGE = 'innova-hf-key';
+const HF_MODEL_STORAGE = 'innova-hf-model';
+const PROVIDER_STORAGE = 'innova-img-provider';
+const DEFAULT_MODEL = 'gemini-2.5-flash-image';
+const DEFAULT_HF_MODEL = 'black-forest-labs/FLUX.1-schnell';
+
 function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
 function getModel() { return localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODEL; }
 function setModel(m) { localStorage.setItem(MODEL_STORAGE, m); }
+function getHfKey() { return localStorage.getItem(HF_KEY_STORAGE) || ''; }
+function setHfKey(k) { localStorage.setItem(HF_KEY_STORAGE, k); }
+function getHfModel() { return localStorage.getItem(HF_MODEL_STORAGE) || DEFAULT_HF_MODEL; }
+function setHfModel(m) { localStorage.setItem(HF_MODEL_STORAGE, m); }
+function getProvider() { return localStorage.getItem(PROVIDER_STORAGE) || 'pollinations'; }
+function setProvider(p) { localStorage.setItem(PROVIDER_STORAGE, p); }
 
-function checkApiKey() {
-  $('apiWarn').style.display = getApiKey() ? 'none' : 'block';
+let selectedProvider = getProvider();
+
+function applyProviderUI() {
+  document.querySelectorAll('#providerSeg button').forEach(b => {
+    b.classList.toggle('active', b.dataset.provider === selectedProvider);
+  });
+  const note = $('providerNote');
+  const warn = $('apiWarn');
+  const refNote = $('refNote');
+  if (selectedProvider === 'gemini') {
+    note.textContent = 'Único com foto de referência. Free tier limitado (~10-20 imgs/dia).';
+    warn.style.display = getApiKey() ? 'none' : 'block';
+    refNote.textContent = 'Opcional. Envie uma foto do rosto pra ele aparecer nas geradas.';
+  } else if (selectedProvider === 'hf') {
+    note.textContent = 'FLUX gratuito (~1000 req/dia). Só texto, sem foto de referência.';
+    warn.style.display = getHfKey() ? 'none' : 'block';
+    refNote.innerHTML = '<span style="color:var(--danger);">⚠ HuggingFace ignora foto de referência.</span> Use Gemini se quiser consistência de rosto.';
+  } else {
+    note.textContent = 'Sem chave. Ilimitado. Só texto, sem foto de referência.';
+    warn.style.display = 'none';
+    refNote.innerHTML = '<span style="color:var(--danger);">⚠ Pollinations ignora foto de referência.</span> Use Gemini se quiser consistência de rosto.';
+  }
 }
-checkApiKey();
+
+document.querySelectorAll('#providerSeg button').forEach(b => b.addEventListener('click', () => {
+  selectedProvider = b.dataset.provider;
+  setProvider(selectedProvider);
+  applyProviderUI();
+}));
+applyProviderUI();
+
+function checkApiKey() { applyProviderUI(); }
 
 // === Modal config ===
 function openConfigModal() {
   $('apiKey').value = getApiKey();
   $('apiModel').value = getModel();
+  $('hfKey').value = getHfKey();
+  $('hfModel').value = getHfModel();
   $('modelsList').textContent = '';
   $('configModal').classList.add('open');
 }
@@ -230,6 +308,8 @@ $('configModal').addEventListener('click', e => { if (e.target.id === 'configMod
 $('saveConfig').addEventListener('click', () => {
   setApiKey($('apiKey').value.trim());
   setModel($('apiModel').value);
+  setHfKey($('hfKey').value.trim());
+  setHfModel($('hfModel').value);
   $('configModal').classList.remove('open');
   checkApiKey();
 });
@@ -301,21 +381,20 @@ document.querySelectorAll('.seg.cols-4 button').forEach(b => b.addEventListener(
 
 // === Generate ===
 $('generateBtn').addEventListener('click', async () => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    alert('Configure sua chave do Gemini primeiro.');
-    $('openConfig').click();
-    return;
+  if (selectedProvider === 'gemini' && !getApiKey()) {
+    alert('Configure sua chave Gemini.'); $('openConfig').click(); return;
+  }
+  if (selectedProvider === 'hf' && !getHfKey()) {
+    alert('Configure seu token HuggingFace.'); $('openConfig').click(); return;
   }
   const userPrompt = $('prompt').value.trim();
   if (!userPrompt) {
-    alert('Descreva a cena que você quer gerar.');
-    return;
+    alert('Descreva a cena que você quer gerar.'); return;
   }
   const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
-  const fullPrompt = refImageBase64
+  const fullPrompt = (refImageBase64 && selectedProvider === 'gemini')
     ? `Generate a photorealistic image of the same person from the reference photo. Maintain face identity, features, and likeness exactly. Scene: ${userPrompt}. Style: ${stylePrompt}.`
-    : `Generate a photorealistic image. ${userPrompt}. Style: ${stylePrompt}.`;
+    : `${userPrompt}. ${stylePrompt}. photorealistic, high detail, professional photography`;
 
   $('resultsEmpty').style.display = 'none';
   $('results').style.display = '';
@@ -325,8 +404,6 @@ $('generateBtn').addEventListener('click', async () => {
   btn.innerHTML = '<i data-lucide="loader"></i> Gerando…';
   if (window.lucide) lucide.createIcons();
 
-  // Cria N cards de loading
-  const startIdx = $('results').children.length;
   for (let i = 0; i < selectedQty; i++) {
     const card = document.createElement('div');
     card.className = 'result-card';
@@ -334,11 +411,10 @@ $('generateBtn').addEventListener('click', async () => {
     $('results').prepend(card);
   }
 
-  // Roda em paralelo
   const tasks = [];
   for (let i = 0; i < selectedQty; i++) {
     const card = $('results').children[selectedQty - 1 - i];
-    tasks.push(generateOne(apiKey, fullPrompt, userPrompt, card));
+    tasks.push(generateOne(fullPrompt, userPrompt, card, i));
   }
   await Promise.all(tasks);
 
@@ -347,9 +423,12 @@ $('generateBtn').addEventListener('click', async () => {
   if (window.lucide) lucide.createIcons();
 });
 
-async function generateOne(apiKey, fullPrompt, userPrompt, card) {
+async function generateOne(fullPrompt, userPrompt, card, idx) {
   try {
-    const base64 = await callGemini(apiKey, fullPrompt);
+    let base64;
+    if (selectedProvider === 'gemini') base64 = await callGemini(getApiKey(), fullPrompt);
+    else if (selectedProvider === 'hf') base64 = await callHF(getHfKey(), fullPrompt);
+    else base64 = await callPollinations(fullPrompt, idx);
     renderResult(card, base64, userPrompt);
   } catch (err) {
     card.innerHTML = `<div class="img-box error">${escapeHtml(err.message || 'Erro ao gerar')}</div>`;
@@ -360,9 +439,7 @@ async function callGemini(apiKey, prompt) {
   const model = getModel();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const parts = [{ text: prompt }];
-  if (refImageBase64) {
-    parts.push({ inline_data: { mime_type: refImageMime, data: refImageBase64 } });
-  }
+  if (refImageBase64) parts.push({ inline_data: { mime_type: refImageMime, data: refImageBase64 } });
   const body = {
     contents: [{ parts }],
     generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
@@ -375,24 +452,73 @@ async function callGemini(apiKey, prompt) {
   if (!res.ok) {
     const t = await res.text();
     let msg = `HTTP ${res.status}`;
-    try {
-      const j = JSON.parse(t);
-      msg = j.error?.message || msg;
-    } catch {}
-    if (res.status === 429) msg = 'Limite diário gratuito atingido. Tente amanhã ou use chave paga.';
-    if (res.status === 400 && msg.toLowerCase().includes('safety')) msg = 'Conteúdo bloqueado por segurança. Reformule.';
+    try { msg = JSON.parse(t).error?.message || msg; } catch {}
+    if (res.status === 429) msg = 'Limite diário gratuito atingido. Use HuggingFace ou Pollinations.';
+    if (res.status === 400 && msg.toLowerCase().includes('safety')) msg = 'Bloqueado por segurança. Reformule.';
     throw new Error(msg);
   }
   const data = await res.json();
   const candidate = data.candidates?.[0];
-  if (!candidate) throw new Error('A API não retornou candidatos. Tente novamente.');
+  if (!candidate) throw new Error('Sem candidatos. Tente novamente.');
   if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'PROHIBITED_CONTENT') {
-    throw new Error('Bloqueado por filtro de segurança. Reformule o prompt.');
+    throw new Error('Bloqueado por filtro de segurança.');
   }
   const imgPart = candidate.content?.parts?.find(p => p.inline_data || p.inlineData);
   const inline = imgPart?.inline_data || imgPart?.inlineData;
-  if (!inline?.data) throw new Error('A API não retornou imagem. Tente outro prompt.');
+  if (!inline?.data) throw new Error('Não retornou imagem. Tente outro prompt.');
   return inline.data;
+}
+
+async function callHF(token, prompt, retries = 2) {
+  const model = getHfModel();
+  const url = `https://api-inference.huggingface.co/models/${model}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'image/png',
+    },
+    body: JSON.stringify({ inputs: prompt }),
+  });
+  if (res.status === 503 && retries > 0) {
+    // Modelo carregando; espera 8s e tenta de novo
+    await new Promise(r => setTimeout(r, 8000));
+    return callHF(token, prompt, retries - 1);
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    let msg = `HF ${res.status}`;
+    try { msg = JSON.parse(t).error || msg; } catch { msg = t.slice(0, 200) || msg; }
+    if (res.status === 401) msg = 'Token HuggingFace inválido.';
+    if (res.status === 402) msg = 'Cota HuggingFace excedida. Tente outro modelo ou Pollinations.';
+    if (res.status === 429) msg = 'Rate limit HuggingFace. Espere alguns segundos.';
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+  if (!blob.type.startsWith('image/')) {
+    const txt = await blob.text();
+    throw new Error('Resposta não-imagem: ' + txt.slice(0, 100));
+  }
+  return blobToBase64(blob);
+}
+
+async function callPollinations(prompt, idx = 0) {
+  const seed = Math.floor(Math.random() * 1e9) + idx;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Pollinations ' + res.status);
+  const blob = await res.blob();
+  return blobToBase64(blob);
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
 }
 
 function renderResult(card, base64, userPrompt) {
@@ -433,12 +559,15 @@ function renderResult(card, base64, userPrompt) {
   });
   card.querySelector('[data-action="regen"]').addEventListener('click', async () => {
     const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
-    const fullPrompt = refImageBase64
+    const fullPrompt = (refImageBase64 && selectedProvider === 'gemini')
       ? `Generate a photorealistic image of the same person from the reference photo. Maintain face identity. Scene: ${userPrompt}. Style: ${stylePrompt}.`
-      : `Generate a photorealistic image. ${userPrompt}. Style: ${stylePrompt}.`;
+      : `${userPrompt}. ${stylePrompt}. photorealistic, high detail, professional photography`;
     card.innerHTML = `<div class="img-box loading"></div>`;
     try {
-      const newBase64 = await callGemini(getApiKey(), fullPrompt);
+      let newBase64;
+      if (selectedProvider === 'gemini') newBase64 = await callGemini(getApiKey(), fullPrompt);
+      else if (selectedProvider === 'hf') newBase64 = await callHF(getHfKey(), fullPrompt);
+      else newBase64 = await callPollinations(fullPrompt, Math.floor(Math.random()*1000));
       renderResult(card, newBase64, userPrompt);
     } catch (err) {
       card.innerHTML = `<div class="img-box error">${escapeHtml(err.message || 'Erro')}</div>`;
