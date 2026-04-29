@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerar Imagem IA — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .gen-layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; padding: 24px 36px; flex: 1; }
+  .ref-zone { display: flex; flex-direction: column; gap: 8px; }
+  .ref-preview { position: relative; width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--panel-2); border: 1px solid var(--border); display: none; }
+  .ref-preview.has-img { display: block; }
+  .ref-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .ref-preview .clear { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; }
+  .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .style-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; transition: all .15s; text-align: center; }
+  .style-card:hover { border-color: var(--accent-2); }
+  .style-card.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .style-card .name { font-size: 12px; font-weight: 600; }
+  .style-card .desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .style-card.active .desc { color: rgba(0,0,0,0.6); }
+  .gen-textarea { width: 100%; min-height: 100px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: inherit; font-size: 13px; resize: vertical; outline: none; }
+  .gen-textarea:focus { border-color: var(--accent-2); }
+  .gen-btn { width: 100%; padding: 13px; font-size: 14px; font-weight: 700; margin-top: 14px; }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .results-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; min-height: 400px; display: flex; flex-direction: column; }
+  .results-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-align:center; padding:40px; }
+  .results-empty .ic { width:64px; height:64px; border-radius:18px; background:rgba(167,139,250,0.14); color:#a78bfa; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .results-empty .ic svg { width:30px; height:30px; }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .result-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
+  .result-card .img-box { aspect-ratio: 1; background: var(--bg); position: relative; cursor: zoom-in; }
+  .result-card .img-box img { width: 100%; height: 100%; object-fit: contain; }
+  .result-card .img-box.loading { display: flex; align-items: center; justify-content: center; }
+  .result-card .img-box.loading::after { content: ''; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  .result-card .img-box.error { display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; color: var(--danger); font-size: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result-actions { display: flex; gap: 4px; padding: 8px; border-top: 1px solid var(--border); }
+  .result-actions button { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px; border-radius: 6px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: all .12s; }
+  .result-actions button:hover { color: var(--text); border-color: var(--accent-2); }
+  .result-actions button.saved { color: var(--ok); border-color: rgba(54,201,138,0.3); }
+  .result-actions button svg { width: 12px; height: 12px; }
+  .api-warn { background: rgba(255,184,77,0.08); border: 1px solid rgba(255,184,77,0.3); color: #ffb84d; padding: 11px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 14px; line-height: 1.5; }
+  .api-warn a { color: #ffb84d; text-decoration: underline; cursor: pointer; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal.open { display: flex; }
+  .modal-content { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-content h3 { margin: 0 0 6px; font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; }
+  .modal-content .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .modal-content .field { margin-bottom: 14px; }
+  .modal-content label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .modal-content input { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; outline: none; }
+  .modal-content input:focus { border-color: var(--accent-2); }
+  .modal-content .help { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  .modal-content .help a { color: var(--accent-2); }
+  .modal-content .actions-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .img-zoom { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 200; cursor: zoom-out; padding: 20px; }
+  .img-zoom.open { display: flex; }
+  .img-zoom img { max-width: 92%; max-height: 92%; object-fit: contain; }
+  @media (max-width: 900px) { .gen-layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Gerar Imagem com IA</h1>
+    <p>Crie ensaios fotográficos com base no seu rosto. Grátis usando Gemini 2.5 Flash Image (Nano Banana).</p>
+  </div>
+
+  <div class="gen-layout">
+    <div class="panel">
+      <div id="apiWarn" class="api-warn" style="display:none;">
+        Configure sua chave do Gemini pra começar. <a id="warnConfig">Abrir configuração →</a>
+      </div>
+
+      <h2>Foto de referência</h2>
+      <div style="font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.5;">Opcional. Envie uma foto do rosto pra ele aparecer nas geradas.</div>
+      <label class="drop" for="refPhoto" id="refDrop">
+        <p>Clique pra enviar foto</p>
+        <p class="hint">JPG/PNG · max 4MB</p>
+      </label>
+      <input type="file" id="refPhoto" accept="image/*">
+      <div class="ref-preview" id="refPreview">
+        <img id="refImg" alt="">
+        <button class="clear" id="refClear" title="Remover">×</button>
+      </div>
+
+      <h2 style="margin-top:18px;">Estilo</h2>
+      <div class="style-grid" id="styleGrid">
+        <div class="style-card active" data-style="editorial">
+          <div class="name">Editorial</div>
+          <div class="desc">moda · revista</div>
+        </div>
+        <div class="style-card" data-style="lifestyle">
+          <div class="name">Lifestyle</div>
+          <div class="desc">candid · natural</div>
+        </div>
+        <div class="style-card" data-style="corporativo">
+          <div class="name">Corporativo</div>
+          <div class="desc">studio · headshot</div>
+        </div>
+        <div class="style-card" data-style="praia">
+          <div class="name">Praia</div>
+          <div class="desc">golden hour · férias</div>
+        </div>
+      </div>
+
+      <h2>Descreva a cena</h2>
+      <textarea id="prompt" class="gen-textarea" placeholder="Ex: pessoa em rooftop com vista da cidade ao pôr do sol, vestindo blazer preto, expressão confiante"></textarea>
+
+      <h2 style="margin-top:14px;">Quantidade</h2>
+      <div class="seg cols-4">
+        <button data-n="1" class="active">1</button>
+        <button data-n="2">2</button>
+        <button data-n="3">3</button>
+        <button data-n="4">4</button>
+      </div>
+
+      <button class="primary gen-btn" id="generateBtn"><i data-lucide="wand-2"></i> Gerar</button>
+      <button class="ghost" id="openConfig" style="width:100%; margin-top:8px;"><i data-lucide="settings"></i> Configurar chave Gemini</button>
+    </div>
+
+    <div class="results-wrap">
+      <div id="resultsEmpty" class="results-empty">
+        <div class="ic"><i data-lucide="wand-2"></i></div>
+        <h3 style="margin:0 0 8px; color:var(--text); font-family:'Sora',sans-serif;">Pronto pra criar</h3>
+        <p style="margin:0; max-width:340px; font-size:13px;">Configure a chave do Gemini, descreva a cena (e opcionalmente envie um rosto de referência) e clique em Gerar.</p>
+      </div>
+      <div id="results" class="results-grid" style="display:none;"></div>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="configModal">
+  <div class="modal-content">
+    <h3>Configurar Gemini</h3>
+    <div class="sub">Sua chave fica salva só no seu navegador (localStorage). Free tier do Google AI Studio: ~1500 requisições/dia.</div>
+    <div class="field">
+      <label for="apiKey">Chave da API (Google AI Studio)</label>
+      <input type="password" id="apiKey" placeholder="AIza...">
+      <div class="help">
+        Pegue grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>. Não precisa cartão. Imagens geradas têm watermark invisível (SynthID).
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="ghost" id="cancelConfig">Cancelar</button>
+      <button class="primary" id="saveConfig">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="img-zoom" id="imgZoom"><img id="imgZoomSrc" src=""></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const STYLE_PROMPTS = {
+  editorial: 'professional editorial fashion photography, magazine cover quality, dramatic studio lighting with rim light, 85mm lens, shallow depth of field, sharp focus, high-end commercial look, ultra detailed skin, photorealistic',
+  lifestyle: 'candid lifestyle photography, natural soft daylight, golden hour warmth, 35mm lens, authentic moment, slight motion, photorealistic, natural skin tones, professional documentary style',
+  corporativo: 'professional corporate headshot, clean neutral studio background, soft three-point studio lighting, sharp focus on eyes, business attire, confident expression, 70mm lens, photorealistic',
+  praia: 'beach photoshoot at golden hour, ocean and sand background, warm natural sunlight, lens flare, lifestyle photography, 50mm lens, photorealistic, vacation mood, vibrant colors',
+};
+let selectedStyle = 'editorial';
+let selectedQty = 1;
+let refImageBase64 = null;
+let refImageMime = 'image/jpeg';
+
+// === API key storage ===
+const KEY_STORAGE = 'innova-gemini-key';
+function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
+
+function checkApiKey() {
+  $('apiWarn').style.display = getApiKey() ? 'none' : 'block';
+}
+checkApiKey();
+
+// === Modal config ===
+$('openConfig').addEventListener('click', () => {
+  $('apiKey').value = getApiKey();
+  $('configModal').classList.add('open');
+});
+$('warnConfig').addEventListener('click', () => {
+  $('apiKey').value = getApiKey();
+  $('configModal').classList.add('open');
+});
+$('cancelConfig').addEventListener('click', () => $('configModal').classList.remove('open'));
+$('configModal').addEventListener('click', e => { if (e.target.id === 'configModal') $('configModal').classList.remove('open'); });
+$('saveConfig').addEventListener('click', () => {
+  setApiKey($('apiKey').value.trim());
+  $('configModal').classList.remove('open');
+  checkApiKey();
+});
+
+// === Reference photo upload ===
+$('refPhoto').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) { alert('Arquivo muito grande. Máximo 4MB.'); return; }
+  const dataUrl = await fileToDataUrl(file);
+  refImageBase64 = dataUrl.split(',')[1];
+  refImageMime = file.type || 'image/jpeg';
+  $('refImg').src = dataUrl;
+  $('refPreview').classList.add('has-img');
+  $('refDrop').style.display = 'none';
+});
+$('refClear').addEventListener('click', () => {
+  refImageBase64 = null;
+  $('refPhoto').value = '';
+  $('refPreview').classList.remove('has-img');
+  $('refDrop').style.display = '';
+});
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+// === Style and qty ===
+$('styleGrid').addEventListener('click', e => {
+  const card = e.target.closest('.style-card');
+  if (!card) return;
+  $('styleGrid').querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  selectedStyle = card.dataset.style;
+});
+document.querySelectorAll('.seg.cols-4 button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg.cols-4 button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  selectedQty = +b.dataset.n;
+}));
+
+// === Generate ===
+$('generateBtn').addEventListener('click', async () => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    alert('Configure sua chave do Gemini primeiro.');
+    $('openConfig').click();
+    return;
+  }
+  const userPrompt = $('prompt').value.trim();
+  if (!userPrompt) {
+    alert('Descreva a cena que você quer gerar.');
+    return;
+  }
+  const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
+  const fullPrompt = refImageBase64
+    ? `Generate a photorealistic image of the same person from the reference photo. Maintain face identity, features, and likeness exactly. Scene: ${userPrompt}. Style: ${stylePrompt}.`
+    : `Generate a photorealistic image. ${userPrompt}. Style: ${stylePrompt}.`;
+
+  $('resultsEmpty').style.display = 'none';
+  $('results').style.display = '';
+
+  const btn = $('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-lucide="loader"></i> Gerando…';
+  if (window.lucide) lucide.createIcons();
+
+  // Cria N cards de loading
+  const startIdx = $('results').children.length;
+  for (let i = 0; i < selectedQty; i++) {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `<div class="img-box loading"></div>`;
+    $('results').prepend(card);
+  }
+
+  // Roda em paralelo
+  const tasks = [];
+  for (let i = 0; i < selectedQty; i++) {
+    const card = $('results').children[selectedQty - 1 - i];
+    tasks.push(generateOne(apiKey, fullPrompt, userPrompt, card));
+  }
+  await Promise.all(tasks);
+
+  btn.disabled = false;
+  btn.innerHTML = '<i data-lucide="wand-2"></i> Gerar';
+  if (window.lucide) lucide.createIcons();
+});
+
+async function generateOne(apiKey, fullPrompt, userPrompt, card) {
+  try {
+    const base64 = await callGemini(apiKey, fullPrompt);
+    renderResult(card, base64, userPrompt);
+  } catch (err) {
+    card.innerHTML = `<div class="img-box error">${escapeHtml(err.message || 'Erro ao gerar')}</div>`;
+  }
+}
+
+async function callGemini(apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const parts = [{ text: prompt }];
+  if (refImageBase64) {
+    parts.push({ inline_data: { mime_type: refImageMime, data: refImageBase64 } });
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts }] }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    let msg = `HTTP ${res.status}`;
+    try {
+      const j = JSON.parse(t);
+      msg = j.error?.message || msg;
+    } catch {}
+    if (res.status === 429) msg = 'Limite diário gratuito atingido. Tente amanhã ou use chave paga.';
+    if (res.status === 400 && msg.toLowerCase().includes('safety')) msg = 'Conteúdo bloqueado por segurança. Reformule.';
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  const candidate = data.candidates?.[0];
+  if (!candidate) throw new Error('A API não retornou candidatos. Tente novamente.');
+  if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'PROHIBITED_CONTENT') {
+    throw new Error('Bloqueado por filtro de segurança. Reformule o prompt.');
+  }
+  const imgPart = candidate.content?.parts?.find(p => p.inline_data || p.inlineData);
+  const inline = imgPart?.inline_data || imgPart?.inlineData;
+  if (!inline?.data) throw new Error('A API não retornou imagem. Tente outro prompt.');
+  return inline.data;
+}
+
+function renderResult(card, base64, userPrompt) {
+  const dataUrl = `data:image/png;base64,${base64}`;
+  card.dataset.base64 = base64;
+  card.dataset.prompt = userPrompt;
+  card.innerHTML = `
+    <div class="img-box"><img src="${dataUrl}" alt=""></div>
+    <div class="result-actions">
+      <button data-action="zoom" title="Ampliar"><i data-lucide="maximize-2"></i></button>
+      <button data-action="download" title="Baixar"><i data-lucide="download"></i></button>
+      <button data-action="save" title="Salvar no histórico"><i data-lucide="bookmark"></i></button>
+      <button data-action="regen" title="Gerar de novo"><i data-lucide="refresh-cw"></i></button>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+
+  const img = card.querySelector('img');
+  card.querySelector('[data-action="zoom"]').addEventListener('click', () => openZoom(dataUrl));
+  card.querySelector('.img-box').addEventListener('click', () => openZoom(dataUrl));
+  card.querySelector('[data-action="download"]').addEventListener('click', () => downloadDataUrl(dataUrl, `innova-${Date.now()}.png`));
+  card.querySelector('[data-action="save"]').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader"></i>';
+    if (window.lucide) lucide.createIcons();
+    try {
+      await saveToHistory(userPrompt, base64);
+      btn.classList.add('saved');
+      btn.innerHTML = '<i data-lucide="check"></i>';
+      if (window.lucide) lucide.createIcons();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="bookmark"></i>';
+      if (window.lucide) lucide.createIcons();
+      alert('Erro ao salvar: ' + (err.message || err));
+    }
+  });
+  card.querySelector('[data-action="regen"]').addEventListener('click', async () => {
+    const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
+    const fullPrompt = refImageBase64
+      ? `Generate a photorealistic image of the same person from the reference photo. Maintain face identity. Scene: ${userPrompt}. Style: ${stylePrompt}.`
+      : `Generate a photorealistic image. ${userPrompt}. Style: ${stylePrompt}.`;
+    card.innerHTML = `<div class="img-box loading"></div>`;
+    try {
+      const newBase64 = await callGemini(getApiKey(), fullPrompt);
+      renderResult(card, newBase64, userPrompt);
+    } catch (err) {
+      card.innerHTML = `<div class="img-box error">${escapeHtml(err.message || 'Erro')}</div>`;
+    }
+  });
+}
+
+function downloadDataUrl(url, name) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+}
+
+function openZoom(url) {
+  $('imgZoomSrc').src = url;
+  $('imgZoom').classList.add('open');
+}
+$('imgZoom').addEventListener('click', () => $('imgZoom').classList.remove('open'));
+
+// === Save to Supabase history ===
+async function saveToHistory(promptText, generatedBase64) {
+  if (!window.supabase) throw new Error('Faça login pra salvar no histórico (Supabase não carregado).');
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) throw new Error('Faça login pra salvar no histórico.');
+
+  // 1. Cria prompt
+  const { data: pData, error: pErr } = await window.supabase.from('prompts').insert({
+    user_id: user.id,
+    text: promptText,
+    source: 'gerar-imagem',
+    tags: [selectedStyle],
+  }).select().single();
+  if (pErr) throw pErr;
+  const promptId = pData.id;
+
+  // 2. Upload da imagem gerada
+  const blob = base64ToBlob(generatedBase64, 'image/png');
+  const path = `${user.id}/${promptId}/gen-${Date.now()}.png`;
+  const { error: upErr } = await window.supabase.storage.from('prompt-images').upload(path, blob, { contentType: 'image/png' });
+  if (upErr) throw upErr;
+  const { error: insErr } = await window.supabase.from('prompt_images').insert({
+    prompt_id: promptId, user_id: user.id, kind: 'gen', storage_path: path, sort_order: 0,
+  });
+  if (insErr) throw insErr;
+
+  // 3. Se tem ref, salva também
+  if (refImageBase64) {
+    const refBlob = base64ToBlob(refImageBase64, refImageMime);
+    const ext = refImageMime.includes('png') ? 'png' : 'jpg';
+    const refPath = `${user.id}/${promptId}/ref-${Date.now()}.${ext}`;
+    await window.supabase.storage.from('prompt-images').upload(refPath, refBlob, { contentType: refImageMime });
+    await window.supabase.from('prompt_images').insert({
+      prompt_id: promptId, user_id: user.id, kind: 'ref', storage_path: refPath, sort_order: 0,
+    });
+  }
+}
+
+function base64ToBlob(b64, mime) {
+  const byteChars = atob(b64);
+  const bytes = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
