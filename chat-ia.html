@@ -536,16 +536,6 @@ ta.addEventListener('input', () => { autoResize(); updateSendBtn(); });
 ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 $('sendBtn').addEventListener('click', sendMessage);
 
-// Prefill (vindo do youtube.html, transcrever.html, etc)
-const prefill = sessionStorage.getItem('chat-prefill');
-if (prefill) {
-  ta.value = prefill;
-  sessionStorage.removeItem('chat-prefill');
-  autoResize();
-  updateSendBtn();
-  ta.focus();
-}
-
 async function sendMessage() {
   const text = ta.value.trim();
   if (!text || isStreaming) return;
