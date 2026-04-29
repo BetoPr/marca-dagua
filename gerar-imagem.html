@@ -245,6 +245,7 @@ let selectedStyle = 'editorial';
 let selectedQty = 1;
 let refImageBase64 = null;
 let refImageMime = 'image/jpeg';
+let cachedFaceDesc = '';
 
 // === Storage ===
 const KEY_STORAGE = 'innova-gemini-key';
@@ -275,18 +276,23 @@ function applyProviderUI() {
   const note = $('providerNote');
   const warn = $('apiWarn');
   const refNote = $('refNote');
+  const hasGeminiKey = !!getApiKey();
   if (selectedProvider === 'gemini') {
-    note.textContent = 'Único com foto de referência. Free tier limitado (~10-20 imgs/dia).';
-    warn.style.display = getApiKey() ? 'none' : 'block';
+    note.textContent = 'Foto de referência nativa (rosto consistente). Free tier limitado (~10-20 imgs/dia BR).';
+    warn.style.display = hasGeminiKey ? 'none' : 'block';
     refNote.textContent = 'Opcional. Envie uma foto do rosto pra ele aparecer nas geradas.';
   } else if (selectedProvider === 'hf') {
-    note.textContent = 'FLUX gratuito (~1000 req/dia). Só texto, sem foto de referência.';
+    note.textContent = 'FLUX gratuito (~1000 req/dia). ' + (hasGeminiKey ? 'Foto de ref será descrita via Gemini Vision e injetada no prompt.' : 'Só texto.');
     warn.style.display = getHfKey() ? 'none' : 'block';
-    refNote.innerHTML = '<span style="color:var(--danger);">⚠ HuggingFace ignora foto de referência.</span> Use Gemini se quiser consistência de rosto.';
+    refNote.innerHTML = hasGeminiKey
+      ? '<span style="color:var(--ok);">✓ Foto será descrita via Gemini Vision e enviada como texto.</span>'
+      : '<span style="color:var(--danger);">⚠ Adicione chave Gemini pra descrever a foto automaticamente.</span>';
   } else {
-    note.textContent = 'Sem chave. Ilimitado. Só texto, sem foto de referência.';
+    note.textContent = 'Sem chave, ilimitado. ' + (hasGeminiKey ? 'Foto de ref será descrita via Gemini Vision e injetada no prompt.' : 'Só texto.');
     warn.style.display = 'none';
-    refNote.innerHTML = '<span style="color:var(--danger);">⚠ Pollinations ignora foto de referência.</span> Use Gemini se quiser consistência de rosto.';
+    refNote.innerHTML = hasGeminiKey
+      ? '<span style="color:var(--ok);">✓ Foto será descrita via Gemini Vision e enviada como texto.</span>'
+      : '<span style="color:var(--danger);">⚠ Adicione chave Gemini pra descrever a foto automaticamente.</span>';
   }
 }
 
@@ -352,16 +358,43 @@ $('refPhoto').addEventListener('change', async e => {
   const dataUrl = await fileToDataUrl(file);
   refImageBase64 = dataUrl.split(',')[1];
   refImageMime = file.type || 'image/jpeg';
+  cachedFaceDesc = '';
   $('refImg').src = dataUrl;
   $('refPreview').classList.add('has-img');
   $('refDrop').style.display = 'none';
 });
 $('refClear').addEventListener('click', () => {
   refImageBase64 = null;
+  cachedFaceDesc = '';
   $('refPhoto').value = '';
   $('refPreview').classList.remove('has-img');
   $('refDrop').style.display = '';
 });
+
+async function describeFaceViaGemini(apiKey, imgBase64, mime) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const body = {
+    contents: [{
+      parts: [
+        { text: 'Describe this person physical appearance in 2 short sentences for AI image generation. Cover: gender, approximate age, hair color and texture, facial hair, skin tone, eye shape/color, face shape, build. Be specific and visual. English only. Do NOT include identity, name, or guesses. Just visual description.' },
+        { inline_data: { mime_type: mime, data: imgBase64 } }
+      ]
+    }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 200 }
+  };
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error('Vision: ' + (JSON.parse(t).error?.message || res.status));
+  }
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.find(p => p.text)?.text;
+  return (text || '').trim();
+}
 
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -398,11 +431,6 @@ $('generateBtn').addEventListener('click', async () => {
   if (!userPrompt) {
     alert('Descreva a cena que você quer gerar.'); return;
   }
-  const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
-  const fullPrompt = (refImageBase64 && selectedProvider === 'gemini')
-    ? `Generate a photorealistic image of the same person from the reference photo. Maintain face identity, features, and likeness exactly. Scene: ${userPrompt}. Style: ${stylePrompt}.`
-    : `${userPrompt}. ${stylePrompt}. photorealistic, high detail, professional photography`;
-
   $('resultsEmpty').style.display = 'none';
   $('results').style.display = '';
 
@@ -410,6 +438,29 @@ $('generateBtn').addEventListener('click', async () => {
   btn.disabled = true;
   btn.innerHTML = '<i data-lucide="loader"></i> Gerando…';
   if (window.lucide) lucide.createIcons();
+
+  const stylePrompt = STYLE_PROMPTS[selectedStyle] || '';
+  let fullPrompt;
+  if (refImageBase64 && selectedProvider === 'gemini') {
+    fullPrompt = `Generate a photorealistic image of the same person from the reference photo. Maintain face identity, features, and likeness exactly. Scene: ${userPrompt}. Style: ${stylePrompt}.`;
+  } else if (refImageBase64 && (selectedProvider === 'hf' || selectedProvider === 'pollinations') && getApiKey()) {
+    // Workaround: descreve o rosto via Gemini Vision (free tier de texto é generoso) e injeta no prompt
+    if (!cachedFaceDesc) {
+      btn.innerHTML = '<i data-lucide="eye"></i> Analisando rosto…';
+      if (window.lucide) lucide.createIcons();
+      try {
+        cachedFaceDesc = await describeFaceViaGemini(getApiKey(), refImageBase64, refImageMime);
+      } catch (e) {
+        console.warn('Falha ao descrever rosto:', e.message);
+      }
+      btn.innerHTML = '<i data-lucide="loader"></i> Gerando…';
+      if (window.lucide) lucide.createIcons();
+    }
+    const desc = cachedFaceDesc ? ` Subject: ${cachedFaceDesc}` : '';
+    fullPrompt = `${userPrompt}. ${stylePrompt}.${desc} photorealistic, high detail, professional photography`;
+  } else {
+    fullPrompt = `${userPrompt}. ${stylePrompt}. photorealistic, high detail, professional photography`;
+  }
 
   for (let i = 0; i < selectedQty; i++) {
     const card = document.createElement('div');
