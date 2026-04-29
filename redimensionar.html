@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Redimensionar pra redes — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  .formats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .fmt-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; user-select: none; transition: all .12s; position: relative; }
+  .fmt-card:hover { border-color: var(--accent-2); }
+  .fmt-card.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .fmt-card .name { font-size: 12px; font-weight: 700; }
+  .fmt-card .dim { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .fmt-card.active .dim { color: rgba(0,0,0,0.65); }
+  .fmt-card .check { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: var(--bg); }
+  .fmt-card.active .check { background: var(--bg); border-color: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--accent); }
+  .fmt-card.active .check::after { content: '✓'; font-size: 11px; font-weight: 700; }
+
+  .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; padding: 8px; }
+  .preview-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .preview-card .pv-img { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 140px; max-height: 280px; padding: 8px; }
+  .preview-card .pv-img img { max-width: 100%; max-height: 240px; object-fit: contain; box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  .preview-card .pv-meta { padding: 8px 10px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .preview-card .pv-meta .lbl { font-size: 11px; }
+  .preview-card .pv-meta .lbl strong { display: block; }
+  .preview-card .pv-meta .lbl span { color: var(--muted); font-size: 10px; }
+  .preview-card .dl-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; gap: 3px; }
+  .preview-card .dl-btn:hover { color: var(--text); border-color: var(--accent-2); }
+  .preview-card .dl-btn svg { width: 11px; height: 11px; }
+
+  .file-thumb-list { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .file-thumb { position: relative; width: 56px; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
+  .file-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .file-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
+  .file-thumb .x { position: absolute; top: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; font-size: 10px; line-height: 1; padding: 0; }
+
+  .seg-strategy { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; margin-bottom: 14px; }
+  .seg-strategy button { background: transparent; color: var(--muted); border: none; padding: 7px 4px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+  .seg-strategy button.active { background: var(--accent); color: var(--bg); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar..." id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1>Redimensionar pra redes</h1>
+    <p>1 imagem vira 8 formatos prontos pra Feed, Stories, Reels, Facebook, LinkedIn, Twitter/X, YouTube e Pinterest. 100% no navegador.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Imagem(ns)</h2>
+      <label class="drop" for="filesInput" id="dropZone">
+        <p>Arraste ou clique pra enviar</p>
+        <p class="hint">JPG/PNG/WebP · múltiplas imagens</p>
+      </label>
+      <input type="file" id="filesInput" accept="image/jpeg,image/png,image/webp" multiple>
+      <div class="file-thumb-list" id="fileList"></div>
+
+      <h2 style="margin-top:18px;">Formatos</h2>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <button class="ghost" id="selectAll" style="font-size:11px; padding:4px 10px;">Todos</button>
+        <button class="ghost" id="selectNone" style="font-size:11px; padding:4px 10px;">Nenhum</button>
+      </div>
+      <div class="formats-grid" id="formatsGrid"></div>
+
+      <h2>Estratégia</h2>
+      <div class="seg-strategy" id="strategySeg">
+        <button data-strategy="cover" class="active">Cobrir (corta)</button>
+        <button data-strategy="contain">Caber (margem)</button>
+        <button data-strategy="stretch">Esticar</button>
+      </div>
+
+      <h2>Saída</h2>
+      <div class="seg cols-3">
+        <button data-out="image/jpeg" class="active">JPEG</button>
+        <button data-out="image/png">PNG</button>
+        <button data-out="image/webp">WebP</button>
+      </div>
+
+      <div id="qualityRow" class="row" style="margin-top: 6px;">
+        <label>Qualidade</label>
+        <input type="range" id="quality" min="60" max="100" value="90">
+        <span class="val" id="qualityVal">90</span>
+      </div>
+
+      <div id="bgRow" class="row" style="margin-top: 6px; display:none;">
+        <label>Cor fundo</label>
+        <input type="color" id="bgColor" value="#ffffff" style="height:32px; border-radius:6px; border:1px solid var(--border); background:var(--panel-2); cursor:pointer; flex:1;">
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin:0;">Preview</h2>
+        <div style="font-size:12px; color:var(--muted);" id="counterTxt">0 imagens · 0 formatos</div>
+      </div>
+      <div id="previewArea" style="flex:1; overflow:auto;">
+        <div class="empty" id="emptyState" style="text-align:center; padding:60px 20px; color:var(--muted);">
+          <div style="width:64px; height:64px; border-radius:18px; background:rgba(255,255,255,0.06); display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px;">
+            <i data-lucide="maximize-2" style="width:30px;height:30px; color:var(--accent-2);"></i>
+          </div>
+          <h3 style="margin:0 0 6px; color:var(--text); font-family:'Sora',sans-serif;">Nada pra mostrar</h3>
+          <p style="margin:0; font-size:13px;">Envie uma imagem e selecione os formatos.</p>
+        </div>
+        <div class="preview-grid hidden" id="previewGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="processBtn"><i data-lucide="play"></i> Gerar formatos</button>
+    <button class="ghost" id="zipBtn" disabled><i data-lucide="archive"></i> Baixar ZIP</button>
+    <button class="ghost" id="clearBtn"><i data-lucide="trash-2"></i> Limpar</button>
+    <div class="status" id="status">Pronto</div>
+  </div>
+</main>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+const FORMATS = [
+  { id: 'ig-square',   label: 'Feed Insta 1:1',     w: 1080, h: 1080 },
+  { id: 'ig-portrait', label: 'Feed Insta 4:5',     w: 1080, h: 1350 },
+  { id: 'ig-stories',  label: 'Stories / Reels',    w: 1080, h: 1920 },
+  { id: 'fb-post',     label: 'Facebook Feed',      w: 1200, h: 630  },
+  { id: 'linkedin',    label: 'LinkedIn Post',      w: 1200, h: 627  },
+  { id: 'twitter',     label: 'Twitter / X 16:9',   w: 1200, h: 675  },
+  { id: 'yt-thumb',    label: 'YouTube Thumbnail',  w: 1280, h: 720  },
+  { id: 'pinterest',   label: 'Pinterest Pin 2:3',  w: 1000, h: 1500 },
+];
+
+let files = [];
+let activeFileIdx = 0;
+let selectedFormats = new Set(FORMATS.map(f => f.id));
+let strategy = 'cover';
+let outputType = 'image/jpeg';
+let outputQuality = 0.9;
+let bgColor = '#ffffff';
+let generated = []; // [{fileIdx, formatId, blob, dataUrl, name}]
+
+// === Render formats grid ===
+function renderFormats() {
+  const grid = $('formatsGrid');
+  grid.innerHTML = FORMATS.map(f => `
+    <div class="fmt-card ${selectedFormats.has(f.id) ? 'active' : ''}" data-fmt="${f.id}">
+      <div class="check"></div>
+      <div class="name">${f.label}</div>
+      <div class="dim">${f.w} × ${f.h}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.fmt-card').forEach(c => c.addEventListener('click', () => {
+    const id = c.dataset.fmt;
+    if (selectedFormats.has(id)) selectedFormats.delete(id);
+    else selectedFormats.add(id);
+    renderFormats();
+    updateCounter();
+  }));
+}
+renderFormats();
+
+$('selectAll').addEventListener('click', () => {
+  selectedFormats = new Set(FORMATS.map(f => f.id));
+  renderFormats();
+  updateCounter();
+});
+$('selectNone').addEventListener('click', () => {
+  selectedFormats = new Set();
+  renderFormats();
+  updateCounter();
+});
+
+// === File upload ===
+$('filesInput').addEventListener('change', e => addFiles(Array.from(e.target.files || [])));
+
+const dropZone = $('dropZone');
+['dragenter', 'dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault();
+  dropZone.classList.add('over');
+}));
+['dragleave', 'drop'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+}));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+  if (dropped.length) addFiles(dropped);
+});
+
+async function addFiles(list) {
+  for (const f of list) {
+    const dataUrl = await readAsDataURL(f);
+    const img = await loadImage(dataUrl);
+    files.push({ name: f.name, file: f, dataUrl, w: img.naturalWidth, h: img.naturalHeight });
+  }
+  renderFileList();
+  updateCounter();
+}
+
+function renderFileList() {
+  $('fileList').innerHTML = files.map((f, i) => `
+    <div class="file-thumb ${i === activeFileIdx ? 'active' : ''}" data-i="${i}">
+      <img src="${f.dataUrl}" alt="">
+      <button class="x" data-x="${i}" title="Remover">×</button>
+    </div>
+  `).join('');
+  $('fileList').querySelectorAll('.file-thumb').forEach(t => {
+    t.addEventListener('click', e => {
+      if (e.target.matches('.x')) return;
+      activeFileIdx = +t.dataset.i;
+      renderFileList();
+    });
+  });
+  $('fileList').querySelectorAll('.x').forEach(x => x.addEventListener('click', e => {
+    e.stopPropagation();
+    files.splice(+x.dataset.x, 1);
+    if (activeFileIdx >= files.length) activeFileIdx = Math.max(0, files.length - 1);
+    renderFileList();
+    updateCounter();
+  }));
+}
+
+function readAsDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+function loadImage(src) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = () => rej(new Error('Falha ao carregar imagem'));
+    img.src = src;
+  });
+}
+
+// === Strategy / output ===
+$('strategySeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-strategy]');
+  if (!b) return;
+  $('strategySeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  strategy = b.dataset.strategy;
+  $('bgRow').style.display = strategy === 'contain' ? '' : 'none';
+});
+
+document.querySelectorAll('.seg.cols-3 button[data-out]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg.cols-3 button[data-out]').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  outputType = b.dataset.out;
+  $('qualityRow').style.display = outputType === 'image/png' ? 'none' : '';
+}));
+
+$('quality').addEventListener('input', e => {
+  outputQuality = e.target.value / 100;
+  $('qualityVal').textContent = e.target.value;
+});
+$('bgColor').addEventListener('input', e => { bgColor = e.target.value; });
+
+// === Process ===
+$('processBtn').addEventListener('click', async () => {
+  if (!files.length) { alert('Envie pelo menos uma imagem.'); return; }
+  if (!selectedFormats.size) { alert('Selecione ao menos 1 formato.'); return; }
+
+  $('processBtn').disabled = true;
+  $('zipBtn').disabled = true;
+  $('status').textContent = 'Gerando…';
+  generated = [];
+
+  const total = files.length * selectedFormats.size;
+  let done = 0;
+
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    const img = await loadImage(file.dataUrl);
+    for (const fmt of FORMATS) {
+      if (!selectedFormats.has(fmt.id)) continue;
+      const { blob, dataUrl } = await renderFormat(img, fmt);
+      const ext = outputType === 'image/png' ? 'png' : (outputType === 'image/webp' ? 'webp' : 'jpg');
+      const baseName = file.name.replace(/\.[^.]+$/, '');
+      const name = `${baseName}__${fmt.id}_${fmt.w}x${fmt.h}.${ext}`;
+      generated.push({ fileIdx: fi, formatId: fmt.id, blob, dataUrl, name, fmt });
+      done++;
+      $('status').textContent = `Gerando… ${done}/${total}`;
+    }
+  }
+
+  renderPreview();
+  $('processBtn').disabled = false;
+  $('zipBtn').disabled = generated.length === 0;
+  $('status').textContent = `✓ ${generated.length} imagem(ns) gerada(s)`;
+});
+
+async function renderFormat(img, fmt) {
+  const canvas = document.createElement('canvas');
+  canvas.width = fmt.w;
+  canvas.height = fmt.h;
+  const ctx = canvas.getContext('2d');
+
+  if (strategy === 'stretch') {
+    ctx.drawImage(img, 0, 0, fmt.w, fmt.h);
+  } else if (strategy === 'cover') {
+    const scale = Math.max(fmt.w / img.width, fmt.h / img.height);
+    const sw = fmt.w / scale;
+    const sh = fmt.h / scale;
+    const sx = (img.width - sw) / 2;
+    const sy = (img.height - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, fmt.w, fmt.h);
+  } else {
+    // contain
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, fmt.w, fmt.h);
+    const scale = Math.min(fmt.w / img.width, fmt.h / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    const dx = (fmt.w - dw) / 2;
+    const dy = (fmt.h - dh) / 2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
+  const blob = await new Promise(res => canvas.toBlob(res, outputType, outputQuality));
+  const dataUrl = canvas.toDataURL(outputType, outputQuality);
+  return { blob, dataUrl };
+}
+
+function renderPreview() {
+  $('emptyState').style.display = generated.length ? 'none' : '';
+  $('previewGrid').classList.toggle('hidden', !generated.length);
+  $('previewGrid').innerHTML = generated.map((g, i) => `
+    <div class="preview-card">
+      <div class="pv-img"><img src="${g.dataUrl}" alt=""></div>
+      <div class="pv-meta">
+        <div class="lbl">
+          <strong>${g.fmt.label}</strong>
+          <span>${g.fmt.w}×${g.fmt.h} · ${(g.blob.size / 1024).toFixed(0)}kB</span>
+        </div>
+        <button class="dl-btn" data-i="${i}"><i data-lucide="download"></i> Baixar</button>
+      </div>
+    </div>
+  `).join('');
+  $('previewGrid').querySelectorAll('.dl-btn').forEach(b => b.addEventListener('click', () => {
+    const g = generated[+b.dataset.i];
+    downloadBlob(g.blob, g.name);
+  }));
+  if (window.lucide) lucide.createIcons();
+}
+
+$('zipBtn').addEventListener('click', async () => {
+  if (!generated.length) return;
+  $('status').textContent = 'Empacotando ZIP…';
+  $('zipBtn').disabled = true;
+  const zip = new JSZip();
+  generated.forEach(g => zip.file(g.name, g.blob));
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadBlob(blob, `redimensionar_${dateStr}.zip`);
+  $('zipBtn').disabled = false;
+  $('status').textContent = `✓ ZIP baixado (${generated.length} imagens)`;
+});
+
+$('clearBtn').addEventListener('click', () => {
+  files = [];
+  generated = [];
+  activeFileIdx = 0;
+  $('filesInput').value = '';
+  renderFileList();
+  renderPreview();
+  updateCounter();
+  $('status').textContent = 'Pronto';
+  $('zipBtn').disabled = true;
+});
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function updateCounter() {
+  $('counterTxt').textContent = `${files.length} imagem(ns) · ${selectedFormats.size} formato(s)`;
+}
+updateCounter();
+
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

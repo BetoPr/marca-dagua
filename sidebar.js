@@ -17,6 +17,7 @@
         { href: 'remove-bg.html', icon: 'scissors', label: 'Remover fundo' },
         { href: 'comprimir.html', icon: 'package', label: 'Comprimir' },
         { href: 'converter.html', icon: 'repeat', label: 'Converter formato' },
+        { href: 'redimensionar.html', icon: 'maximize-2', label: 'Redimensionar' },
       ],
     },
     {
@@ -33,7 +34,6 @@
       icon: 'clock',
       color: 'gray',
       items: [
-        { href: '#', icon: 'maximize-2', label: 'Redimensionar', disabled: true },
         { href: '#', icon: 'tag', label: 'Renomear', disabled: true },
         { href: '#', icon: 'frame', label: 'Mockups', disabled: true },
       ],
