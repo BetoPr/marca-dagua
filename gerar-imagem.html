@@ -161,6 +161,22 @@
         Pegue grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>. Não precisa cartão. Imagens geradas têm watermark invisível (SynthID).
       </div>
     </div>
+    <div class="field">
+      <label for="apiModel">Modelo</label>
+      <select id="apiModel" style="width:100%; background:var(--panel-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 13px; font-size:14px; outline:none;">
+        <option value="gemini-2.0-flash-preview-image-generation">Gemini 2.0 Flash Image (free, recomendado)</option>
+        <option value="gemini-2.0-flash-exp-image-generation">Gemini 2.0 Flash Exp Image</option>
+        <option value="gemini-2.5-flash-image-preview">Gemini 2.5 Flash Image Preview (Nano Banana)</option>
+        <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>
+      </select>
+      <div class="help">
+        Se um modelo der 404, troca pra outro. O 2.0 funciona no free tier sem billing.
+      </div>
+    </div>
+    <div class="field">
+      <button class="ghost" id="listModelsBtn" style="width:100%;"><i data-lucide="list"></i> Listar modelos disponíveis (debug)</button>
+      <div id="modelsList" style="font-size:11px; color:var(--muted); margin-top:8px; max-height:160px; overflow:auto; line-height:1.5;"></div>
+    </div>
     <div class="actions-row">
       <button class="ghost" id="cancelConfig">Cancelar</button>
       <button class="primary" id="saveConfig">Salvar</button>
@@ -188,8 +204,12 @@ let refImageMime = 'image/jpeg';
 
 // === API key storage ===
 const KEY_STORAGE = 'innova-gemini-key';
+const MODEL_STORAGE = 'innova-gemini-model';
+const DEFAULT_MODEL = 'gemini-2.0-flash-preview-image-generation';
 function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
+function getModel() { return localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODEL; }
+function setModel(m) { localStorage.setItem(MODEL_STORAGE, m); }
 
 function checkApiKey() {
   $('apiWarn').style.display = getApiKey() ? 'none' : 'block';
@@ -197,20 +217,44 @@ function checkApiKey() {
 checkApiKey();
 
 // === Modal config ===
-$('openConfig').addEventListener('click', () => {
+function openConfigModal() {
   $('apiKey').value = getApiKey();
+  $('apiModel').value = getModel();
+  $('modelsList').textContent = '';
   $('configModal').classList.add('open');
-});
-$('warnConfig').addEventListener('click', () => {
-  $('apiKey').value = getApiKey();
-  $('configModal').classList.add('open');
-});
+}
+$('openConfig').addEventListener('click', openConfigModal);
+$('warnConfig').addEventListener('click', openConfigModal);
 $('cancelConfig').addEventListener('click', () => $('configModal').classList.remove('open'));
 $('configModal').addEventListener('click', e => { if (e.target.id === 'configModal') $('configModal').classList.remove('open'); });
 $('saveConfig').addEventListener('click', () => {
   setApiKey($('apiKey').value.trim());
+  setModel($('apiModel').value);
   $('configModal').classList.remove('open');
   checkApiKey();
+});
+
+$('listModelsBtn').addEventListener('click', async () => {
+  const k = $('apiKey').value.trim();
+  if (!k) { $('modelsList').textContent = 'Cole a chave primeiro.'; return; }
+  $('modelsList').textContent = 'Carregando…';
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(k)}`);
+    if (!res.ok) {
+      $('modelsList').textContent = 'Erro ' + res.status + ': ' + (await res.text()).slice(0, 200);
+      return;
+    }
+    const data = await res.json();
+    const imgModels = (data.models || []).filter(m =>
+      (m.supportedGenerationMethods || []).includes('generateContent') &&
+      (m.name.includes('image') || m.name.includes('flash'))
+    );
+    $('modelsList').innerHTML = imgModels.map(m =>
+      `<div><strong>${m.name.replace('models/','')}</strong> — ${(m.description || '').slice(0, 80)}</div>`
+    ).join('') || 'Nenhum modelo de imagem encontrado.';
+  } catch (e) {
+    $('modelsList').textContent = 'Erro: ' + e.message;
+  }
 });
 
 // === Reference photo upload ===
@@ -313,15 +357,20 @@ async function generateOne(apiKey, fullPrompt, userPrompt, card) {
 }
 
 async function callGemini(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const model = getModel();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const parts = [{ text: prompt }];
   if (refImageBase64) {
     parts.push({ inline_data: { mime_type: refImageMime, data: refImageBase64 } });
   }
+  const body = {
+    contents: [{ parts }],
+    generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+  };
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts }] }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const t = await res.text();
