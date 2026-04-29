@@ -23,6 +23,48 @@
   .style-card .name { font-size: 12px; font-weight: 600; }
   .style-card .desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
   .style-card.active .desc { color: rgba(0,0,0,0.6); }
+
+  /* Modelos prontos — dropdown clean */
+  .template-select { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; color: var(--text); font-size: 13px; outline: none; cursor: pointer; transition: border-color .15s; }
+  .template-select:focus, .template-select:hover { border-color: var(--accent-2); }
+  .template-info { background: linear-gradient(135deg, rgba(167,139,250,0.10), rgba(125,211,252,0.06)); border: 1px solid rgba(167,139,250,0.25); border-radius: 9px; padding: 10px 12px; margin-top: 8px; }
+  .template-info .ti-name { font-weight: 700; color: #a78bfa; font-size: 12px; }
+  .template-info .ti-desc { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .template-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .template-actions button { flex: 1; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: 7px 8px; border-radius: 7px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all .12s; }
+  .template-actions button:hover { border-color: var(--accent-2); background: var(--bg); }
+  .template-actions button svg { width: 12px; height: 12px; }
+
+  /* Library modal */
+  .library-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 150; padding: 16px; }
+  .library-modal.open { display: flex; }
+  .library-content { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; max-width: 1000px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+  .library-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .library-header h3 { margin: 0; font-family: 'Sora', sans-serif; font-size: 18px; }
+  .library-header .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .library-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px 10px; line-height: 1; border-radius: 6px; }
+  .library-close:hover { color: var(--text); background: var(--panel-2); }
+
+  .library-tabs { display: flex; gap: 4px; padding: 12px 24px 0; overflow-x: auto; flex-shrink: 0; }
+  .library-tabs button { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; transition: all .12s; }
+  .library-tabs button:hover { color: var(--text); border-color: var(--accent-2); }
+  .library-tabs button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  .library-grid { padding: 16px 24px 24px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .library-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; gap: 6px; }
+  .library-card:hover { border-color: var(--accent-2); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .library-card .lc-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .library-card .lc-desc { font-size: 11px; color: #a78bfa; font-weight: 600; }
+  .library-card .lc-preview { font-size: 11px; color: var(--muted); line-height: 1.5; max-height: 78px; overflow: hidden; position: relative; }
+  .library-card .lc-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 24px; background: linear-gradient(transparent, var(--panel-2)); }
+  .library-card .lc-use { margin-top: 6px; background: var(--accent); color: var(--bg); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+  .library-card .lc-use svg { width: 12px; height: 12px; }
+  .library-card .lc-use:hover { background: var(--accent-2); }
+
+  @media (max-width: 600px) {
+    .library-grid { grid-template-columns: 1fr; }
+    .library-content { max-height: 100vh; border-radius: 0; }
+  }
   .gen-textarea { width: 100%; min-height: 100px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: inherit; font-size: 13px; resize: vertical; outline: none; }
   .gen-textarea:focus { border-color: var(--accent-2); }
   .gen-btn { width: 100%; padding: 13px; font-size: 14px; font-weight: 700; margin-top: 14px; }
@@ -112,7 +154,24 @@
         <button class="clear" id="refClear" title="Remover">×</button>
       </div>
 
-      <h2 style="margin-top:18px;">Estilo</h2>
+      <h2 style="margin-top:18px; display:flex; align-items:center; gap:6px;">
+        <i data-lucide="library" style="width:16px;height:16px;"></i> Modelos prontos
+      </h2>
+      <div style="font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.5;">Templates com cenários completos e instrução de fidelidade ao rosto. Escolha pra preencher automaticamente.</div>
+      <select id="templateSelect" class="template-select">
+        <option value="">— escolha um modelo de ensaio —</option>
+      </select>
+      <div class="template-info hidden" id="templateInfo">
+        <div class="ti-name" id="tiName"></div>
+        <div class="ti-desc" id="tiDesc"></div>
+      </div>
+      <div class="template-actions">
+        <button id="openLibraryBtn" type="button"><i data-lucide="layout-grid"></i> Ver biblioteca visual</button>
+        <button id="clearTemplateBtn" type="button"><i data-lucide="x"></i> Limpar modelo</button>
+      </div>
+
+      <h2 style="margin-top:18px;">Estilo (opcional)</h2>
+      <div style="font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.5;">Modificador de iluminação/lente aplicado em cima do prompt.</div>
       <div class="style-grid" id="styleGrid">
         <div class="style-card active" data-style="editorial">
           <div class="name">Editorial</div>
@@ -133,7 +192,7 @@
       </div>
 
       <h2>Descreva a cena</h2>
-      <textarea id="prompt" class="gen-textarea" placeholder="Ex: pessoa em rooftop com vista da cidade ao pôr do sol, vestindo blazer preto, expressão confiante"></textarea>
+      <textarea id="prompt" class="gen-textarea" placeholder="Ex: pessoa em rooftop com vista da cidade ao pôr do sol, vestindo blazer preto, expressão confiante. Ou escolha um modelo pronto acima."></textarea>
 
       <h2 style="margin-top:14px;">Quantidade</h2>
       <div class="seg cols-4">
@@ -228,6 +287,20 @@
   </div>
 </div>
 
+<div class="library-modal" id="libraryModal">
+  <div class="library-content">
+    <div class="library-header">
+      <div>
+        <h3>Biblioteca de modelos prontos</h3>
+        <div class="sub">Clique num cartão pra carregar o prompt completo. Você pode editar antes de gerar.</div>
+      </div>
+      <button class="library-close" id="closeLibraryBtn" title="Fechar">×</button>
+    </div>
+    <div class="library-tabs" id="libraryTabs"></div>
+    <div class="library-grid" id="libraryGrid"></div>
+  </div>
+</div>
+
 <div class="img-zoom" id="imgZoom"><img id="imgZoomSrc" src=""></div>
 
 <script src="favicon.js"></script>
@@ -236,10 +309,328 @@
 <script>
 const $ = id => document.getElementById(id);
 const STYLE_PROMPTS = {
-  editorial: 'professional editorial fashion photography, magazine cover quality, dramatic studio lighting with rim light, 85mm lens, shallow depth of field, sharp focus, high-end commercial look, ultra detailed skin, photorealistic',
-  lifestyle: 'candid lifestyle photography, natural soft daylight, golden hour warmth, 35mm lens, authentic moment, slight motion, photorealistic, natural skin tones, professional documentary style',
-  corporativo: 'professional corporate headshot, clean neutral studio background, soft three-point studio lighting, sharp focus on eyes, business attire, confident expression, 70mm lens, photorealistic',
-  praia: 'beach photoshoot at golden hour, ocean and sand background, warm natural sunlight, lens flare, lifestyle photography, 50mm lens, photorealistic, vacation mood, vibrant colors',
+  editorial: 'professional editorial fashion photography, magazine cover quality, dramatic studio lighting with soft key light and rim light, 85mm portrait lens, shallow depth of field, sharp focus on eyes, high-end commercial look, ultra-detailed skin texture, natural skin tones, photorealistic, no digital artifacts, realistic and natural body/head proportions, preserve original facial features and identity exactly',
+  lifestyle: 'candid lifestyle photography, natural soft daylight, golden hour warmth, 35mm lens, authentic spontaneous moment, photorealistic, natural skin tones, no posed feeling, professional documentary style, realistic body proportions, preserve original facial features and identity exactly',
+  corporativo: 'professional corporate portrait, clean neutral studio background or modern Brazilian office, soft three-point studio lighting, sharp focus on eyes, refined business attire, calm confident expression, 70mm lens, photorealistic, natural and balanced body proportions, not artificial, preserve original facial features and identity exactly',
+  praia: 'beach photoshoot at golden hour, ocean and sand background, warm natural sunlight, soft lens flare, lifestyle photography, 50mm lens, photorealistic, vacation mood, vibrant colors, natural skin tones, realistic body proportions, preserve original facial features and identity exactly',
+};
+
+// === Biblioteca de modelos prontos ===
+// Templates completos (substituem o textarea inteiro). Inclui frase-chave de fidelidade facial.
+const PROMPT_TEMPLATES = {
+  familia: {
+    label: 'Família & Casal',
+    items: [
+      {
+        id: 'maternidade-individual',
+        name: 'Maternidade Individual',
+        desc: 'Estúdio elegante · vestido off-white',
+        prompt: 'Fotografia de estúdio de corpo inteiro da mulher grávida em um ensaio de maternidade elegante, com expressão serena e confiante. Usa vestido longo branco ou off-white, estruturado e luxuoso, com decote ombro a ombro volumoso e cauda fluida. Fundo de estúdio neutro e minimalista em tom de cinza suave, com iluminação difusa e cinematográfica. Estilo refinado, atemporal e sofisticado. Mantendo todas as características originais da pessoa da foto anexa.'
+      },
+      {
+        id: 'maternidade-casal',
+        name: 'Maternidade Casal',
+        desc: 'Casal grávido · estúdio elegante',
+        prompt: 'Fotografia de estúdio de corpo inteiro do casal em um ensaio de maternidade elegante. A gestante usa vestido longo branco ou off-white, estruturado e luxuoso, com decote ombro a ombro volumoso e cauda fluida. O parceiro veste terno escuro clássico, com postura confiante e expressão afetuosa. Ambos em pose harmoniosa e sofisticada, com a mão do parceiro sobre a barriga da gestante, transmitindo conexão e carinho. Fundo neutro e minimalista em tom de cinza suave, com iluminação difusa e cinematográfica. Estilo refinado, atemporal e sofisticado. Mantendo todas as características originais das pessoas da foto anexa.'
+      },
+      {
+        id: 'familia-praia',
+        name: 'Família na Praia',
+        desc: 'Pôr do sol · roupas leves de verão',
+        prompt: 'TRANSFORME AS FOTOS ANEXO EM uma cena de família na praia, com todos em posição natural e expressões alegres, em foto de corpo inteiro, vestindo roupas leves e confortáveis de verão (como vestidos claros, camisas de linho, shorts ou roupas de banho discretas). O cenário deve ser bem realista, com areia, mar calmo ao fundo, céu azul e luz suave do fim de tarde. Use iluminação natural, com tons quentes e reflexos dourados, mantendo texturas, sombras e profundidade realistas. MANTENDO todas as características originais das pessoas da foto anexa, sem alterar nada das características físicas dos modelos.'
+      },
+      {
+        id: 'familia-natal',
+        name: 'Família no Natal',
+        desc: 'Árvore · lareira · ambiente festivo',
+        prompt: 'TRANSFORME AS FOTOS ANEXO EM uma cena de família natalina, com todos em posição natural e expressões alegres, em foto de corpo inteiro, vestindo roupas típicas de Natal (como suéteres vermelhos, verdes, brancos ou com estampas natalinas). O cenário deve ser bem realista, com árvore de Natal decorada, luzes quentes, lareira acesa, presentes e uma atmosfera acolhedora e festiva. Use iluminação natural ou de luzes natalinas suaves, com tons dourados e avermelhados, mantendo texturas, sombras e profundidade realistas. MANTENDO todas as características originais das pessoas da foto anexa, sem alterar nada das características físicas dos modelos.'
+      },
+      {
+        id: 'casal-praia',
+        name: 'Casal na Praia',
+        desc: 'Pôr do sol · romântico',
+        prompt: 'TRANSFORME AS FOTOS ANEXO EM uma cena de casal na praia, com os dois em posição natural e expressões de carinho e conexão, em foto de corpo inteiro, vestindo roupas leves e confortáveis de verão (como vestido fluido para ela e camisa de linho clara para ele). O cenário deve ser bem realista, com areia, mar suave ao fundo, céu dourado do pôr do sol e brisa leve. Use iluminação natural, com tons quentes e reflexos suaves, mantendo texturas, sombras e profundidade realistas. MANTENDO todas as características originais das pessoas da foto anexa, sem alterar nada das características físicas dos modelos.'
+      },
+      {
+        id: 'casal-urbano',
+        name: 'Casal Urbano Cinematográfico',
+        desc: 'Cidade à noite · neon · cumplicidade',
+        prompt: 'TRANSFORME AS FOTOS ANEXO EM uma cena de casal em ambiente urbano moderno, com expressões intensas e pose de cumplicidade, em foto de corpo inteiro, vestindo roupas casuais elegantes (como jaquetas, calças jeans e tons neutros). O cenário deve ser realista e cinematográfico, com luzes de cidade ao fundo, reflexos de vitrines e atmosfera noturna leve. Use iluminação suave e contrastes equilibrados, com profundidade de campo realista, destacando o casal no centro da cena. MANTENDO todas as características originais das pessoas da foto anexa, sem alterar nada das características físicas dos modelos.'
+      },
+    ]
+  },
+  profissional: {
+    label: 'Profissional',
+    items: [
+      {
+        id: 'advogado-escritorio-br',
+        name: 'Advogado(a) — Escritório BR',
+        desc: 'Estilo brasileiro · móveis planejados',
+        prompt: 'Fotografia profissional altamente realista de advogado(a) sentado(a) em mesa de escritório moderno brasileiro, com laptop aberto à frente. Decoração minimalista com móveis planejados em madeira clara, parede neutra, planta discreta ao fundo e iluminação natural suave. Vestindo terno cinza claro com camisa branca, sem gravata. Expressão calma e confiante, olhar direto para a câmera. Estilo fotográfico realista e natural. MANTENDO fielmente todas as características faciais e proporções da pessoa da foto anexa: estrutura facial, formato dos olhos, traços e expressão característica. Proporção correta entre cabeça e corpo. Aparência fotográfica genuína, sem aparência digital ou artificial.'
+      },
+      {
+        id: 'advogado-suits',
+        name: 'Advogado(a) — Estilo Suits',
+        desc: 'Corporativo internacional · vista panorâmica',
+        prompt: 'Retrato corporativo altamente realista estilo Suits, advogado(a) em escritório de canto em arranha-céu, diante de janela de vidro com vista panorâmica da cidade. Vestindo terno risca de giz cinza-escuro ou azul-marinho, camisa branca impecável e gravata de seda discreta. Braços cruzados ou uma mão no bolso. Olhar direto para a câmera com expressão composta e confiante. Interior moderno minimalista com decoração premium. MANTENDO rigorosamente as características faciais originais da pessoa da foto anexa: formato e estrutura, olhos, proporções, traços. Proporção corpo/cabeça realista. Aparência de foto de luxo corporativo, sem traços digitais ou artificiais.'
+      },
+      {
+        id: 'advogada-tribunal',
+        name: 'Advogada — Tribunal',
+        desc: 'Sala formal · expressão determinada',
+        prompt: 'Retrato profissional realista de advogada em sala de tribunal ou salão de justiça sofisticado, cadeiras e mesas de madeira clássicas ao fundo. Cabelo bem arrumado, maquiagem discreta, expressão confiante e determinada. Vestindo terno formal preto ou cinza com blusa clara. Luz natural ou suave de estúdio. Estilo fotográfico realista e natural, ensaio feminino corporativo de alto padrão. MANTENDO fielmente todos os traços faciais da pessoa da foto anexa: estrutura, olhos, proporções, expressão característica. Proporção corpo/cabeça correta. Sem aparência digital.'
+      },
+      {
+        id: 'perito-corporativo',
+        name: 'Perito — Corporativo',
+        desc: 'Sem referências jurídicas · técnico',
+        prompt: 'Fotografia corporativa altamente realista de perito profissional sentado em mesa moderna analisando relatórios técnicos e gráficos impressos. Vestindo blazer cinza ou azul-marinho com camisa branca de colarinho aberto, sem gravata. Olhar calmo direto para a câmera. Decoração de escritório brasileiro limpa, iluminação suave, ambiente organizado. SEM livros jurídicos ou referências do direito — apenas relatórios técnicos, gráficos, laptop e itens de análise. MANTENDO fielmente todas as características faciais da pessoa da foto anexa: mesma estrutura, mesmos olhos, mesma textura de pele. Proporção corpo/cabeça natural e realista. Imagem deve parecer fotografia real, não artificial.'
+      },
+      {
+        id: 'perito-tablet',
+        name: 'Perito — Tablet em Pé',
+        desc: 'Em pé · análise de dados',
+        prompt: 'Retrato corporativo realista de perito masculino em pé em escritório limpo e moderno, segurando tablet com gráficos e dashboards técnicos. Vestindo blazer esporte fino com camisa social de colarinho aberto, sem gravata. Postura confiante, olhar direto e sereno para a câmera. Decoração brasileira contemporânea com vidro, planta e luz natural difusa. MANTENDO rigorosamente os traços faciais e proporções da pessoa da foto anexa: estrutura, olhos, expressão. Proporção corpo/cabeça correta. Aparência fotográfica genuína.'
+      },
+      {
+        id: 'empreendedor-digital',
+        name: 'Empreendedor Digital',
+        desc: 'Home office · laptop · concentrado',
+        prompt: 'Foto lifestyle altamente realista de empreendedor(a) digital trabalhando em laptop em mesa moderna limpa. Vestindo blazer casual sobre camisa social com colarinho aberto, sem gravata. Postura concentrada mas calma, ligeiramente inclinado(a) para frente. Olhar breve e atento para a câmera. Escritório brasileiro moderno com decoração minimalista, planta discreta, iluminação natural suave. MANTENDO rigorosamente as características faciais originais da foto anexa: estrutura, olhos, proporções e traços. Proporção corpo/cabeça realista. Estilo fotográfico real e natural, sem aparência de IA.'
+      },
+      {
+        id: 'empresaria-escritorio',
+        name: 'Empresária — Escritório',
+        desc: 'Cadeira de couro · autoridade',
+        prompt: 'Retrato profissional realista de mulher empresária sentada em cadeira de couro em escritório moderno com móveis de madeira escura. Cabelo bem arrumado, maquiagem discreta, expressão confiante e natural com leve sorriso. Vestindo blazer elegante com camisa social. Iluminação suave natural vinda da janela. Estilo realista e profissional, transmitindo autoridade e simpatia. MANTENDO fielmente todas as características faciais da pessoa da foto anexa: estrutura facial, olhos, proporções, expressão característica. Proporção corpo/cabeça correta. Aparência fotográfica natural, sem aspecto artificial ou digital.'
+      },
+      {
+        id: 'empresaria-reuniao',
+        name: 'Empresária — Reunião',
+        desc: 'Mesa de reunião · laptop',
+        prompt: 'Mulher empresária em reunião, sentada à mesa de reunião moderna com laptop e papéis. Expressão séria mas acolhedora, cabelo bem arrumado, maquiagem discreta. Vestindo terno elegante. Luz natural suave entrando pela janela, ambiente moderno de escritório com vidro e decoração minimalista. Estilo fotográfico realista e natural, aparência profissional e confiante. Fotografia editorial de negócios. MANTENDO fielmente todas as características faciais e proporções da foto anexa: estrutura, olhos, expressão característica. Proporção corpo/cabeça correta. Sem aparência digital.'
+      },
+      {
+        id: 'empresaria-terraco',
+        name: 'Empresária — Terraço Urbano',
+        desc: 'Vista da cidade · sucesso',
+        prompt: 'Mulher empresária elegante em terraço urbano sofisticado com vista panorâmica da cidade ao fundo. Cabelo alinhado, maquiagem natural, expressão confiante e leve. Vestindo terno ou vestido chique de tons neutros. Luz natural suave do fim de tarde. Estilo realista e moderno, fotografia de ensaio profissional, transmitindo sucesso e independência. MANTENDO fielmente todas as características faciais e proporções da pessoa da foto anexa. Proporção corpo/cabeça correta. Sem aparência digital ou artificial.'
+      },
+    ]
+  },
+  basicos: {
+    label: 'Básicos',
+    items: [
+      {
+        id: 'editorial-basic',
+        name: 'Editorial Premium',
+        desc: 'Moda · revista · 85mm',
+        prompt: 'Fotografia editorial de moda em qualidade de capa de revista. Iluminação dramática de estúdio com luz suave principal e luz de contorno. Lente 85mm, profundidade de campo rasa, foco nítido nos olhos. Aparência comercial premium, textura de pele ultra-detalhada, tons de pele naturais. Estilo refinado e atemporal. MANTENDO fielmente todas as características da pessoa da foto anexa: estrutura facial, olhos, proporções e expressão. Proporção corpo/cabeça realista. Sem aparência digital ou artificial.'
+      },
+      {
+        id: 'lifestyle-basic',
+        name: 'Lifestyle Candid',
+        desc: 'Hora dourada · 35mm · espontâneo',
+        prompt: 'Fotografia lifestyle candid com luz natural suave do dia e calor de hora dourada. Lente 35mm, momento autêntico e espontâneo, leve movimento natural. Estilo documental profissional sem sensação posada. Tons de pele naturais, fotorrealista. MANTENDO fielmente todas as características da pessoa da foto anexa: estrutura, olhos, proporções. Proporção corpo/cabeça realista. Sem aparência digital.'
+      },
+      {
+        id: 'corporativo-basic',
+        name: 'Corporativo Headshot',
+        desc: 'Studio · 70mm · três pontos',
+        prompt: 'Retrato corporativo profissional. Fundo neutro de estúdio limpo, iluminação suave de três pontos, foco nítido nos olhos. Traje executivo refinado, expressão calma e confiante. Lente 70mm, fotorrealista. MANTENDO fielmente todas as características faciais da pessoa da foto anexa: estrutura, olhos, proporções, expressão característica. Proporção corpo/cabeça natural e correta. Sem aparência digital ou artificial.'
+      },
+      {
+        id: 'praia-basic',
+        name: 'Praia Golden Hour',
+        desc: 'Pôr do sol · 50mm · férias',
+        prompt: 'Ensaio fotográfico em praia na hora dourada. Fundo de oceano e areia, luz solar quente natural, flare de lente suave. Fotografia lifestyle, lente 50mm, fotorrealista. Clima de férias, cores vibrantes, tons de pele naturais. MANTENDO fielmente todas as características da pessoa da foto anexa: estrutura, olhos, expressão. Proporção corpo/cabeça correta e realista. Sem aparência digital.'
+      },
+    ]
+  },
+  criancas_meninas: {
+    label: 'Crianças — Meninas',
+    items: [
+      {
+        id: 'princesa-disney',
+        name: 'Princesa da Disney Clássica',
+        desc: 'Castelo · vestido nobre · tiara',
+        prompt: 'Ensaio fotográfico infantil de alta qualidade em estúdio profissional. Criança vestindo um lindo vestido de princesa da Disney clássica, com tecidos nobres, detalhes em tule e brilho sutil. Cenário mágico com castelo ao fundo, iluminação suave dourada e rosa, ambiente encantado. Sapatos delicados de princesa, tiara brilhante, cabelo arrumado com penteado de princesa. Fotografia ultra realista, foco nítido, cores vibrantes mas naturais, luz de estúdio profissional. Mantendo todas as características originais da criança da foto anexa, sem alterar rosto, corpo ou proporções.'
+      },
+      {
+        id: 'bailarina-palco',
+        name: 'Bailarina no Palco',
+        desc: 'Teatro · tutu rosa · ponta',
+        prompt: 'Ensaio fotográfico profissional de criança como bailarina clássica. Vestindo um tutu rosa ou branco impecável, sapatilhas de ponta rosa, cabelo preso em coque de bailarina. Cenário de palco de teatro com cortinas vermelhas ao fundo, iluminação de holofote suave, atmosfera elegante. Pose graciosa de ballet, braços delicados, postura de bailarina profissional. Fotografia ultra realista, alta definição, cores suaves e elegantes, iluminação de teatro profissional. Mantendo todas as características originais da criança da foto anexa, preservando sua fisionomia natural.'
+      },
+      {
+        id: 'jardim-flores',
+        name: 'Jardim de Flores Encantado',
+        desc: 'Vestido floral · coroa de flores',
+        prompt: 'Ensaio fotográfico infantil em jardim encantado cheio de flores coloridas. Criança vestindo um vestido floral delicado em tons pastéis, com detalhes de flores, coroa de flores naturais no cabelo. Cenário ao ar livre com flores gigantes, borboletas coloridas, luz natural dourada de fim de tarde. Sapatos baixos delicados, cabelo solto com cachos naturais. Fotografia ultra realista, bokeh suave no fundo, cores vibrantes da natureza, iluminação natural perfeita. Mantendo todas as características originais da criança da foto anexa, sem modificar suas feições.'
+      },
+      {
+        id: 'unicornio-magico',
+        name: 'Unicórnio Mágico',
+        desc: 'Arco-íris · holográfico · sonho',
+        prompt: 'Ensaio fotográfico temático de unicórnio com criança em cenário mágico. Vestido holográfico ou em tons de arco-íris, com brilhos sutis, tiara com chifre de unicórnio delicado. Cenário fantástico com nuvens coloridas, arco-íris ao fundo, ambiente de sonho. Cabelo com mechas coloridas sutis ou flores, sapatos com brilho delicado. Iluminação mágica com tons de rosa, azul e lilás suaves. Fotografia ultra realista, alta qualidade, cores vibrantes mas harmoniosas. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'fada-bosque',
+        name: 'Fada do Bosque',
+        desc: 'Floresta · asas · varinha',
+        prompt: 'Ensaio fotográfico de criança como fada encantada do bosque. Vestido de fada em tons de verde, rosa ou lilás com detalhes de folhas, asas de fada delicadas e transparentes. Cenário de floresta mágica com árvores, cogumelos brilhantes, luz filtrada entre as folhas. Varinha mágica com estrela, cabelo solto com flores pequenas, sapatos de fada delicados. Iluminação natural suave com efeitos de brilho mágico. Fotografia ultra realista, cores naturais vibrantes, atmosfera de conto de fadas. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'chef-confeiteira',
+        name: 'Pequena Chef Confeiteira',
+        desc: 'Cozinha vintage · cupcakes',
+        prompt: 'Ensaio fotográfico infantil de criança como chef confeiteira. Vestindo avental infantil fofo em tons pastéis, chapéu de chef branco, segurando utensílios de confeitaria. Cenário de cozinha vintage com bolos coloridos, cupcakes decorados, doces ao redor. Iluminação suave e acolhedora, cores quentes e delicadas. Cabelo arrumado com laço, sapatos confortáveis. Fotografia ultra realista, alta definição, cores apetitosas e vibrantes, ambiente profissional mas lúdico. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'artista-pintora',
+        name: 'Artista Pintora',
+        desc: 'Ateliê · cavalete · paleta',
+        prompt: 'Ensaio fotográfico de criança como pequena artista pintora. Vestindo roupas artísticas coloridas ou avental de pintura, boina de artista. Cenário de ateliê com cavalete, telas coloridas, pincéis e tintas ao redor. Criança segurando paleta de cores e pincel, manchas de tinta artísticas nas roupas. Iluminação natural de ateliê, cores vibrantes e criativas. Cabelo solto ou preso de forma casual, sapatos confortáveis. Fotografia ultra realista, cores vivas, ambiente inspirador. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'rainha-gelo',
+        name: 'Rainha do Gelo (Frozen)',
+        desc: 'Vestido azul · gelo · cristal',
+        prompt: 'Ensaio fotográfico inspirado em Frozen com criança como rainha do gelo. Vestido longo azul brilhante com detalhes de gelo e neve, capa translúcida, coroa de cristal. Cenário invernal mágico com gelo, neve, castelo de gelo ao fundo. Iluminação azul e branca fria mas suave, efeitos de brilho de gelo. Cabelo solto em trança lateral ou solto, sapatos de princesa do gelo. Fotografia ultra realista, cores frias vibrantes, atmosfera mágica congelante. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'astronauta-menina',
+        name: 'Astronauta Exploradora',
+        desc: 'Espaço · planetas · NASA',
+        prompt: 'Ensaio fotográfico infantil de criança como astronauta exploradora. Traje de astronauta infantil realista em branco com detalhes coloridos, capacete transparente. Cenário espacial com planetas, estrelas, galáxias ao fundo, superfície lunar. Iluminação cênica com tons de azul, roxo e prateado, atmosfera futurista. Cabelo preso de forma prática, botas de astronauta. Fotografia ultra realista, efeitos de espaço sideral, cores vibrantes cósmicas. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'sereia-oceano',
+        name: 'Sereia do Oceano',
+        desc: 'Subaquático · cauda · conchas',
+        prompt: 'Ensaio fotográfico temático de sereia com criança em cenário aquático. Top de sereia com conchas ou escamas brilhantes, cauda de sereia colorida em tons de azul, verde ou roxo. Cenário subaquático com corais, peixes coloridos, bolhas, luz filtrada da água. Cabelo solto com ondas, coroa de conchas ou estrela do mar, colares de pérolas. Iluminação aquática em tons de azul e verde turquesa. Fotografia ultra realista, cores oceânicas vibrantes, atmosfera mágica submarina. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'pequena-musicista',
+        name: 'Pequena Musicista',
+        desc: 'Violino · estúdio · trança',
+        prompt: 'Menina com vestido leve e elegante, corpo inteiro, segurando um violino ou guitarra infantil, usando sapatos sociais delicados, cabelo penteado em trança lateral, fundo de estúdio com iluminação suave e instrumentos musicais ao redor, mantendo todas as características originais da criança da foto anexa, fotografia realista e artística.'
+      },
+      {
+        id: 'pequena-medica',
+        name: 'Pequena Médica',
+        desc: 'Jaleco · estetoscópio · estúdio',
+        prompt: 'Menina vestindo jaleco branco e roupa infantil confortável, corpo inteiro, usando sapatos claros e cabelo preso em rabo de cavalo, segurando um estetoscópio de brinquedo, fundo de estúdio com elementos médicos sutis, mantendo fielmente as feições e proporções originais da criança da foto anexa, fotografia realista e natural.'
+      },
+      {
+        id: 'branca-de-neve',
+        name: 'Branca de Neve',
+        desc: 'Vestido clássico · maçã · floresta',
+        prompt: 'Menina com vestido clássico de Branca de Neve (azul, amarelo e vermelho), corpo inteiro, usando sapatilhas vermelhas e laço vermelho no cabelo, expressão doce, fundo de estúdio com floresta encantada e maçã nas mãos, mantendo todas as características originais da criança da foto anexa, fotografia realista e mágica.'
+      },
+      {
+        id: 'pequena-fotografa',
+        name: 'Pequena Fotógrafa',
+        desc: 'Câmera · estúdio · espontânea',
+        prompt: 'Menina com roupa casual moderna, corpo inteiro, segurando uma câmera fotográfica infantil, tênis coloridos, cabelo solto e natural, fundo de estúdio com luz suave e equipamentos de fotografia ao redor, mantendo fielmente as características originais da criança da foto anexa, fotografia realista e espontânea.'
+      },
+      {
+        id: 'protetora-animais',
+        name: 'Protetora dos Animais',
+        desc: 'Animais · natureza · afeto',
+        prompt: 'Menina com roupa leve e confortável, corpo inteiro, usando sapatos simples, cercada por animais pequenos (cachorro, gato ou coelho), e ela está segurando um gatinho e sorrindo, fundo de estúdio com iluminação natural simulando natureza, mantendo todas as características originais da criança da foto anexa, fotografia realista e afetiva.'
+      },
+      {
+        id: 'pequena-professora',
+        name: 'Pequena Professora',
+        desc: 'Quadro negro · livro · educativa',
+        prompt: 'Menina com vestido ou saia e blusa de professora infantil, corpo inteiro, sapatos baixos e cabelo preso em coque ou rabo de cavalo, segurando um livro e apontando para um quadro negro no fundo de estúdio, mantendo integralmente as características originais da criança da foto anexa, fotografia realista e educativa.'
+      },
+    ]
+  },
+  criancas_meninos: {
+    label: 'Crianças — Meninos',
+    items: [
+      {
+        id: 'super-homem',
+        name: 'Super-Homem Infantil',
+        desc: 'Capa vermelha · cidade · épico',
+        prompt: 'Ensaio fotográfico infantil de criança como Super-Homem. Fantasia completa do Superman com capa vermelha, símbolo S no peito, roupa azul e vermelha. Cenário urbano heroico com cidade ao fundo, céu dramático, pose de super-herói. Iluminação cinematográfica com tons azuis e vermelhos, atmosfera épica. Cabelo penteado de forma heroica, botas de super-herói. Fotografia ultra realista, alta definição, cores vibrantes de quadrinho, estilo cinematográfico. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'homem-aranha',
+        name: 'Homem-Aranha',
+        desc: 'Teia · prédios · ação',
+        prompt: 'Ensaio fotográfico de criança como Homem-Aranha. Fantasia completa do Homem-Aranha em vermelho e azul, máscara de aranha. Cenário urbano com prédios, teias de aranha, cidade ao fundo. Pose dinâmica de lançar teia, iluminação urbana noturna com tons azulados. Fotografia ultra realista, estilo de filme de ação, cores vibrantes de filme. Mantendo todas as características originais da criança da foto anexa, corpo e proporções preservados.'
+      },
+      {
+        id: 'astronauta-menino',
+        name: 'Astronauta Explorador',
+        desc: 'Lua · NASA · galáxia',
+        prompt: 'Ensaio fotográfico infantil de criança como astronauta explorador. Traje de astronauta infantil realista em branco com bandeira e patches da NASA, capacete de astronauta. Cenário espacial lunar com crateras, Terra ao fundo, estrelas. Iluminação espacial com tons prateados e azuis, atmosfera futurista. Botas de astronauta, pose de explorador. Fotografia ultra realista, cores cósmicas vibrantes, estilo NASA. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'piloto-aviacao',
+        name: 'Piloto de Aviação',
+        desc: 'Hangar · jaqueta de couro · vintage',
+        prompt: 'Ensaio fotográfico de criança como piloto de aviação. Uniforme de piloto infantil com jaqueta de couro, óculos aviador, chapéu de piloto. Cenário de hangar ou pista de aeroporto com avião vintage ao fundo. Iluminação natural dourada, atmosfera de aventura. Cabelo arrumado sob o chapéu, botas de piloto. Fotografia ultra realista, cores vintage quentes, estilo de filme de aventura. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'pirata-aventureiro',
+        name: 'Pirata Aventureiro',
+        desc: 'Navio · tesouro · mar',
+        prompt: 'Ensaio fotográfico infantil de criança como pirata aventureiro. Fantasia de pirata com chapéu tricorne, tapa-olho, colete, camisa branca com detalhes. Cenário de navio pirata com mar ao fundo, barril de tesouro, mapas antigos. Iluminação dramática com tons dourados e azulados, atmosfera de aventura marítima. Botas de pirata, espada de brinquedo, cabelo despenteado de aventureiro. Fotografia ultra realista, cores de filme de aventura, estilo cinematográfico. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'jogador-futebol',
+        name: 'Jogador de Futebol Campeão',
+        desc: 'Uniforme · estádio · bola',
+        prompt: 'Menino vestindo uniforme completo de futebol infantil (camisa, shorts e meiões), chuteiras esportivas, corpo inteiro, posando com uma bola em estúdio com gramado sintético e iluminação de estádio. Expressão confiante e alegre. Mantendo todas as características originais da criança da foto anexa, fotografia realista e esportiva, cores vibrantes e iluminação natural simulando luz de campo.'
+      },
+      {
+        id: 'skatista-radical',
+        name: 'Skatista Radical',
+        desc: 'Skatepark · grafite · neon',
+        prompt: 'Ensaio fotográfico de criança como skatista radical. Roupa de skatista urbana colorida, tênis de skate, capacete e proteções, segurando skate personalizado. Cenário de skatepark com rampas, grafites ao fundo, atmosfera urbana jovem. Iluminação urbana vibrante, cores neon e vibrantes. Cabelo moderno, estilo streetwear. Fotografia ultra realista, cores urbanas dinâmicas, estilo de revista de esportes radicais. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'cavaleiro-medieval',
+        name: 'Cavaleiro Medieval',
+        desc: 'Armadura · castelo · espada',
+        prompt: 'Ensaio fotográfico de criança como cavaleiro medieval. Armadura de cavaleiro infantil prateada, elmo com plumas, escudo com brasão, espada de cavaleiro. Cenário de castelo medieval com pedras antigas, bandeiras, iluminação dramática com tochas. Capa vermelha ou azul, botas de cavaleiro. Fotografia ultra realista, cores medievais vibrantes, atmosfera épica de fantasia. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'explorador-safari',
+        name: 'Explorador Safari',
+        desc: 'Savana · binóculos · National Geographic',
+        prompt: 'Ensaio fotográfico infantil de criança como explorador de safari. Roupa de safari bege ou cáqui, chapéu de explorador, colete com bolsos, binóculos. Cenário de savana africana com árvores, animais ao longe, pôr do sol dourado. Iluminação natural quente, atmosfera de aventura na natureza. Botas de explorador, mochila de aventureiro. Fotografia ultra realista, cores naturais vibrantes, estilo National Geographic. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'jedi-star-wars',
+        name: 'Jedi Star Wars',
+        desc: 'Sabre de luz · templo · galáctico',
+        prompt: 'Ensaio fotográfico de criança como Jedi de Star Wars. Túnica Jedi bege ou marrom, cinto, capuz, sabre de luz azul ou verde. Cenário futurista espacial ou templo Jedi, iluminação cinematográfica com tons azulados. Pose de Jedi em posição de combate ou meditação, cabelo de padawan. Fotografia ultra realista, cores de filme Star Wars, atmosfera épica galáctica. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'bombeiro-heroico',
+        name: 'Bombeiro Heroico',
+        desc: 'Quartel · capacete · caminhão',
+        prompt: 'Ensaio fotográfico infantil de criança como bombeiro heroico. Uniforme de bombeiro infantil completo amarelo e preto, capacete vermelho, mangueira de incêndio. Cenário de quartel de bombeiros com caminhão vermelho ao fundo, equipamentos. Iluminação dramática com tons vermelhos e amarelos, atmosfera heroica. Botas de bombeiro, luvas. Fotografia ultra realista, cores vibrantes de emergência, estilo de filme de ação. Mantendo todas as características originais da criança da foto anexa.'
+      },
+      {
+        id: 'pequeno-mago',
+        name: 'Pequeno Mago Aventureiro',
+        desc: 'Manto azul · varinha · poções',
+        prompt: 'Menino com roupa de mago infantil, manto azul escuro com estrelas, chapéu pontudo e varinha mágica nas mãos, corpo inteiro, fundo de estúdio com livros antigos, velas e poções coloridas. Iluminação dourada e mística. Mantendo fielmente as feições originais da criança da foto anexa, fotografia realista e cinematográfica com atmosfera de fantasia.'
+      },
+      {
+        id: 'pequeno-maquinista',
+        name: 'Pequeno Maquinista',
+        desc: 'Trem a vapor · lanterna · vintage',
+        prompt: 'Menino com uniforme de maquinista infantil, colete jeans, lenço vermelho no pescoço e boné listrado, corpo inteiro, segurando uma lanterna antiga, fundo de estúdio com cenário ferroviário vintage (trem a vapor ao fundo). Mantendo todas as características originais da criança da foto anexa, fotografia realista com iluminação quente e tom nostálgico.'
+      },
+    ]
+  }
 };
 let selectedStyle = 'editorial';
 let selectedQty = 1;
@@ -404,6 +795,89 @@ function fileToDataUrl(file) {
     r.readAsDataURL(file);
   });
 }
+
+// === Modelos prontos: dropdown + biblioteca visual ===
+function populateTemplateSelect() {
+  const sel = $('templateSelect');
+  let html = '<option value="">— escolha um modelo de ensaio —</option>';
+  Object.entries(PROMPT_TEMPLATES).forEach(([catKey, cat]) => {
+    html += `<optgroup label="${cat.label}">`;
+    cat.items.forEach(t => {
+      html += `<option value="${catKey}:${t.id}">${escapeHtml(t.name)}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+}
+populateTemplateSelect();
+
+function applyTemplate(catKey, templateId) {
+  const t = PROMPT_TEMPLATES[catKey]?.items.find(x => x.id === templateId);
+  if (!t) return;
+  $('prompt').value = t.prompt;
+  $('templateInfo').classList.remove('hidden');
+  $('tiName').textContent = '✓ ' + t.name;
+  $('tiDesc').textContent = t.desc;
+  $('templateSelect').value = `${catKey}:${templateId}`;
+}
+
+$('templateSelect').addEventListener('change', e => {
+  const val = e.target.value;
+  if (!val) {
+    $('templateInfo').classList.add('hidden');
+    return;
+  }
+  const [catKey, templateId] = val.split(':');
+  applyTemplate(catKey, templateId);
+});
+
+$('clearTemplateBtn').addEventListener('click', () => {
+  $('templateSelect').value = '';
+  $('prompt').value = '';
+  $('templateInfo').classList.add('hidden');
+});
+
+// Library modal
+let activeLibraryCat = Object.keys(PROMPT_TEMPLATES)[0];
+function renderLibraryTabs() {
+  $('libraryTabs').innerHTML = Object.entries(PROMPT_TEMPLATES).map(([key, cat]) =>
+    `<button data-cat="${key}" class="${key === activeLibraryCat ? 'active' : ''}">${escapeHtml(cat.label)}</button>`
+  ).join('');
+  $('libraryTabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    activeLibraryCat = b.dataset.cat;
+    renderLibraryTabs();
+    renderLibraryGrid();
+  }));
+}
+
+function renderLibraryGrid() {
+  const cat = PROMPT_TEMPLATES[activeLibraryCat];
+  $('libraryGrid').innerHTML = cat.items.map(t => `
+    <div class="library-card" data-id="${t.id}">
+      <div class="lc-name">${escapeHtml(t.name)}</div>
+      <div class="lc-desc">${escapeHtml(t.desc)}</div>
+      <div class="lc-preview">${escapeHtml(t.prompt.slice(0, 220))}…</div>
+      <button class="lc-use" data-id="${t.id}"><i data-lucide="check"></i> Usar este modelo</button>
+    </div>
+  `).join('');
+  $('libraryGrid').querySelectorAll('.library-card').forEach(c => {
+    c.addEventListener('click', () => {
+      applyTemplate(activeLibraryCat, c.dataset.id);
+      $('libraryModal').classList.remove('open');
+    });
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+$('openLibraryBtn').addEventListener('click', () => {
+  renderLibraryTabs();
+  renderLibraryGrid();
+  $('libraryModal').classList.add('open');
+});
+$('closeLibraryBtn').addEventListener('click', () => $('libraryModal').classList.remove('open'));
+$('libraryModal').addEventListener('click', e => {
+  if (e.target.id === 'libraryModal') $('libraryModal').classList.remove('open');
+});
 
 // === Style and qty ===
 $('styleGrid').addEventListener('click', e => {
