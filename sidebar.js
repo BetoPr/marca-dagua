@@ -30,6 +30,17 @@
       ],
     },
     {
+      label: 'Comunidade',
+      icon: 'users',
+      color: 'pink',
+      items: [
+        { href: 'galeria.html', icon: 'layout-grid', label: 'Galeria' },
+        { href: '#', icon: 'bookmark', label: 'Meus prompts', disabled: true },
+        { href: '#', icon: 'heart', label: 'Favoritos', disabled: true },
+        { href: '#', icon: 'plus-circle', label: 'Compartilhar', disabled: true },
+      ],
+    },
+    {
       label: 'Em breve',
       icon: 'clock',
       color: 'gray',
