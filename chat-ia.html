@@ -12,9 +12,14 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
   .chat-layout { display:flex; flex-direction:column; flex:1; min-height:0; padding: 0 36px 16px; }
-  .templates-row { padding: 14px 0 6px; display: flex; gap: 10px; align-items: center; }
+  .templates-row { padding: 14px 0 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .templates-row label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
-  .templates-row select { flex: 1; max-width: 420px; padding: 8px 12px; border-radius: 8px; }
+  .templates-row select { flex: 1; min-width: 240px; max-width: 480px; padding: 8px 12px; border-radius: 8px; }
+  .ref-toggle { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
+  .ref-toggle button { background: transparent; color: var(--muted); border: none; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all .12s; display: inline-flex; align-items: center; gap: 5px; }
+  .ref-toggle button:hover { color: var(--text); }
+  .ref-toggle button.active { background: var(--accent); color: var(--bg); }
+  .ref-toggle button svg { width: 12px; height: 12px; }
   .quick-prompts { display: flex; gap: 8px; padding: 10px 0 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
   .quick-prompts button { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
   .quick-prompts button:hover { color: var(--text); border-color: var(--accent-2); background: var(--panel-2); }
@@ -147,7 +152,7 @@
 
   <div class="page-header">
     <h1>Chat IA</h1>
-    <p>Brainstorm de prompts pra Whisk/Midjourney/OpenAI Imagen, legendas, ideias. Escolha um modelo de pose abaixo ou digite seu pedido.</p>
+    <p>Modelos prontos de prompts pra geração de imagens. Escolha entre <strong>com referência</strong> (preserva o rosto) ou <strong>sem referência</strong> (cena livre).</p>
     <div class="header-extras">
       <button class="config-pill" id="openSettings">
         <i data-lucide="settings"></i>
@@ -167,43 +172,17 @@
   <div class="chat-layout">
     <div class="templates-row">
       <label>Modelos prontos:</label>
+      <div class="ref-toggle" id="refToggle">
+        <button data-ref="com" class="active" type="button"><i data-lucide="image"></i> Com referência</button>
+        <button data-ref="sem" type="button"><i data-lucide="palette"></i> Sem referência</button>
+      </div>
       <select id="templateSelect">
-        <option value="">— escolha um modelo de pose/ensaio —</option>
-        <optgroup label="Posições masculinas">
-          <option value="m-editorial">Editorial — confiante (estúdio dramático)</option>
-          <option value="m-lifestyle-outdoor">Lifestyle ao ar livre (golden hour)</option>
-          <option value="m-closeup">Close-up retrato (intenso)</option>
-          <option value="m-corporativo">Corporativo (terno, ambiente luxuoso)</option>
-          <option value="m-streetwear">Streetwear urbano</option>
-          <option value="m-fitness">Fitness / esportivo</option>
-          <option value="m-praia">Praia / verão</option>
-          <option value="m-cafe">Café aconchegante</option>
-        </optgroup>
-        <optgroup label="Posições femininas">
-          <option value="f-editorial">Editorial — confiante (estúdio dramático)</option>
-          <option value="f-lifestyle-outdoor">Lifestyle ao ar livre (golden hour)</option>
-          <option value="f-romantica">Romântica / etérea</option>
-          <option value="f-fashion">Fashion / haute couture</option>
-          <option value="f-fitness">Fitness / esportivo</option>
-          <option value="f-praia">Praia / verão</option>
-          <option value="f-cafe">Café aconchegante</option>
-          <option value="f-corporativa">Corporativa (executiva)</option>
-        </optgroup>
-        <optgroup label="Ensaios e cenários">
-          <option value="e-estudio-min">Estúdio minimalista</option>
-          <option value="e-urbano-noite">Urbano noturno (neon)</option>
-          <option value="e-natureza">Natureza (luz natural)</option>
-          <option value="e-inverno">Inverno (frio, neve)</option>
-          <option value="e-estudio-dramatico">Estúdio dramático (chiaroscuro)</option>
-          <option value="e-lifestyle-casa">Lifestyle em casa (aconchegante)</option>
-          <option value="e-rooftop">Rooftop com skyline</option>
-        </optgroup>
+        <option value="">— escolha um modelo —</option>
       </select>
     </div>
 
     <div class="quick-prompts">
-      <button data-prompt="prompt-whisk"><i data-lucide="sparkles"></i> Prompt Whisk/Imagen</button>
-      <button data-prompt="prompt-mj"><i data-lucide="image"></i> Prompt Midjourney</button>
+      <button data-prompt="prompt-imagem"><i data-lucide="sparkles"></i> Criar prompt de imagem</button>
       <button data-prompt="legendas-ig"><i data-lucide="instagram"></i> Legendas Insta</button>
       <button data-prompt="ideias-post"><i data-lucide="lightbulb"></i> Ideias de post</button>
       <button data-prompt="variacoes"><i data-lucide="copy"></i> Variações de prompt</button>
@@ -213,7 +192,7 @@
     <div class="chat-messages" id="messages"></div>
 
     <div class="chat-input-area">
-      <textarea id="chatInput" placeholder="Pergunte algo... Ex: 'crie um prompt do Whisk de um homem em ambiente urbano à noite'" rows="1"></textarea>
+      <textarea id="chatInput" placeholder="Escolha um modelo acima ou digite seu pedido. Ex: 'crie um prompt de homem em ambiente urbano à noite'" rows="1"></textarea>
       <button class="send-btn" id="sendBtn" disabled>
         <i data-lucide="send"></i>
       </button>
@@ -297,41 +276,94 @@ Ajude o usuário a:
 Seja direto, prático e responda em português. Use markdown pra listas e blocos de código quando útil.`;
 
 const QUICK_PROMPTS = {
-  'prompt-whisk': 'Crie um prompt detalhado em INGLÊS para o Whisk/Imagen gerar uma imagem de [TEMA AQUI]. Inclua: estilo fotográfico (editorial/lifestyle/cinematic), iluminação, lente (ex: 85mm), pose, expressão, ambiente, paleta de cores, profundidade de campo.',
-  'prompt-mj': 'Crie um prompt detalhado em INGLÊS para o Midjourney v6 gerar uma imagem de [TEMA AQUI]. Inclua: subject, action, environment, mood, lighting, lens, style, quality flags. Termine com --ar 4:5 --v 6.',
+  'prompt-imagem': 'Crie um prompt detalhado em INGLÊS para gerar uma imagem de [TEMA AQUI]. Inclua: estilo fotográfico (editorial/lifestyle/cinematic), iluminação, lente (ex: 85mm), pose, expressão, ambiente, paleta de cores, profundidade de campo. Se for com referência de rosto, inclua a frase: "Use the face from the uploaded reference image and preserve the same facial features. Keep the face 100% accurate."',
   'legendas-ig': 'Sugira 5 legendas pra Instagram em português sobre [TEMA AQUI]. Variando entre: curta e impactante, longa com storytelling, divertida, emocional, e provocadora. Inclua CTA e hashtags relevantes.',
   'ideias-post': 'Liste 10 ideias de conteúdo pra Instagram/LinkedIn sobre [TÓPICO AQUI]. Pra cada uma, dá um título e 1 frase do gancho.',
   'variacoes': 'Tenho este prompt: "[COLE SEU PROMPT AQUI]"\n\nCrie 5 variações: 1 com ângulo diferente, 1 com iluminação noturna, 1 com paleta vibrante, 1 close-up, 1 com fundo minimalista.',
   'hashtags': 'Sugira 30 hashtags pra um post de [TEMA AQUI] no Instagram. Mistura: 10 grandes (>1M), 10 médias (100k-1M), 10 nicho (<100k). Liste separadamente.',
 };
 
+// Frase-chave de fidelidade facial (apenas pra modelos COM REFERÊNCIA)
+const FACE_LOCK = 'Use the face from the uploaded reference image and preserve the same facial features. Keep the face 100% accurate as shown on the reference image. Do not alter the face, skin tone, or identity. The face must remain identical, natural, and realistic (not AI-generated looking).';
+
 const TEMPLATES = {
-  // Posições masculinas
-  'm-editorial': 'high-end editorial portrait of a confident man, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial details, realistic skin texture, high resolution photography, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic',
-  'm-lifestyle-outdoor': 'lifestyle photo of athletic man outdoors during golden hour, soft warm golden light illuminating the body, casual elegant clothing, natural walking pose, modern urban background, candid lifestyle photography, warm tones, sense of freedom and movement, 35mm lens',
-  'm-closeup': 'close-up portrait of a man with well-groomed beard, soft directional side lighting, blurred neutral background, intense gaze directly at camera, realistic photography, high definition skin detail, cool balanced tones with cinematic contrast, 100mm macro lens',
-  'm-corporativo': 'elegant man wearing tailored black suit, luxurious modern interior environment, soft sophisticated three-point lighting, seated with confident upright posture, cinematic aesthetic, neutral and golden color palette, high-end editorial photography style',
-  'm-streetwear': 'young man in modern streetwear outfit, urban scenario with subtle graffiti and concrete texture, natural overcast lighting, relaxed pose leaning against wall, authentic confident expression, vibrant colors and high contrast, 35mm lens',
-  'm-fitness': 'muscular athletic man in workout attire, modern gym environment with dramatic side lighting, intense exercise pose with visible sweat and motion, dynamic composition, fitness magazine cover style, high contrast lighting',
-  'm-praia': 'man at beach during sunset, ocean waves and sand in background, casual summer outfit or shirtless physique, golden hour warm lighting with rim glow, relaxed vacation pose, 50mm lens, lifestyle photography',
-  'm-cafe': 'man sitting at modern wooden cafe table, warm interior lighting from pendant lights, holding ceramic coffee cup, casual smart outfit, soft natural window light filling background, intimate lifestyle composition, 50mm lens at f/2',
-  // Posições femininas
-  'f-editorial': 'high-end editorial portrait of a confident woman, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial features, realistic skin texture, high resolution photography, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic',
-  'f-lifestyle-outdoor': 'lifestyle photo of woman outdoors during golden hour, soft warm golden light, casual elegant outfit, natural walking pose, modern urban or natural background, candid lifestyle photography, warm tones, sense of freedom, 35mm lens',
-  'f-romantica': 'romantic portrait of woman with soft genuine expression, dreamy soft lighting with pastel hues, flowing dress or natural hair movement, blurred natural background, ethereal mood, 85mm lens, soft focus background',
-  'f-fashion': 'fashion model woman in haute couture outfit, dramatic studio backdrop, professional editorial three-point lighting, dynamic confident pose, magazine quality production, high fashion photography aesthetic',
-  'f-fitness': 'fit toned woman in athletic wear, gym or outdoor workout setting, dynamic motion captured, strong confident pose, motivational fitness photography aesthetic, high definition skin and muscle detail',
-  'f-praia': 'woman at beach during sunset, ocean and sand background, summer casual outfit or beachwear, golden hour warm lighting, lifestyle and travel photography aesthetic, sun-kissed warm skin tones',
-  'f-cafe': 'woman at cozy modern cafe, holding ceramic mug, soft natural window light, intimate atmosphere with subtle bokeh, casual stylish outfit, lifestyle editorial photography, 50mm lens at f/2',
-  'f-corporativa': 'professional woman in business attire, modern executive office or upscale interior, confident pose, soft sophisticated lighting, executive editorial style, neutral color palette',
-  // Ensaios
-  'e-estudio-min': 'minimalist studio environment, plain neutral colored backdrop, professional studio lighting with single soft key light from 45 degrees, clean composition with negative space, fashion editorial style',
-  'e-urbano-noite': 'urban night cityscape, neon signs and city lights creating colorful bokeh, dramatic moody atmosphere, cinematic lighting with practical light sources, modern fashion photography style',
-  'e-natureza': 'natural outdoor environment with lush green trees, dappled sunlight filtering through leaves, organic relaxed mood, soft naturalistic lighting, lifestyle photography aesthetic',
-  'e-inverno': 'winter scenery with snow or cold misty environment, layered cozy warm clothing, cool blue tones throughout, dramatic atmospheric overcast lighting, cinematic mood',
-  'e-estudio-dramatico': 'dramatic studio with strong single directional lighting, deep dark shadows, moody black background, cinematic noir style, sharp contrast, dramatic chiaroscuro',
-  'e-lifestyle-casa': 'cozy modern home interior, warm artificial lamp lighting, casual relaxed setting, intimate lifestyle photography, mid-century modern decor with plants',
-  'e-rooftop': 'rooftop setting with city skyline visible, dusk or golden hour lighting, modern urban backdrop, contemporary fashion photography style, expansive view',
+  com: {
+    masculino: {
+      label: 'Masculino — com foto',
+      items: [
+        { id: 'm-macbook-selfie', name: 'MacBook selfie mirror (oversized hoodie)', prompt: `Create an image with the original face from the reference photo without changing the structure of the facial, skin tone, or identity. The face must remain identical, natural, and realistic (not AI-generated looking).\nCamera angle / shooting: MacBook screen selfie mirror, medium close-up (chest up), slightly tilted framing (subtle tilt), main focus on the laptop screen, realistic perspective as if taken using the front of the screen.\nOutfit: oversized black hoodie made from cotton fleece, worn hood, without big logo, relaxed loose fit, wearing thick frame glasses.\nPose: head slightly lowered and tilted, hair covering part of the eye, one hand styled near the nose, the other hand holding the iPhone as if a mirror photo, cool relaxed expression, not made up.\nEnvironment: minimalist room with dim light, vertical line panel wall background + marble texture, MacBook screen showing Photo Booth preview window, Spotify app on the side.\nLighting: light from MacBook screen (soft cool light) + warm ambient indoor light, natural, no cinematic effect, no bokeh, facial details remain sharp and realistic.\nAspect ratio: 3:4.\nNegative prompt: worst quality, low quality, blurry, ugly, distorted, deformed, watermark, text, signature, bad anatomy, missing fingers, extra limbs, fused fingers, distorted face, plastic skin, unrealistic reflection.` },
+        { id: 'm-cufflinks-navy', name: 'Editorial — navy suit + cufflinks', prompt: `${FACE_LOCK}\nA confident man in a navy blue tailored suit with a white shirt, no tie, adjusting his cufflinks. He wears aviator sunglasses, a gold wristwatch, and a small lapel pin. The background is a smooth warm brown/olive studio backdrop with soft gradient lighting. Studio lighting is dramatic yet balanced, with a key light from the upper left casting subtle shadows. Editorial fashion portrait, waist-up, cinematic and luxurious style.` },
+        { id: 'm-fullbody-leaning', name: 'Full body leaning + lapel mic', prompt: `Ultra-realistic 8K full-body portrait of the same man from the reference photo, wearing a clean, pressed white dress shirt with a turned-up collar and a small lapel microphone, dark navy blue trousers, and polished brown dress shoes. He is casually and unpretentiously leaning against a smooth, light gray studio wall; his hands are in his pockets and one leg is crossed over the other, with relaxed and confident body language.\n${FACE_LOCK}` },
+        { id: 'm-bw-sunglasses-skyline', name: 'B&W dramatic + sunglasses skyline', prompt: `Dramatic, ultra-realistic close-up in black and white with high-contrast cinematic lighting from the side, highlighting the contours of his face and beard, casting deep shadows. He wears round, reflective sunglasses. He gazes confidently upward into a dark void. The sunglasses reflect a city's towering skyline. The atmosphere is mysterious with a minimalist black background. Details in 4K. Keep the subject's exact facial structure, hair texture, and the original face from the reference photo. Do not alter the face.` },
+        { id: 'm-artistic-gold-green', name: 'Artistic gold/green backlight', prompt: `Ultra-realistic artistic portrait of the model in the reference photo, preserving all real features. Do not alter the face from the submitted photo. Wearing a stylish black sweatshirt, hair glowing with golden backlighting, contrasted by cool green light on the face and chest, against a deep black background. The model is posed slightly in profile, head turned gently to the side with a thoughtful expression, avoiding direct eye contact with the camera.` },
+        { id: 'm-suit-yellow-lens', name: 'Studio black suit + yellow lens', prompt: `Studio photography of the same man from the reference photo, wearing a black suit, black turtleneck and round sunglasses with translucent yellow lenses. Vibrant orange background. Unique pose from the front.\n${FACE_LOCK}` },
+        { id: 'm-underwater', name: 'Underwater half-submerged', prompt: `Close-up photograph of the same man from the reference photo submerged underwater, half of the body exposed from chest to head, occupying the center frame. Serious expression. Eyes are open and directed towards the viewer. The water's surface, with its manipulated light, creates caustic patterns on the skin. Slightly suspended water droplets and bubbles add depth. Cinematic lighting with soft shadows and sharp highlights, realistic textures creating an intricate pattern of light and shadow on the face and upper body. Color gradient background between greenish-blue and dark blue, with scattered air bubbles, suggesting a deep environment. Diffused lighting, soft shadows, photographic realistic style in 4K resolution.\n${FACE_LOCK}` },
+        { id: 'm-editorial-studio', name: 'Editorial dramático (estúdio)', prompt: `High-end editorial portrait of a confident man, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial details, realistic skin texture, high resolution photography, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic.\n${FACE_LOCK}` },
+        { id: 'm-lifestyle-golden', name: 'Lifestyle golden hour (ao ar livre)', prompt: `Lifestyle photo of an athletic man outdoors during golden hour, soft warm golden light illuminating the body, casual elegant clothing, natural walking pose, modern urban background, candid lifestyle photography, warm tones, sense of freedom and movement, 35mm lens.\n${FACE_LOCK}` },
+        { id: 'm-corporativo', name: 'Corporativo (terno + ambiente luxuoso)', prompt: `Elegant man wearing a tailored black suit, luxurious modern interior environment, soft sophisticated three-point lighting, seated with confident upright posture, cinematic aesthetic, neutral and golden color palette, high-end editorial photography style.\n${FACE_LOCK}` },
+        { id: 'm-streetwear', name: 'Streetwear urbano', prompt: `Young man in modern streetwear outfit, urban scenario with subtle graffiti and concrete texture, natural overcast lighting, relaxed pose leaning against wall, authentic confident expression, vibrant colors and high contrast, 35mm lens.\n${FACE_LOCK}` },
+        { id: 'm-praia-sunset', name: 'Praia ao pôr do sol', prompt: `Man at the beach during sunset, ocean waves and sand in the background, casual summer outfit, golden hour warm lighting with rim glow, relaxed vacation pose, 50mm lens, lifestyle photography.\n${FACE_LOCK}` },
+      ]
+    },
+    feminino: {
+      label: 'Feminino — com foto',
+      items: [
+        { id: 'f-couple-studio', name: 'Casal — estúdio cinza minimalista', prompt: `Create an ultra-realistic couple portrait in a clean, minimal studio with a confident, modern vibe. The man sits deep in a grey armchair wearing a black T-shirt, ripped black pants, and beige sneakers, holding a calm, composed expression. His girlfriend sits elegantly on the edge of the same chair, legs crossed gracefully in a chic, fitted neutral-tone outfit. Both appear confident, stylish, and naturally posed with strong body language. Use soft cinematic lighting and a minimalist background to enhance a high-end editorial feel.\nUse the faces from the uploaded reference images and preserve the same facial features for both subjects. Do not alter the faces. Keep both faces 100% accurate as shown on the reference images.` },
+        { id: 'f-editorial-studio', name: 'Editorial dramático (estúdio)', prompt: `High-end editorial portrait of a confident woman, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial features, realistic skin texture, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic.\n${FACE_LOCK}` },
+        { id: 'f-romantica', name: 'Romântica / etérea', prompt: `Romantic portrait of a woman with soft genuine expression, dreamy soft lighting with pastel hues, flowing dress or natural hair movement, blurred natural background, ethereal mood, 85mm lens, soft focus background.\n${FACE_LOCK}` },
+        { id: 'f-fashion-couture', name: 'Fashion / haute couture', prompt: `Fashion model woman in haute couture outfit, dramatic studio backdrop, professional editorial three-point lighting, dynamic confident pose, magazine quality production, high fashion photography aesthetic.\n${FACE_LOCK}` },
+        { id: 'f-corporativa', name: 'Corporativa (executiva)', prompt: `Professional woman in business attire, modern executive office or upscale interior, confident pose, soft sophisticated lighting, executive editorial style, neutral color palette.\n${FACE_LOCK}` },
+        { id: 'f-praia-sunset', name: 'Praia ao pôr do sol', prompt: `Woman at the beach during sunset, ocean and sand in the background, summer casual outfit or beachwear, golden hour warm lighting, lifestyle and travel photography aesthetic, sun-kissed warm skin tones.\n${FACE_LOCK}` },
+        { id: 'f-cafe', name: 'Café aconchegante', prompt: `Woman at a cozy modern cafe, holding a ceramic mug, soft natural window light, intimate atmosphere with subtle bokeh, casual stylish outfit, lifestyle editorial photography, 50mm lens at f/2.\n${FACE_LOCK}` },
+        { id: 'f-fitness', name: 'Fitness / esportivo', prompt: `Fit toned woman in athletic wear, gym or outdoor workout setting, dynamic motion captured, strong confident pose, motivational fitness photography aesthetic, high definition skin detail.\n${FACE_LOCK}` },
+        { id: 'f-lifestyle-golden', name: 'Lifestyle golden hour (ao ar livre)', prompt: `Lifestyle photo of a woman outdoors during golden hour, soft warm golden light, casual elegant outfit, natural walking pose, modern urban or natural background, candid lifestyle photography, warm tones, sense of freedom, 35mm lens.\n${FACE_LOCK}` },
+      ]
+    },
+    cenarios: {
+      label: 'Ensaios & cenários — com foto',
+      items: [
+        { id: 'e-estudio-min', name: 'Estúdio minimalista', prompt: `Minimalist studio environment, plain neutral colored backdrop, professional studio lighting with single soft key light from 45 degrees, clean composition with negative space, fashion editorial style.\n${FACE_LOCK}` },
+        { id: 'e-urbano-noite', name: 'Urbano noturno (neon)', prompt: `Urban night cityscape, neon signs and city lights creating colorful bokeh, dramatic moody atmosphere, cinematic lighting with practical light sources, modern fashion photography style.\n${FACE_LOCK}` },
+        { id: 'e-natureza', name: 'Natureza (luz natural)', prompt: `Natural outdoor environment with lush green trees, dappled sunlight filtering through leaves, organic relaxed mood, soft naturalistic lighting, lifestyle photography aesthetic.\n${FACE_LOCK}` },
+        { id: 'e-inverno', name: 'Inverno (frio, neve)', prompt: `Winter scenery with snow or cold misty environment, layered cozy warm clothing, cool blue tones throughout, dramatic atmospheric overcast lighting, cinematic mood.\n${FACE_LOCK}` },
+        { id: 'e-rooftop', name: 'Rooftop com skyline', prompt: `Rooftop setting with city skyline visible, dusk or golden hour lighting, modern urban backdrop, contemporary fashion photography style, expansive view.\n${FACE_LOCK}` },
+        { id: 'e-lifestyle-casa', name: 'Lifestyle em casa', prompt: `Cozy modern home interior, warm artificial lamp lighting, casual relaxed setting, intimate lifestyle photography, mid-century modern decor with plants.\n${FACE_LOCK}` },
+      ]
+    },
+  },
+  sem: {
+    masculino: {
+      label: 'Masculino',
+      items: [
+        { id: 's-m-cufflinks', name: 'Confident man — navy suit + cufflinks', prompt: `A confident man in a navy blue tailored suit with a white shirt, no tie, adjusting his cufflinks. He wears aviator sunglasses, a gold wristwatch, and a small lapel pin. The background is a smooth warm brown/olive studio backdrop with soft gradient lighting. Studio lighting is dramatic yet balanced, with a key light from the upper left casting subtle shadows. Editorial fashion portrait, waist-up, cinematic and luxurious style.` },
+        { id: 's-m-suit-yellow', name: 'Black suit + translucent yellow lens', prompt: `Studio photography of a man in a black suit, black turtleneck and round sunglasses with translucent yellow lenses. Vibrant orange background. Unique pose from the front, confident and editorial.` },
+        { id: 's-m-underwater', name: 'Underwater half-submerged (Arab descent)', prompt: `Close-up photograph of a man submerged underwater, half of his body exposed from chest to head, occupying the center frame. He appears to be of Arab descent, with a serious expression. His eyes are open and directed towards the viewer. He appears shirtless. The water's surface, with its manipulated light, creates caustic patterns on his skin. Slightly suspended water droplets and bubbles add depth. Cinematic lighting with soft shadows and sharp highlights, realistic textures creating an intricate pattern of light and shadow on his face and upper body. Color gradient background between greenish-blue and dark blue, with scattered air bubbles, suggesting a deep environment. Diffused lighting, soft shadows, photographic realistic style in 4K resolution.` },
+        { id: 's-m-editorial', name: 'Editorial dramático', prompt: `High-end editorial portrait of a confident man, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial details, realistic skin texture, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic.` },
+        { id: 's-m-streetwear', name: 'Streetwear urbano', prompt: `Young man in modern streetwear outfit, urban scenario with subtle graffiti and concrete texture, natural overcast lighting, relaxed pose leaning against a concrete wall, authentic confident expression, vibrant colors and high contrast, 35mm lens.` },
+        { id: 's-m-fitness', name: 'Fitness / esportivo', prompt: `Muscular athletic man in workout attire, modern gym environment with dramatic side lighting, intense exercise pose with visible motion, dynamic composition, fitness magazine cover style, high contrast lighting.` },
+      ]
+    },
+    feminino: {
+      label: 'Feminino',
+      items: [
+        { id: 's-f-black-suit-chair', name: 'Black suit on luxurious white chair', prompt: `A beautiful, confident woman wearing a black suit sits elegantly on a luxurious white chair that highlights her slim, graceful figure. Her right hand rests gently beneath her chin, with her chin slightly raised in a pose of self-assurance. Her head tilts subtly to the right, eyes steady and looking forward with confidence. Her facial features glow under high-quality cinematic lighting, enhancing her natural beauty. The background is pure white, featuring a rare art painting and soft, cinematic illumination. Beside the chair stands a unique white table topped with a black coffee cup and a stylish lamp decor, creating a refined and elegant atmosphere.` },
+        { id: 's-f-editorial', name: 'Editorial dramático', prompt: `High-end editorial portrait of a confident woman, dramatic studio lighting with strong key light and subtle rim light, dark minimalist background, sharp focus on facial features, realistic skin texture, 85mm lens at f/1.8, shallow depth of field, fashion editorial style, magazine cover aesthetic.` },
+        { id: 's-f-romantica', name: 'Romântica / etérea', prompt: `Romantic portrait of a woman with soft genuine expression, dreamy soft lighting with pastel hues, flowing dress or natural hair movement, blurred natural background, ethereal mood, 85mm lens, soft focus background.` },
+        { id: 's-f-fashion-couture', name: 'Fashion / haute couture', prompt: `Fashion model woman in haute couture outfit, dramatic studio backdrop, professional editorial three-point lighting, dynamic confident pose, magazine quality production, high fashion photography aesthetic.` },
+        { id: 's-f-corporativa', name: 'Corporativa (executiva)', prompt: `Professional woman in business attire, modern executive office or upscale interior, confident pose, soft sophisticated lighting, executive editorial style, neutral color palette.` },
+      ]
+    },
+    cenarios: {
+      label: 'Cenários',
+      items: [
+        { id: 's-e-estudio-min', name: 'Estúdio minimalista', prompt: `Minimalist studio environment, plain neutral colored backdrop, professional studio lighting with single soft key light from 45 degrees, clean composition with negative space, fashion editorial style.` },
+        { id: 's-e-urbano-noite', name: 'Urbano noturno (neon)', prompt: `Urban night cityscape, neon signs and city lights creating colorful bokeh, dramatic moody atmosphere, cinematic lighting with practical light sources, modern fashion photography style.` },
+        { id: 's-e-rooftop', name: 'Rooftop com skyline', prompt: `Rooftop setting with city skyline visible, dusk or golden hour lighting, modern urban backdrop, contemporary fashion photography style, expansive view.` },
+        { id: 's-e-natureza', name: 'Natureza (luz natural)', prompt: `Natural outdoor environment with lush green trees, dappled sunlight filtering through leaves, organic relaxed mood, soft naturalistic lighting, lifestyle photography aesthetic.` },
+        { id: 's-e-inverno', name: 'Inverno (neve)', prompt: `Winter scenery with snow or cold misty environment, layered cozy warm clothing, cool blue tones throughout, dramatic atmospheric overcast lighting, cinematic mood.` },
+      ]
+    },
+  },
 };
 
 const PROVIDERS = {
@@ -458,12 +490,39 @@ document.querySelectorAll('.quick-prompts button').forEach(b => {
   });
 });
 
-// Templates dropdown
+// Modelos prontos: toggle Com/Sem referência + dropdown
+let refMode = 'com';
+
+function rebuildTemplateSelect() {
+  const cats = TEMPLATES[refMode];
+  let html = '<option value="">— escolha um modelo —</option>';
+  Object.entries(cats).forEach(([catKey, cat]) => {
+    html += `<optgroup label="${cat.label}">`;
+    cat.items.forEach(t => {
+      html += `<option value="${refMode}:${catKey}:${t.id}">${t.name}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  $('templateSelect').innerHTML = html;
+}
+rebuildTemplateSelect();
+
+document.querySelectorAll('#refToggle button').forEach(b => b.addEventListener('click', () => {
+  refMode = b.dataset.ref;
+  document.querySelectorAll('#refToggle button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rebuildTemplateSelect();
+  if (window.lucide) lucide.createIcons();
+}));
+
 $('templateSelect').addEventListener('change', e => {
   const v = e.target.value;
   if (!v) return;
+  const [mode, catKey, id] = v.split(':');
+  const t = TEMPLATES[mode]?.[catKey]?.items.find(x => x.id === id);
+  if (!t) return;
   const ta = $('chatInput');
-  ta.value = `Refine este prompt em INGLÊS para o Whisk/Imagen, ajustando detalhes ou adicionando o que pedir abaixo:\n\n${TEMPLATES[v]}\n\n[escreva aqui o que quer customizar — cores, idade, tipo físico, etc.]`;
+  ta.value = `${t.prompt}\n\n[campo de características — adicione cores, idade, tipo físico, ambiente customizado, expressão, etc.]`;
   ta.focus();
   autoResize();
   updateSendBtn();
