@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Compartilhar prompt — Innova & AI Studio</title>
+<meta name="description" content="Publique seu prompt na galeria pública da comunidade Innova.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <!-- Auth gate -->
+  <div class="share-gate" id="authGate" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Faça login pra compartilhar</h2>
+    <p>Você precisa estar logado pra publicar prompts na galeria da comunidade.</p>
+    <a class="gal-btn-primary" id="goLogin">Entrar</a>
+  </div>
+
+  <div id="shareApp" hidden>
+    <!-- Header -->
+    <div class="share-header">
+      <span class="hero-badge" id="modeBadge">Compartilhar prompt</span>
+      <h1 id="modeTitle">Compartilhe seu prompt</h1>
+      <p id="modeSubtitle">Adicione o prompt, escolha estilo e publique pra comunidade testar.</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="share-stepper">
+      <div class="share-step-pill active" data-step="1">
+        <span class="num">1</span>
+        <span class="lbl">Conteúdo</span>
+      </div>
+      <div class="share-step-line"></div>
+      <div class="share-step-pill" data-step="2">
+        <span class="num">2</span>
+        <span class="lbl">Detalhes</span>
+      </div>
+      <div class="share-step-line"></div>
+      <div class="share-step-pill" data-step="3">
+        <span class="num">3</span>
+        <span class="lbl">Capa</span>
+      </div>
+      <div class="share-step-line"></div>
+      <div class="share-step-pill" data-step="4">
+        <span class="num">4</span>
+        <span class="lbl">Publicar</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <form class="share-form" id="shareForm" autocomplete="off" onsubmit="return false;">
+
+      <!-- ===== Step 1: Conteúdo ===== -->
+      <section class="share-step active" data-step="1">
+        <div class="share-card">
+          <label class="share-label" for="promptText">Prompt</label>
+          <p class="share-help">Escreva o prompt que você usou (de preferência em inglês). Vai aparecer no detalhe pra outros copiarem.</p>
+          <textarea id="promptText" rows="9" placeholder="Cinematic medium-shot portrait of..."></textarea>
+          <div class="share-counter">
+            <span id="charCount">0</span> / 4000 caracteres
+          </div>
+        </div>
+
+        <div class="share-card share-polish">
+          <div class="share-polish-head">
+            <div>
+              <strong>Polir com IA <span class="share-pill-min">Beta</span></strong>
+              <span>Reescreve o prompt em estrutura cinematográfica usando sua chave Groq.</span>
+            </div>
+            <button type="button" class="gal-btn-ghost" id="polishBtn">
+              <i data-lucide="wand-2"></i> Polir prompt
+            </button>
+          </div>
+          <div class="share-polish-result" id="polishResult" hidden></div>
+        </div>
+      </section>
+
+      <!-- ===== Step 2: Detalhes ===== -->
+      <section class="share-step" data-step="2">
+        <div class="share-card">
+          <label class="share-label" for="title">Título <span class="req">*</span></label>
+          <input type="text" id="title" maxlength="60" placeholder="Ex: Retrato executivo em escritório moderno">
+          <div class="share-counter"><span id="titleCount">0</span> / 60</div>
+        </div>
+
+        <div class="share-grid-2">
+          <div class="share-card">
+            <label class="share-label">Modelo usado</label>
+            <select id="modelSel" class="share-select"></select>
+          </div>
+          <div class="share-card">
+            <label class="share-label">Proporção</label>
+            <select id="aspectSel" class="share-select"></select>
+          </div>
+        </div>
+
+        <div class="share-grid-2">
+          <div class="share-card">
+            <label class="share-label">Idioma</label>
+            <select id="langSel" class="share-select"></select>
+          </div>
+          <div class="share-card">
+            <label class="share-label">Tom</label>
+            <select id="toneSel" class="share-select">
+              <option value="">— sem tom específico —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="share-card">
+          <label class="share-label">Estilo (categoria)</label>
+          <p class="share-help">Escolha 1 categoria principal que melhor descreve o resultado.</p>
+          <div class="share-chip-grid" id="categoryChips"></div>
+        </div>
+
+        <div class="share-card">
+          <label class="share-label" for="tagsInput">Tags <span class="share-pill-min">opcional</span></label>
+          <p class="share-help">Até 8 tags separadas por vírgula ou Enter.</p>
+          <div class="share-tags-input">
+            <div class="share-tags-list" id="tagsList"></div>
+            <input type="text" id="tagsInput" placeholder="Digite e Enter (ex: golden-hour, retrato, masculino)">
+          </div>
+        </div>
+
+        <div class="share-card">
+          <label class="share-label">Complementos <span class="share-pill-min">opcional</span></label>
+          <div class="share-chip-grid" id="extrasChips"></div>
+        </div>
+      </section>
+
+      <!-- ===== Step 3: Capa ===== -->
+      <section class="share-step" data-step="3">
+        <div class="share-card">
+          <label class="share-label">Imagem de capa</label>
+          <p class="share-help">JPG, PNG ou WebP. Até 10MB. <strong>Use a imagem que você gerou</strong> — não envie obras de terceiros.</p>
+
+          <label class="share-drop" id="coverDrop" for="coverInput">
+            <input type="file" id="coverInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <div class="share-drop-empty" id="dropEmpty">
+              <i data-lucide="image-up"></i>
+              <strong>Clique ou arraste a imagem aqui</strong>
+              <span>Recomendado: 1080×1350 (4:5)</span>
+            </div>
+            <div class="share-drop-preview" id="dropPreview" hidden>
+              <img id="coverPreview" alt="Preview">
+              <button type="button" class="share-drop-remove" id="coverRemove">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+          </label>
+
+          <div class="share-status" id="coverStatus"></div>
+        </div>
+      </section>
+
+      <!-- ===== Step 4: Publicar ===== -->
+      <section class="share-step" data-step="4">
+        <div class="share-card">
+          <label class="share-toggle">
+            <input type="checkbox" id="publishToggle" checked>
+            <span class="share-toggle-bullet"></span>
+            <span>
+              <strong>Publicar agora</strong>
+              <small>Desmarcar salva como rascunho (visível só pra você).</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="share-card share-summary">
+          <h3>Resumo</h3>
+          <div class="share-summary-grid" id="summary"></div>
+        </div>
+
+        <div class="share-card share-limit" id="limitCard" hidden>
+          <i data-lucide="alert-circle"></i>
+          <div>
+            <strong>Você atingiu o limite Free de 5 prompts publicados.</strong>
+            <p>Faça upgrade pro plano <strong>Pro</strong> pra publicar ilimitado.</p>
+          </div>
+          <button type="button" class="gal-btn-primary" id="limitUpgrade">Conhecer o Pro</button>
+        </div>
+      </section>
+
+      <!-- Stepper actions -->
+      <div class="share-actions">
+        <button type="button" class="gal-btn-ghost" id="prevBtn" hidden>
+          <i data-lucide="arrow-left"></i> Voltar
+        </button>
+        <span class="share-step-info"><span id="stepCur">1</span> de 4</span>
+        <button type="button" class="gal-btn-primary" id="nextBtn">
+          Próximo <i data-lucide="arrow-right"></i>
+        </button>
+        <button type="button" class="gal-btn-primary" id="publishBtn" hidden>
+          <i data-lucide="rocket"></i> <span id="publishLbl">Publicar</span>
+        </button>
+      </div>
+
+      <div class="share-status global" id="globalStatus"></div>
+    </form>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/compartilhar.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

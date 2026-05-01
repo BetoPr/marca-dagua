@@ -35,9 +35,9 @@
       color: 'pink',
       items: [
         { href: 'galeria.html', icon: 'layout-grid', label: 'Galeria' },
+        { href: 'compartilhar.html', icon: 'plus-circle', label: 'Compartilhar' },
         { href: '#', icon: 'bookmark', label: 'Meus prompts', disabled: true },
         { href: '#', icon: 'heart', label: 'Favoritos', disabled: true },
-        { href: '#', icon: 'plus-circle', label: 'Compartilhar', disabled: true },
       ],
     },
     {
