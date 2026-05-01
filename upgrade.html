@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Plano Pro — Innova & AI Studio</title>
+<meta name="description" content="R$ 19,90/mês — todos os prompts Pro, construtor completo, prompts ilimitados. Você usa sua própria chave de API.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="up-hero">
+    <span class="hero-badge">Planos &amp; preços</span>
+    <h1>Escolha o plano que faz sentido</h1>
+    <p>Comece grátis com sua própria chave de API. Faça upgrade quando quiser tudo curado e construtor completo.</p>
+  </div>
+
+  <div class="up-cards">
+
+    <!-- FREE -->
+    <article class="up-card up-free">
+      <div class="up-card-head">
+        <h2>Free</h2>
+        <span class="up-sub">Pra começar agora</span>
+      </div>
+      <div class="up-price">
+        <span class="up-currency">R$</span>
+        <span class="up-amount">0</span>
+        <span class="up-period">para sempre</span>
+      </div>
+      <ul class="up-features">
+        <li><i data-lucide="check"></i> Galeria pública completa</li>
+        <li><i data-lucide="check"></i> Copiar prompts grátis ilimitado</li>
+        <li><i data-lucide="check"></i> Chat IA com chave própria (Groq grátis, OpenAI, OpenRouter)</li>
+        <li><i data-lucide="check"></i> 5 prompts publicados</li>
+        <li><i data-lucide="check"></i> Construtor visual básico (5 blocos)</li>
+        <li><i data-lucide="check"></i> Marca d'água, conversão, redimensionamento, compressão</li>
+      </ul>
+      <a href="cadastro.html" class="up-btn-secondary">Começar grátis</a>
+    </article>
+
+    <!-- PRO (destaque) -->
+    <article class="up-card up-pro">
+      <span class="up-badge-popular">Mais popular</span>
+      <div class="up-card-head">
+        <h2>Pro</h2>
+        <span class="up-sub">Pra criadores que levam a sério</span>
+      </div>
+      <div class="up-price">
+        <span class="up-currency">R$</span>
+        <span class="up-amount">19<span class="up-cents">,90</span></span>
+        <span class="up-period">/mês</span>
+      </div>
+      <ul class="up-features up-features-pro">
+        <li><i data-lucide="check"></i> Tudo do Free</li>
+        <li><i data-lucide="check"></i> Acesso a <strong>todos os prompts Pro</strong> curados</li>
+        <li><i data-lucide="check"></i> Prompts publicados <strong>ilimitados</strong></li>
+        <li><i data-lucide="check"></i> Construtor visual completo (11 blocos)</li>
+        <li><i data-lucide="check"></i> Chat IA com histórico ilimitado</li>
+        <li><i data-lucide="check"></i> Sem marca d'água nas ferramentas</li>
+        <li><i data-lucide="check"></i> Selo Pro no perfil</li>
+        <li><i data-lucide="check"></i> Suporte prioritário</li>
+        <li><i data-lucide="check"></i> Acesso antecipado a novas features</li>
+      </ul>
+      <button class="up-btn-primary" id="goPro">
+        <i data-lucide="rocket"></i> Assinar Pro
+      </button>
+      <span class="up-card-foot">Cancele quando quiser. Sem fidelidade.</span>
+    </article>
+
+    <!-- STUDIO (em breve) -->
+    <article class="up-card up-studio">
+      <span class="up-badge-soon">Em desenvolvimento</span>
+      <div class="up-card-head">
+        <h2>Studio</h2>
+        <span class="up-sub">Com geração de imagem incluída</span>
+      </div>
+      <div class="up-price up-price-soon">
+        <span class="up-amount">Em breve</span>
+      </div>
+      <ul class="up-features up-features-soon">
+        <li><i data-lucide="check"></i> Tudo do Pro</li>
+        <li><i data-lucide="check"></i> Geração de imagem direto no Innova (cota mensal)</li>
+        <li><i data-lucide="check"></i> Modelos: Whisk, Flux e mais</li>
+        <li><i data-lucide="check"></i> Sem precisar de chave de API pra imagens</li>
+        <li><i data-lucide="check"></i> Prioridade no roadmap</li>
+      </ul>
+      <form class="up-waitlist" id="waitlistForm">
+        <input type="email" placeholder="seu@email.com" id="waitlistEmail" required>
+        <button type="submit" class="up-btn-secondary"><i data-lucide="bell"></i> Avise-me</button>
+      </form>
+      <span class="up-card-foot" id="waitlistMsg"></span>
+    </article>
+
+  </div>
+
+  <!-- Why cheaper -->
+  <div class="up-banner">
+    <div class="up-banner-icon"><i data-lucide="sparkles"></i></div>
+    <div class="up-banner-text">
+      <strong>Por que mais barato que outras plataformas?</strong>
+      <p>Porque você usa <strong>sua própria chave de API</strong> pro Chat IA — sem créditos artificiais, sem markup. Você paga só o que usar direto na fonte. O Innova centraliza galeria, ferramentas e histórico.</p>
+      <p class="up-compare">Banana Prompts: <s>US$ 9,99/mês (~R$ 50)</s> · <strong>Innova Pro: R$ 19,90/mês</strong></p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="up-faq">
+    <h2>Perguntas frequentes</h2>
+    <details>
+      <summary>Posso cancelar quando quiser?</summary>
+      <p>Sim. Sem fidelidade — você cancela a qualquer momento e fica com o acesso Pro até o fim do ciclo já pago.</p>
+    </details>
+    <details>
+      <summary>Quais formas de pagamento?</summary>
+      <p>PIX, boleto e cartão de crédito (via Asaas). Você escolhe na hora do pagamento.</p>
+    </details>
+    <details>
+      <summary>Vai cobrar pelo Chat IA também?</summary>
+      <p>Não. O Chat IA usa sua própria chave de API (Groq tem free tier generoso). O Innova só cobra pelo acesso à galeria curada e ferramentas Pro.</p>
+    </details>
+    <details>
+      <summary>O que acontece com os prompts que publiquei se eu cancelar?</summary>
+      <p>Continuam visíveis na galeria. Você só perde o acesso ao conteúdo gateado de outros autores Pro e aos blocos avançados do construtor.</p>
+    </details>
+    <details>
+      <summary>Quando o Studio vai lançar?</summary>
+      <p>Sem data confirmada. Entre na lista de espera com seu email pra ser avisado primeiro.</p>
+    </details>
+  </div>
+
+</main>
+
+<!-- Modal: pagamento ainda não está pronto -->
+<div class="gal-modal-overlay" id="soonModal" hidden>
+  <div class="gal-modal">
+    <button class="gal-modal-close" id="soonClose"><i data-lucide="x"></i></button>
+    <div class="gal-modal-icon"><i data-lucide="rocket"></i></div>
+    <h2>Quase lá!</h2>
+    <p>Estamos ajustando o pagamento via <strong>Asaas</strong>. O acesso Pro abre em breve. Te avisamos no email cadastrado quando estiver pronto.</p>
+    <div class="gal-modal-actions">
+      <button class="gal-btn-primary" id="soonOk">Beleza</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/upgrade.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

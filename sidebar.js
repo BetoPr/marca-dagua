@@ -46,6 +46,8 @@
       icon: 'settings',
       color: 'gray',
       items: [
+        { href: 'upgrade.html', icon: 'rocket', label: 'Plano Pro' },
+        { href: 'assinatura.html', icon: 'credit-card', label: 'Minha assinatura' },
         { href: 'configuracoes.html', icon: 'key-round', label: 'Chaves de API' },
       ],
     },

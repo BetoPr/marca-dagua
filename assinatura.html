@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Minha assinatura — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="share-gate" id="authGate" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Faça login pra ver sua assinatura</h2>
+    <a class="gal-btn-primary" id="goLogin">Entrar</a>
+  </div>
+
+  <div id="subApp" hidden>
+    <div class="cb-header">
+      <span class="hero-badge">Sua conta</span>
+      <h1>Minha assinatura</h1>
+      <p>Plano atual, próximas cobranças e gestão.</p>
+    </div>
+
+    <div class="sub-content">
+      <div class="sub-card sub-current" id="planCard">
+        <div class="sub-plan-info">
+          <span class="sub-plan-label">Plano atual</span>
+          <h2 id="planName">Free</h2>
+          <p id="planDesc">Você usa sua própria chave de API. Galeria pública, 5 prompts publicados, construtor básico.</p>
+        </div>
+        <div class="sub-plan-action">
+          <a href="upgrade.html" class="gal-btn-primary" id="upgradeBtn">
+            <i data-lucide="rocket"></i> Fazer upgrade pra Pro
+          </a>
+        </div>
+      </div>
+
+      <!-- Pro details (escondido enquanto não tem Pro ativo) -->
+      <div class="sub-card" id="proDetails" hidden>
+        <h3 class="sub-section-title"><i data-lucide="credit-card"></i> Cobrança</h3>
+        <div class="sub-row"><label>Próxima cobrança</label><span id="nextDue">—</span></div>
+        <div class="sub-row"><label>Valor</label><span id="planValue">—</span></div>
+        <div class="sub-row"><label>Status</label><span id="planStatus">—</span></div>
+        <div class="sub-row"><label>Ciclo</label><span id="planCycle">—</span></div>
+        <div class="sub-actions">
+          <a href="#" class="gal-btn-ghost" id="updatePayment">
+            <i data-lucide="external-link"></i> Atualizar forma de pagamento
+          </a>
+          <button class="gal-btn-ghost cfg-danger" id="cancelSub">
+            <i data-lucide="x-circle"></i> Cancelar assinatura
+          </button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="historyCard" hidden>
+        <h3 class="sub-section-title"><i data-lucide="receipt"></i> Histórico de pagamentos</h3>
+        <div id="paymentHistory"></div>
+      </div>
+
+      <div class="sub-card sub-pending">
+        <i data-lucide="info"></i>
+        <div>
+          <strong>Em desenvolvimento</strong>
+          <p>A integração com Asaas está sendo finalizada. Em breve você poderá assinar, gerenciar e cancelar direto por aqui.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/assinatura.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
