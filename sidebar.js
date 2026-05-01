@@ -334,11 +334,30 @@
         <div class="profile-modal-body">
           <div class="profile-avatar-wrap">
             <div class="profile-avatar-big" id="profileAvatarBig">${(name[0]||'?').toUpperCase()}</div>
-            <label class="profile-avatar-edit" for="profilePhotoInput">
-              <i data-lucide="camera"></i>
+          </div>
+
+          <div class="profile-tabs">
+            <button class="profile-tab active" data-tab="avatar">
+              <i data-lucide="user-circle-2"></i> Escolher avatar
+            </button>
+            <button class="profile-tab" data-tab="upload">
+              <i data-lucide="upload"></i> Subir foto
+            </button>
+          </div>
+
+          <div class="profile-tab-pane active" data-pane="avatar">
+            <div class="profile-help">Escolha um avatar pré-feito. Aparece nos seus prompts publicados.</div>
+            <div class="profile-avatar-grid" id="avatarGrid"></div>
+          </div>
+
+          <div class="profile-tab-pane" data-pane="upload">
+            <div class="profile-help">JPG, PNG ou WebP. Até 2MB.</div>
+            <label for="profilePhotoInput" class="profile-upload-btn">
+              <i data-lucide="upload"></i> Escolher arquivo
               <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;">
             </label>
           </div>
+
           <div class="profile-field">
             <label>Nome</label>
             <input type="text" id="profileName" value="${name.replace(/"/g,'&quot;')}" maxlength="60">
@@ -348,7 +367,7 @@
             <input type="email" value="${user.email || ''}" disabled>
           </div>
           <div class="profile-actions">
-            <button class="profile-btn-save" id="profileSave">Salvar alterações</button>
+            <button class="profile-btn-save" id="profileSave">Salvar nome</button>
             <button class="profile-btn-logout" id="profileLogout">Sair da conta</button>
           </div>
           <div class="profile-status" id="profileStatus"></div>
@@ -358,11 +377,42 @@
     document.body.appendChild(modal);
     if (window.lucide) lucide.createIcons();
 
+    let currentAvatar = null;
     loadAvatarUrl(user).then(url => {
+      currentAvatar = url;
       if (url) {
         const big = document.getElementById('profileAvatarBig');
         if (big) big.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
       }
+      // Carrega grid de avatares (lazy import)
+      import('./lib/avatars.js').then(({ renderAvatarGrid }) => {
+        const grid = document.getElementById('avatarGrid');
+        if (!grid) return;
+        renderAvatarGrid(grid, currentAvatar, async (avatarUrl) => {
+          setStatus('Salvando avatar…');
+          try {
+            await window.supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', user.id);
+            currentAvatar = avatarUrl;
+            // Atualiza UIs
+            const big = document.getElementById('profileAvatarBig');
+            if (big) big.innerHTML = `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            const sidebarAvatar = document.getElementById('accountAvatar');
+            if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            const topbarAvatar = document.querySelector('.topbar-avatar');
+            if (topbarAvatar) topbarAvatar.innerHTML = `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            setStatus('✓ Avatar atualizado');
+          } catch (err) { setStatus('Erro: ' + (err.message || err), true); }
+        });
+      });
+    });
+
+    // Tabs
+    modal.querySelectorAll('.profile-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        modal.querySelectorAll('.profile-tab').forEach(b => b.classList.toggle('active', b === btn));
+        modal.querySelectorAll('.profile-tab-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === tab));
+      });
     });
 
     const close = () => modal.remove();

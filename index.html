@@ -72,16 +72,33 @@
 
     <section class="land-section">
       <div class="land-section-head">
-        <h2>Veja o que a comunidade está criando agora</h2>
+        <h2>Mais curtidos pela comunidade</h2>
         <p>Cada imagem vem com o prompt exato que a criou. Pule as suposições e aprenda direto de peças que chamaram a atenção.</p>
       </div>
-      <div class="gal-grid land-grid" id="landFeatured"></div>
+      <div class="gal-grid land-grid" id="landTopLiked"></div>
+    </section>
+
+    <section class="land-section land-premium-section" id="landPremiumWrap" hidden>
+      <div class="land-section-head">
+        <span class="land-pill" style="background: linear-gradient(135deg, rgba(167,139,250,0.14), rgba(124,58,237,0.06)); border-color: rgba(167,139,250,0.4); color: #a78bfa;">
+          <i data-lucide="lock" style="width:11px;height:11px;margin-right:5px;"></i> Coleção curada
+        </span>
+        <h2>Prompts Premium</h2>
+        <p>Coleção curada manualmente com prompts 95%+ funcionais. Acesso completo no plano <strong>Pro · R$ 19,90/mês</strong>.</p>
+      </div>
+      <div class="gal-grid land-grid" id="landPremium"></div>
       <div class="land-section-cta">
-        <a href="galeria.html" class="land-pill-cta">
-          Explorar prompts em alta <i data-lucide="arrow-right"></i>
+        <a href="upgrade.html" class="land-cta-primary">
+          <i data-lucide="rocket"></i> Desbloquear Premium
         </a>
       </div>
     </section>
+
+    <div class="land-section-cta" style="padding: 0 36px 40px;">
+      <a href="galeria.html" class="land-pill-cta">
+        Explorar prompts em alta <i data-lucide="arrow-right"></i>
+      </a>
+    </div>
 
     <section class="land-how">
       <div class="land-how-card">
@@ -265,28 +282,44 @@ async function loadStats() {
 }
 
 async function loadFeatured() {
-  const { data } = await supabase
-    .from('prompt_posts_public')
-    .select('*')
-    .eq('is_published', true)
-    .order('likes_count', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(6);
-  if (!data || !data.length) return;
+  // 2 queries em paralelo: top free curtidos + premium
+  const [topLikedRes, premiumRes] = await Promise.all([
+    supabase.from('prompt_posts_public').select('*')
+      .eq('is_published', true).eq('is_pro', false)
+      .order('likes_count', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6),
+    supabase.from('prompt_posts_public').select('*')
+      .eq('is_published', true).eq('is_pro', true)
+      .order('likes_count', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6),
+  ]);
 
   const { renderPromptCard } = await import('./lib/cards.js');
-  const grid = $('landFeatured');
-  data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
 
-  // Click no botao Copiar = vai pra detalhe (anonimo nao copia direto aqui pra induzir cadastro)
-  grid.addEventListener('click', e => {
-    const copyBtn = e.target.closest('.gal-card-copy');
-    if (copyBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const card = copyBtn.closest('.gal-card');
-      if (card) location.href = `prompt.html?slug=${encodeURIComponent(card.dataset.slug)}`;
-    }
+  if (topLikedRes.data?.length) {
+    const grid = $('landTopLiked');
+    topLikedRes.data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
+  }
+
+  if (premiumRes.data?.length) {
+    $('landPremiumWrap').hidden = false;
+    const grid = $('landPremium');
+    premiumRes.data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
+  }
+
+  // Click no botao Copiar dos cards na landing = vai pra detalhe (induz cadastro)
+  document.querySelectorAll('.land-grid').forEach(grid => {
+    grid.addEventListener('click', e => {
+      const copyBtn = e.target.closest('.gal-card-copy');
+      if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = copyBtn.closest('.gal-card');
+        if (card) location.href = `prompt.html?slug=${encodeURIComponent(card.dataset.slug)}`;
+      }
+    });
   });
 
   if (window.lucide) lucide.createIcons();
