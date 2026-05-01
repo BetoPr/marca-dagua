@@ -133,6 +133,14 @@
   aside.innerHTML = html;
   setupAuthFooter();
 
+  // Carrega o handler do sininho de notificacoes (so se a pagina tem topbar)
+  if (document.querySelector('.topbar-btn[title="Notificações"]')) {
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.src = 'lib/notifications.js';
+    document.body.appendChild(s);
+  }
+
   // Render icons
   if (window.lucide) lucide.createIcons();
 
@@ -258,8 +266,30 @@
       apply(user);
       window.supabase.auth.onAuthStateChange((_event, session) => apply(session?.user || null));
       // Lazy check: rebaixa Pro expirado caso webhook tenha falhado
-      if (user) lazyCheckProExpired(user.id);
+      if (user) {
+        lazyCheckProExpired(user.id);
+        revealAdminLink(user.id);
+      }
     };
+
+    async function revealAdminLink(userId) {
+      try {
+        const { data } = await window.supabase
+          .from('profiles').select('is_admin').eq('id', userId).maybeSingle();
+        if (data?.is_admin) {
+          // Adiciona item Admin na secao Sistema (uma vez)
+          if (document.querySelector('a[href="admin.html"]')) return;
+          const sysItems = document.querySelector('.nav-items[data-items="' + (sections.length - 2) + '"]');
+          if (!sysItems) return;
+          const a = document.createElement('a');
+          a.href = 'admin.html';
+          a.innerHTML = '<span class="icon"><i data-lucide="shield"></i></span><span>Admin</span><span class="badge" style="background:rgba(255,93,108,0.16); color:var(--danger); border-color:rgba(255,93,108,0.3);">Admin</span>';
+          if ((location.pathname.split('/').pop() || '').toLowerCase() === 'admin.html') a.classList.add('active');
+          sysItems.appendChild(a);
+          if (window.lucide) lucide.createIcons();
+        }
+      } catch {}
+    }
     if (window.supabase) initAuth();
     else document.addEventListener('supabase-ready', initAuth, { once: true });
   }
@@ -279,8 +309,16 @@
   }
 
   async function loadAvatarUrl(user) {
+    if (!window.supabase) return null;
+    // 1) URL publica salva em profiles.avatar_url tem prioridade (bucket user-avatars)
+    try {
+      const { data: prof } = await window.supabase
+        .from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+      if (prof?.avatar_url) return prof.avatar_url;
+    } catch {}
+    // 2) Legacy: signed URL do bucket privado avatars (pra contas antigas)
     const path = user.user_metadata?.avatar_path;
-    if (!path || !window.supabase) return null;
+    if (!path) return null;
     try {
       const { data, error } = await window.supabase.storage.from('avatars').createSignedUrl(path, 3600);
       if (error) return null;
@@ -348,19 +386,26 @@
     document.getElementById('profilePhotoInput').onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file || !window.supabase) return;
+      if (file.size > 2 * 1024 * 1024) { setStatus('Foto maior que 2MB', true); return; }
       setStatus('Enviando foto…');
       try {
         const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
         const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-        const { error: upErr } = await window.supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+        // Sobe pro bucket publico user-avatars (pra galeria/detalhe verem)
+        const { error: upErr } = await window.supabase.storage.from('user-avatars')
+          .upload(path, file, { upsert: true, contentType: file.type });
         if (upErr) throw upErr;
-        const { error: updErr } = await window.supabase.auth.updateUser({ data: { avatar_path: path } });
-        if (updErr) throw updErr;
-        const { data } = await window.supabase.storage.from('avatars').createSignedUrl(path, 3600);
+        const { data: pub } = window.supabase.storage.from('user-avatars').getPublicUrl(path);
+        const url = pub.publicUrl;
+        // Salva em profiles.avatar_url (publico)
+        await window.supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id);
+
         const big = document.getElementById('profileAvatarBig');
-        if (big && data?.signedUrl) big.innerHTML = `<img src="${data.signedUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        if (big) big.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         const sidebarAvatar = document.getElementById('accountAvatar');
-        if (sidebarAvatar && data?.signedUrl) sidebarAvatar.innerHTML = `<img src="${data.signedUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        const topbarAvatar = document.querySelector('.topbar-avatar');
+        if (topbarAvatar) topbarAvatar.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         setStatus('✓ Foto atualizada');
       } catch (err) {
         setStatus('Erro: ' + (err.message || err), true);

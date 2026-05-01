@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin — Innova & AI Studio</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="share-gate" id="authGate" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Acesso restrito</h2>
+    <p>Esta área é só pra administradores.</p>
+    <a class="gal-btn-primary" id="goLogin" href="login.html">Entrar</a>
+  </div>
+
+  <div id="adminApp" hidden>
+    <div class="cb-header">
+      <span class="hero-badge" style="background: rgba(255,93,108,0.14); color: var(--danger);">Admin</span>
+      <h1>Painel administrativo</h1>
+      <p>Disparar notificações pra usuários, ver métricas e gerenciar conteúdo curado.</p>
+    </div>
+
+    <div class="adm-grid">
+      <!-- Disparar notificação -->
+      <section class="adm-card">
+        <h3 class="sub-section-title"><i data-lucide="megaphone"></i> Disparar notificação</h3>
+
+        <div class="adm-form">
+          <div class="up-field">
+            <label>Tipo</label>
+            <select id="notifType" class="share-select">
+              <option value="announcement">📢 Aviso geral</option>
+              <option value="feature">✨ Nova feature</option>
+              <option value="bugfix">🔧 Correção de bug</option>
+              <option value="promo">🎁 Promoção</option>
+            </select>
+          </div>
+
+          <div class="up-field">
+            <label>Audiência</label>
+            <select id="notifAudience" class="share-select">
+              <option value="all">Todos os usuários logados</option>
+              <option value="free">Apenas Free</option>
+              <option value="pro">Apenas Pro</option>
+            </select>
+          </div>
+
+          <div class="up-field">
+            <label>Título <span class="req">*</span></label>
+            <input type="text" id="notifTitle" maxlength="80" placeholder="Ex: Novo construtor de prompts disponível">
+            <div class="share-counter"><span id="titleCount">0</span> / 80</div>
+          </div>
+
+          <div class="up-field">
+            <label>Mensagem (opcional)</label>
+            <textarea id="notifBody" rows="3" maxlength="300" placeholder="Detalhes da novidade..."></textarea>
+            <div class="share-counter"><span id="bodyCount">0</span> / 300</div>
+          </div>
+
+          <div class="up-field">
+            <label>Link (opcional)</label>
+            <input type="text" id="notifLink" placeholder="construtor.html ou https://...">
+            <small style="color:var(--muted); font-size:11px;">Pra rotas internas, use só o nome (ex: <code>galeria.html</code>)</small>
+          </div>
+
+          <button class="gal-btn-primary" id="sendBtn">
+            <i data-lucide="send"></i> Disparar agora
+          </button>
+          <span class="up-checkout-status" id="sendStatus"></span>
+        </div>
+      </section>
+
+      <!-- Histórico -->
+      <section class="adm-card">
+        <h3 class="sub-section-title"><i data-lucide="history"></i> Últimas notificações enviadas</h3>
+        <div id="historyList" class="adm-history">
+          <div class="notif-loading"><span class="gal-spinner"></span> Carregando…</div>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="adm-card">
+        <h3 class="sub-section-title"><i data-lucide="bar-chart-3"></i> Métricas gerais</h3>
+        <div class="adm-stats" id="adminStats">
+          <div class="my-stat"><i data-lucide="users"></i><div><span class="lbl">Usuários totais</span><span class="val" id="statUsers">—</span></div></div>
+          <div class="my-stat"><i data-lucide="rocket"></i><div><span class="lbl">Pro ativos</span><span class="val" id="statPro">—</span></div></div>
+          <div class="my-stat"><i data-lucide="file-text"></i><div><span class="lbl">Prompts publicados</span><span class="val" id="statPosts">—</span></div></div>
+          <div class="my-stat"><i data-lucide="copy"></i><div><span class="lbl">Total cópias</span><span class="val" id="statCopies">—</span></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/admin.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
