@@ -676,6 +676,7 @@ select, input[type="number"], input[type="text"] {
 
 /* === HIDDEN === */
 .hidden { display: none !important; }
+[hidden] { display: none !important; }
 
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
