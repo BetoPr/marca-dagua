@@ -26,6 +26,7 @@
       color: 'purple',
       items: [
         { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA' },
+        { href: 'construtor.html', icon: 'blocks', label: 'Construtor' },
         { href: 'transcrever.html', icon: 'mic', label: 'Transcrever' },
       ],
     },

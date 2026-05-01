@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Construtor de prompts — Innova & AI Studio</title>
+<meta name="description" content="Monte prompts em blocos visuais — sujeito, ação, ambiente, estilo, lente, iluminação. Saída em inglês pronta pra Midjourney, Gemini, Flux.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="cb-header">
+    <span class="hero-badge">Construtor visual</span>
+    <h1>Monte seu prompt em blocos</h1>
+    <p>Escolha sujeito, pose, ambiente e estilo. Vai gerando o prompt em inglês em tempo real, pronto pra Midjourney, Gemini, Flux ou DALL·E.</p>
+  </div>
+
+  <div class="cb-layout">
+    <!-- ESQUERDA: blocos -->
+    <div class="cb-blocks">
+
+      <!-- Free -->
+      <section class="cb-block">
+        <header class="cb-block-head">
+          <span class="cb-block-num">1</span>
+          <h3>Sujeito</h3>
+          <span class="cb-tier-free">Free</span>
+        </header>
+        <div class="cb-options" data-key="subject"></div>
+        <input type="text" class="cb-extra" data-extra="subject" placeholder="Detalhes opcionais (ex: confident, mid-30s, beard, tall)">
+      </section>
+
+      <section class="cb-block">
+        <header class="cb-block-head">
+          <span class="cb-block-num">2</span>
+          <h3>Ação / pose</h3>
+          <span class="cb-tier-free">Free</span>
+        </header>
+        <div class="cb-options" data-key="pose"></div>
+        <input type="text" class="cb-extra" data-extra="pose" placeholder="Detalhe da pose (ex: looking down, hands in pockets)">
+      </section>
+
+      <section class="cb-block">
+        <header class="cb-block-head">
+          <span class="cb-block-num">3</span>
+          <h3>Ambiente</h3>
+          <span class="cb-tier-free">Free</span>
+        </header>
+        <div class="cb-options" data-key="environment"></div>
+        <input type="text" class="cb-extra" data-extra="environment" placeholder="Detalhe do ambiente (ex: with neon signs, marble floor)">
+      </section>
+
+      <section class="cb-block">
+        <header class="cb-block-head">
+          <span class="cb-block-num">4</span>
+          <h3>Estilo visual</h3>
+          <span class="cb-tier-free">Free</span>
+        </header>
+        <div class="cb-options" data-key="style"></div>
+      </section>
+
+      <section class="cb-block">
+        <header class="cb-block-head">
+          <span class="cb-block-num">5</span>
+          <h3>Proporção</h3>
+          <span class="cb-tier-free">Free</span>
+        </header>
+        <div class="cb-options" data-key="aspect"></div>
+      </section>
+
+      <!-- Pro -->
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">6</span>
+          <h3>Vestuário</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="outfit"></div>
+        <input type="text" class="cb-extra" data-extra="outfit" placeholder="Detalhe (ex: cream knit sweater, gold cufflinks)">
+      </section>
+
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">7</span>
+          <h3>Lente / câmera</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="lens"></div>
+      </section>
+
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">8</span>
+          <h3>Iluminação</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="lighting"></div>
+      </section>
+
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">9</span>
+          <h3>Atmosfera</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="atmosphere"></div>
+      </section>
+
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">10</span>
+          <h3>Texturas e detalhes</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="textures"></div>
+      </section>
+
+      <section class="cb-block cb-block-pro" data-pro="true">
+        <header class="cb-block-head">
+          <span class="cb-block-num">11</span>
+          <h3>Modificadores finais</h3>
+          <span class="cb-tier-pro"><i data-lucide="lock"></i> Pro</span>
+        </header>
+        <div class="cb-options" data-key="modifiers"></div>
+      </section>
+
+      <!-- Pro CTA -->
+      <div class="cb-pro-cta" id="proCta">
+        <i data-lucide="lock"></i>
+        <div>
+          <strong>Desbloqueie 6 blocos avançados</strong>
+          <span>Vestuário, lente, iluminação, atmosfera, texturas e modificadores. Plano <strong>Pro</strong> · R$ 19,90/mês.</span>
+        </div>
+        <button class="gal-btn-primary" id="proCtaBtn">Conhecer o Pro</button>
+      </div>
+    </div>
+
+    <!-- DIREITA: preview -->
+    <aside class="cb-preview-pane">
+      <div class="cb-preview-card">
+        <div class="cb-preview-head">
+          <h4>Prompt gerado</h4>
+          <span class="cb-char-count"><span id="charCount">0</span> chars</span>
+        </div>
+        <pre class="cb-preview-text" id="promptPreview">Escolha um sujeito pra começar…</pre>
+
+        <div class="cb-preview-actions">
+          <button class="gal-btn-primary" id="copyBtn">
+            <i data-lucide="copy"></i> Copiar
+          </button>
+          <button class="gal-btn-ghost" id="polishBtn">
+            <i data-lucide="wand-2"></i> Polir com IA
+          </button>
+          <button class="gal-btn-ghost" id="publishBtn">
+            <i data-lucide="upload-cloud"></i> Publicar
+          </button>
+          <button class="gal-btn-ghost" id="clearBtn" title="Limpar tudo">
+            <i data-lucide="rotate-ccw"></i>
+          </button>
+        </div>
+
+        <div class="cb-preview-hint">
+          💡 O prompt sai em <strong>inglês</strong> (melhor performance em modelos de imagem). Use "Polir com IA" pra deixar mais fluido e cinematográfico.
+        </div>
+      </div>
+    </aside>
+  </div>
+
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/construtor.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
