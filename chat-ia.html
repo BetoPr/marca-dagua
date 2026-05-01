@@ -1158,6 +1158,22 @@ $('saveManualPrompt').addEventListener('click', async () => {
   renderMessages();
   updateSendBtn();
   await refreshHistoryCount();
+
+  // Pre-preenche o input se vier ?prompt= da galeria/detalhe
+  try {
+    const seed = new URLSearchParams(location.search).get('prompt');
+    if (seed) {
+      const ta = document.getElementById('chatInput');
+      if (ta) {
+        ta.value = seed;
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+        ta.focus();
+        updateSendBtn();
+      }
+    }
+  } catch {}
+
   if (window.lucide) lucide.createIcons();
 })();
 </script>

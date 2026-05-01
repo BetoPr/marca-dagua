@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Prompt — Innova & AI Studio</title>
+<meta name="description" content="Prompt validado pela comunidade Innova. Copie e teste no seu modelo de IA favorito.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Prompt — Innova & AI Studio">
+<meta property="og:description" content="Prompt validado pela comunidade Innova.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar prompts…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="pd-back-wrap">
+    <a href="galeria.html" class="pd-back" id="backLink">
+      <i data-lucide="arrow-left"></i> Voltar para a galeria
+    </a>
+  </div>
+
+  <article id="pdRoot">
+    <div class="pd-loader-full">
+      <span class="gal-spinner"></span> Carregando prompt…
+    </div>
+  </article>
+
+</main>
+
+<!-- Modal Pro -->
+<div class="gal-modal-overlay" id="proModal" hidden>
+  <div class="gal-modal">
+    <button class="gal-modal-close" id="proClose"><i data-lucide="x"></i></button>
+    <div class="gal-modal-icon"><i data-lucide="lock"></i></div>
+    <h2>Este prompt é Pro</h2>
+    <p>Assine o plano Pro por <strong>R$ 19,90/mês</strong> e desbloqueie todos os prompts curados da comunidade.</p>
+    <div class="gal-modal-actions">
+      <button class="gal-btn-primary" id="proGoUpgrade">Conhecer o Pro</button>
+      <button class="gal-btn-ghost" id="proCancel">Talvez depois</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/prompt-detail.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
