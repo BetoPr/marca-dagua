@@ -162,6 +162,10 @@
         <i data-lucide="bookmark"></i>
         <span>Histórico (<span id="historyCount">0</span>)</span>
       </button>
+      <button class="config-pill" id="openSessions" hidden>
+        <i data-lucide="messages-square"></i>
+        Conversas
+      </button>
       <button class="config-pill" id="newChatBtn">
         <i data-lucide="plus"></i>
         Nova conversa
@@ -183,9 +187,11 @@
 
     <div class="quick-prompts">
       <button data-prompt="prompt-imagem"><i data-lucide="sparkles"></i> Criar prompt de imagem</button>
+      <button data-prompt="remix"><i data-lucide="shuffle"></i> Remixar prompt</button>
+      <button data-prompt="reverse"><i data-lucide="reply"></i> Engenharia reversa</button>
+      <button data-prompt="comparar"><i data-lucide="git-compare"></i> Comparar prompts</button>
       <button data-prompt="legendas-ig"><i data-lucide="instagram"></i> Legendas Insta</button>
       <button data-prompt="ideias-post"><i data-lucide="lightbulb"></i> Ideias de post</button>
-      <button data-prompt="variacoes"><i data-lucide="copy"></i> Variações de prompt</button>
       <button data-prompt="hashtags"><i data-lucide="hash"></i> Hashtags</button>
     </div>
 
@@ -262,6 +268,18 @@
 
 <div class="img-zoom" id="imgZoom"><img id="imgZoomSrc" src=""></div>
 
+<!-- Sessions modal (chat_sessions persistente) -->
+<div class="modal" id="sessionsModal">
+  <div class="modal-content wide">
+    <h3>Suas conversas</h3>
+    <div class="sub">Conversas salvas automaticamente quando você está logado. Clique pra retomar.</div>
+    <div id="sessionsList" class="sessions-list"></div>
+    <div class="actions-row">
+      <button class="ghost" id="closeSessions">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script src="favicon.js"></script>
 <script type="module" src="supabase-client.js"></script>
 <script src="sidebar.js"></script>
@@ -277,9 +295,11 @@ Seja direto, prático e responda em português. Use markdown pra listas e blocos
 
 const QUICK_PROMPTS = {
   'prompt-imagem': 'Crie um prompt detalhado em INGLÊS para gerar uma imagem de [TEMA AQUI]. Inclua: estilo fotográfico (editorial/lifestyle/cinematic), iluminação, lente (ex: 85mm), pose, expressão, ambiente, paleta de cores, profundidade de campo. Se for com referência de rosto, inclua a frase: "Use the face from the uploaded reference image and preserve the same facial features. Keep the face 100% accurate."',
+  'remix': 'Remixe este prompt em 3 variações distintas, mantendo o sujeito principal mas mudando uma dimensão por vez:\n\n[COLE SEU PROMPT AQUI]\n\nFormato da resposta:\n1) **Mais cinematográfico** — versão com mood cinematic, color grading, lente premium e iluminação dramática.\n2) **Mais minimalista** — versão limpa, fundo neutro, foco no sujeito, paleta reduzida.\n3) **Outro ambiente / outra paleta** — escolha um ambiente surpreendente e harmônico, troque a paleta.\n\nMantenha cada prompt em INGLÊS, completo e copiável. Sem comentários extras.',
+  'reverse': 'Engenharia reversa: a partir da descrição abaixo de uma cena ou imagem, gere o prompt provável que a criou. Inclua câmera, lente, iluminação, paleta, estilo, pose e proporção. Em INGLÊS, pronto pra colar em Midjourney/Gemini/Flux.\n\nDescrição:\n[COLE A DESCRIÇÃO AQUI]',
+  'comparar': 'Compare estes dois prompts e devolva: (1) o que cada um faz melhor, (2) onde cada um falha, (3) uma versão mesclada que combina o melhor dos dois. Seja objetivo, em formato de tabela ou listas.\n\nPROMPT A:\n[COLE O PRIMEIRO]\n\nPROMPT B:\n[COLE O SEGUNDO]',
   'legendas-ig': 'Sugira 5 legendas pra Instagram em português sobre [TEMA AQUI]. Variando entre: curta e impactante, longa com storytelling, divertida, emocional, e provocadora. Inclua CTA e hashtags relevantes.',
   'ideias-post': 'Liste 10 ideias de conteúdo pra Instagram/LinkedIn sobre [TÓPICO AQUI]. Pra cada uma, dá um título e 1 frase do gancho.',
-  'variacoes': 'Tenho este prompt: "[COLE SEU PROMPT AQUI]"\n\nCrie 5 variações: 1 com ângulo diferente, 1 com iluminação noturna, 1 com paleta vibrante, 1 close-up, 1 com fundo minimalista.',
   'hashtags': 'Sugira 30 hashtags pra um post de [TEMA AQUI] no Instagram. Mistura: 10 grandes (>1M), 10 médias (100k-1M), 10 nicho (<100k). Liste separadamente.',
 };
 
@@ -533,9 +553,99 @@ $('templateSelect').addEventListener('change', e => {
 $('newChatBtn').addEventListener('click', () => {
   if (messages.length && !confirm('Iniciar nova conversa? O histórico atual será apagado.')) return;
   messages = [];
+  currentSessionId = null;
   localStorage.setItem('chat-history', '[]');
   renderMessages();
 });
+
+// === Chat sessions persistentes em chat_sessions (quando logado) ===
+let currentSessionId = null;
+
+async function ensureSession(firstMessage) {
+  if (!cloudUser || !window.supabase) return null;
+  if (currentSessionId) return currentSessionId;
+  const title = (firstMessage || 'Conversa').slice(0, 60);
+  const { data, error } = await window.supabase
+    .from('chat_sessions')
+    .insert({ user_id: cloudUser.id, title, messages: [] })
+    .select('id')
+    .single();
+  if (error) { console.warn('chat_session create failed', error); return null; }
+  currentSessionId = data.id;
+  return currentSessionId;
+}
+
+async function persistSession() {
+  if (!cloudUser || !window.supabase || !currentSessionId) return;
+  const persistable = messages.filter(m => m.role === 'user' || m.role === 'assistant');
+  await window.supabase
+    .from('chat_sessions')
+    .update({ messages: persistable, updated_at: new Date().toISOString() })
+    .eq('id', currentSessionId);
+}
+
+async function loadSessions() {
+  if (!cloudUser || !window.supabase) return [];
+  const { data, error } = await window.supabase
+    .from('chat_sessions')
+    .select('id, title, updated_at, messages')
+    .eq('user_id', cloudUser.id)
+    .order('updated_at', { ascending: false })
+    .limit(50);
+  if (error) { console.warn(error); return []; }
+  return data || [];
+}
+
+function openSessions() { $('sessionsModal').classList.add('open'); renderSessionsList(); }
+function closeSessions() { $('sessionsModal').classList.remove('open'); }
+
+async function renderSessionsList() {
+  const list = $('sessionsList');
+  list.innerHTML = '<div class="sessions-loading">Carregando…</div>';
+  const items = await loadSessions();
+  if (!items.length) {
+    list.innerHTML = '<div class="sessions-empty">Nenhuma conversa salva ainda.</div>';
+    return;
+  }
+  list.innerHTML = items.map(s => {
+    const cnt = Array.isArray(s.messages) ? s.messages.length : 0;
+    const preview = (s.messages?.[0]?.content || '').slice(0, 100);
+    const date = new Date(s.updated_at).toLocaleString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    return `
+      <div class="session-item" data-id="${s.id}">
+        <div class="session-info">
+          <strong>${escapeHtml(s.title || '(sem título)')}</strong>
+          <span class="session-meta">${cnt} msgs · ${date}</span>
+          <span class="session-preview">${escapeHtml(preview)}</span>
+        </div>
+        <button class="ghost session-load" data-id="${s.id}">Abrir</button>
+        <button class="session-del" data-id="${s.id}" title="Excluir"><i data-lucide="trash-2"></i></button>
+      </div>`;
+  }).join('');
+  if (window.lucide) lucide.createIcons();
+
+  list.querySelectorAll('.session-load').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.id;
+    const session = items.find(s => s.id === id);
+    if (!session) return;
+    messages = Array.isArray(session.messages) ? session.messages.slice() : [];
+    localStorage.setItem('chat-history', JSON.stringify(messages));
+    currentSessionId = id;
+    renderMessages();
+    closeSessions();
+  }));
+  list.querySelectorAll('.session-del').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.id;
+    if (!confirm('Excluir esta conversa?')) return;
+    await window.supabase.from('chat_sessions').delete().eq('id', id);
+    if (currentSessionId === id) { messages = []; currentSessionId = null; renderMessages(); }
+    renderSessionsList();
+  }));
+}
+
+$('openSessions').addEventListener('click', openSessions);
+$('closeSessions').addEventListener('click', closeSessions);
+$('sessionsModal').addEventListener('click', e => { if (e.target.id === 'sessionsModal') closeSessions(); });
 
 // === Render messages ===
 function renderMessages() {
@@ -559,7 +669,8 @@ function renderMessages() {
     }
     const html = marked.parse(m.content);
     const actions = m.content && !isStreaming ? `<div class="msg-actions">
-      <button data-act="save" data-i="${i}"><i data-lucide="bookmark-plus"></i> Salvar como prompt</button>
+      <button data-act="publish" data-i="${i}" title="Publicar este prompt na galeria"><i data-lucide="upload-cloud"></i> Publicar na galeria</button>
+      <button data-act="save" data-i="${i}"><i data-lucide="bookmark-plus"></i> Salvar local</button>
       <button data-act="copy" data-i="${i}"><i data-lucide="copy"></i> Copiar</button>
     </div>` : '';
     return `<div class="chat-message ai">${html}${actions}</div>`;
@@ -572,7 +683,12 @@ function renderMessages() {
     await refreshHistoryCount();
     b.innerHTML = '<i data-lucide="check"></i> Salvo!';
     if (window.lucide) lucide.createIcons();
-    setTimeout(() => { b.innerHTML = '<i data-lucide="bookmark-plus"></i> Salvar como prompt'; if (window.lucide) lucide.createIcons(); }, 1800);
+    setTimeout(() => { b.innerHTML = '<i data-lucide="bookmark-plus"></i> Salvar local'; if (window.lucide) lucide.createIcons(); }, 1800);
+  }));
+  box.querySelectorAll('[data-act="publish"]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.i;
+    const text = messages[i].content;
+    location.href = `compartilhar.html?seed=${encodeURIComponent(text)}`;
   }));
   box.querySelectorAll('[data-act="copy"]').forEach(b => b.addEventListener('click', () => {
     const i = +b.dataset.i;
@@ -667,6 +783,14 @@ async function sendMessage() {
   updateSendBtn();
   renderMessages();
   ta.focus();
+
+  // Persiste em chat_sessions quando logado
+  try {
+    if (cloudUser) {
+      await ensureSession(messages[0]?.content);
+      await persistSession();
+    }
+  } catch (e) { console.warn('persist session failed', e); }
 }
 
 // === Storage layer (cloud quando logado, IndexedDB senão) ===
@@ -1146,8 +1270,10 @@ $('saveManualPrompt').addEventListener('click', async () => {
   if (window.whenSupabaseReady) {
     await new Promise(resolve => window.whenSupabaseReady(resolve));
     await refreshCloudUser();
+    $('openSessions').hidden = !cloudUser;
     window.supabase.auth.onAuthStateChange(async (_event, session) => {
       cloudUser = session?.user || null;
+      $('openSessions').hidden = !cloudUser;
       await refreshHistoryCount();
       if (document.getElementById('historyModal').classList.contains('open')) {
         await renderHistory();

@@ -41,6 +41,14 @@
       ],
     },
     {
+      label: 'Sistema',
+      icon: 'settings',
+      color: 'gray',
+      items: [
+        { href: 'configuracoes.html', icon: 'key-round', label: 'Chaves de API' },
+      ],
+    },
+    {
       label: 'Em breve',
       icon: 'clock',
       color: 'gray',

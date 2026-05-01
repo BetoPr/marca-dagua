@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Configurações — Innova & AI Studio</title>
+<meta name="description" content="Gerencie suas chaves de API e preferências.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="cfg-wrap">
+    <div class="cfg-header">
+      <span class="hero-badge">Configurações</span>
+      <h1>Chaves de API</h1>
+      <p>Conecte suas chaves de cada provedor pra usar o Chat IA, polir prompts e gerar conteúdo. <strong>Suas chaves ficam apenas no seu navegador</strong> — nunca passam pelos nossos servidores.</p>
+    </div>
+
+    <div class="cfg-banner">
+      <i data-lucide="shield-check"></i>
+      <div>
+        <strong>Por que BYOK (Bring Your Own Key)?</strong>
+        <span>Você paga só o que usar, direto na fonte. Sem créditos artificiais, sem markup. Groq tem free tier generoso, OpenAI/OpenRouter são pay-per-use.</span>
+      </div>
+    </div>
+
+    <!-- Provider cards -->
+    <div class="cfg-card" data-provider="groq">
+      <div class="cfg-card-head">
+        <div class="cfg-provider-icon groq"><i data-lucide="zap"></i></div>
+        <div class="cfg-card-info">
+          <h3>Groq <span class="cfg-tag-free">Gratuito</span></h3>
+          <p>Llama 3.3 70B, Mixtral, Gemma. <strong>~14k tokens/min de graça</strong>. Recomendado pra começar.</p>
+          <a href="https://console.groq.com/keys" target="_blank" class="cfg-howto">
+            <i data-lucide="external-link"></i> Pegue sua chave em console.groq.com/keys
+          </a>
+        </div>
+        <span class="cfg-status" data-status="groq"></span>
+      </div>
+      <div class="cfg-key-row">
+        <div class="cfg-input-wrap">
+          <input type="password" data-key="groq" placeholder="gsk_…" autocomplete="off">
+          <button type="button" class="cfg-eye" data-eye="groq" title="Mostrar/ocultar">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+        <button type="button" class="gal-btn-ghost cfg-test-btn" data-test="groq">
+          <i data-lucide="zap"></i> Testar
+        </button>
+        <button type="button" class="gal-btn-primary cfg-save-btn" data-save="groq">
+          <i data-lucide="save"></i> Salvar
+        </button>
+      </div>
+    </div>
+
+    <div class="cfg-card" data-provider="openai">
+      <div class="cfg-card-head">
+        <div class="cfg-provider-icon openai"><i data-lucide="sparkles"></i></div>
+        <div class="cfg-card-info">
+          <h3>OpenAI <span class="cfg-tag-paid">Pay-per-use</span></h3>
+          <p>GPT-4o, GPT-4 Turbo, o1-mini. <strong>~$0,15–$5 por 1M tokens.</strong> Melhor qualidade pra prompts criativos.</p>
+          <a href="https://platform.openai.com/api-keys" target="_blank" class="cfg-howto">
+            <i data-lucide="external-link"></i> Pegue sua chave em platform.openai.com/api-keys
+          </a>
+        </div>
+        <span class="cfg-status" data-status="openai"></span>
+      </div>
+      <div class="cfg-key-row">
+        <div class="cfg-input-wrap">
+          <input type="password" data-key="openai" placeholder="sk-…" autocomplete="off">
+          <button type="button" class="cfg-eye" data-eye="openai">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+        <button type="button" class="gal-btn-ghost cfg-test-btn" data-test="openai">
+          <i data-lucide="zap"></i> Testar
+        </button>
+        <button type="button" class="gal-btn-primary cfg-save-btn" data-save="openai">
+          <i data-lucide="save"></i> Salvar
+        </button>
+      </div>
+    </div>
+
+    <div class="cfg-card" data-provider="openrouter">
+      <div class="cfg-card-head">
+        <div class="cfg-provider-icon openrouter"><i data-lucide="route"></i></div>
+        <div class="cfg-card-info">
+          <h3>OpenRouter <span class="cfg-tag-mix">Free + paid</span></h3>
+          <p>Acesso a vários modelos (Gemini, Llama, Mistral, Claude). Modelos com <code>:free</code> no nome são gratuitos.</p>
+          <a href="https://openrouter.ai/keys" target="_blank" class="cfg-howto">
+            <i data-lucide="external-link"></i> Pegue sua chave em openrouter.ai/keys
+          </a>
+        </div>
+        <span class="cfg-status" data-status="openrouter"></span>
+      </div>
+      <div class="cfg-key-row">
+        <div class="cfg-input-wrap">
+          <input type="password" data-key="openrouter" placeholder="sk-or-…" autocomplete="off">
+          <button type="button" class="cfg-eye" data-eye="openrouter">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+        <button type="button" class="gal-btn-ghost cfg-test-btn" data-test="openrouter">
+          <i data-lucide="zap"></i> Testar
+        </button>
+        <button type="button" class="gal-btn-primary cfg-save-btn" data-save="openrouter">
+          <i data-lucide="save"></i> Salvar
+        </button>
+      </div>
+    </div>
+
+    <div class="cfg-section-title">Outras opções</div>
+
+    <div class="cfg-card cfg-misc">
+      <div>
+        <strong>Limpar todas as chaves</strong>
+        <p>Remove todas as chaves de API armazenadas neste navegador.</p>
+      </div>
+      <button type="button" class="gal-btn-ghost cfg-danger" id="clearAll">
+        <i data-lucide="trash-2"></i> Limpar tudo
+      </button>
+    </div>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/configuracoes.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
