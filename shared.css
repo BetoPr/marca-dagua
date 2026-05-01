@@ -858,6 +858,7 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
 @media (max-width: 1024px) { .gal-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px)  { .gal-grid { grid-template-columns: 1fr; padding: 14px; } }
 
+/* === Card estilo Banana: imagem 1:1 + tag-title topo + likes topo + preview no body + footer fixo === */
 .gal-card {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 14px; overflow: hidden;
@@ -872,7 +873,7 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
 
 .gal-card-img {
   position: relative; display: block;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   background: var(--panel-2);
   overflow: hidden;
   text-decoration: none;
@@ -884,9 +885,38 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
 }
 .gal-card:hover .gal-card-img img { transform: scale(1.04); }
 
+/* Tag de titulo (canto superior esquerdo) */
+.gal-card-tag {
+  position: absolute; top: 12px; left: 12px;
+  max-width: 60%;
+  background: rgba(0,0,0,0.55); color: white;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 11px; border-radius: 999px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* Likes no topo direito */
+.gal-card-top-likes {
+  position: absolute; top: 12px; right: 12px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(0,0,0,0.55); color: white;
+  font-size: 12px; font-weight: 700;
+  padding: 6px 11px; border-radius: 999px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.gal-card-top-likes svg { width: 13px; height: 13px; color: #ff8094; fill: currentColor; }
+
+/* Badges extras (PRO, RASCUNHO, TESTADO, FAV) — coluna inferior esquerda */
+.gal-card-extras {
+  position: absolute; bottom: 12px; left: 12px;
+  display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100% - 24px);
+}
 .gal-pro-badge {
-  position: absolute; top: 10px; left: 10px;
-  display: flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: linear-gradient(135deg, #a78bfa, #7c3aed);
   color: white; font-size: 10px; font-weight: 800;
   padding: 4px 9px; border-radius: 6px;
@@ -896,7 +926,7 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
 .gal-pro-badge svg { width: 10px; height: 10px; stroke-width: 3; }
 
 .gal-validated-badge {
-  position: absolute; top: 10px; right: 10px;
+  position: absolute; top: 12px; right: 12px;
   width: 28px; height: 28px; border-radius: 50%;
   background: rgba(54,201,138,0.95); color: white;
   display: flex; align-items: center; justify-content: center;
@@ -904,45 +934,67 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
 }
 .gal-validated-badge svg { width: 14px; height: 14px; stroke-width: 2.5; }
 
-.gal-card-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.92) 100%);
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 14px;
-  opacity: 0; transition: opacity .2s;
+/* Body: preview do prompt sempre visivel */
+.gal-card-body {
+  padding: 14px 16px 12px; flex: 1;
+  display: flex; flex-direction: column;
 }
-.gal-card:hover .gal-card-overlay { opacity: 1; }
 .gal-card-preview {
-  margin: 0 0 12px; color: rgba(255,255,255,0.92);
-  font-size: 12px; line-height: 1.55; font-weight: 500;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden;
+  margin: 0; color: var(--text);
+  font-size: 13px; line-height: 1.55; font-weight: 500;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+  word-break: break-word;
+}
+
+/* Footer: Copiar + autor */
+.gal-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 14px;
+  gap: 10px;
 }
 .gal-card-copy {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  background: rgba(255,255,255,0.96); color: #0f1115;
-  border: none; padding: 9px 14px; border-radius: 8px;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  transition: background .12s, transform .12s;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 7px 13px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: all .12s;
 }
-.gal-card-copy:hover { background: white; transform: scale(1.02); }
-.gal-card-copy.copied { background: var(--ok); color: white; }
+.gal-card-copy:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.gal-card-copy.copied { background: var(--ok); color: white; border-color: var(--ok); }
 .gal-card-copy svg { width: 13px; height: 13px; stroke-width: 2.5; }
 
-.gal-card-body { padding: 13px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
-.gal-card-body h3 {
-  margin: 0; font-family: 'Sora', system-ui, sans-serif;
-  font-size: 14.5px; font-weight: 700; color: var(--text);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;
+.gal-card-author {
+  font-size: 12px; color: var(--muted);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1;
+  overflow: hidden; min-width: 0;
 }
-.gal-card-meta {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 11.5px; color: var(--muted);
+.gal-card-author-min { font-size: 12px; color: var(--muted); }
+.gal-card-actions { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Stats no footer (cards owner) */
+.gal-card-stats {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 11.5px; color: var(--muted); font-weight: 600;
+  flex: 1; min-width: 0; overflow: hidden;
 }
-.gal-card-author { display: flex; align-items: center; gap: 4px; }
-.gal-card-author svg { width: 11px; height: 11px; }
-.gal-card-likes { display: flex; align-items: center; gap: 4px; font-weight: 600; }
-.gal-card-likes.on { color: #ff8094; }
-.gal-card-likes svg { width: 12px; height: 12px; }
+.gal-card-stats span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.gal-card-stats svg { width: 11px; height: 11px; }
+
+/* Botoes editar/excluir no footer (own) */
+.my-own-footer { padding: 10px 14px 12px; }
+.my-own-buttons { display: inline-flex; gap: 4px; flex-shrink: 0; }
+.my-own-buttons .my-act-edit,
+.my-own-buttons .my-act-delete {
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 7px 9px; border-radius: 7px;
+  cursor: pointer; transition: all .12s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.my-own-buttons .my-act-edit:hover { color: var(--accent-2); border-color: var(--accent-2); }
+.my-own-buttons .my-act-delete:hover { color: var(--danger); border-color: rgba(255,93,108,0.5); background: rgba(255,93,108,0.08); }
+.my-own-buttons svg { width: 13px; height: 13px; }
 
 /* === Loader / empty / end === */
 .gal-loader, .gal-end, .gal-empty {
@@ -1718,41 +1770,9 @@ body.light-mode .my-header-text h1 {
   max-width: 1200px; padding: 0 36px 40px;
 }
 
-/* Own card overlay */
-.my-own-card .my-own-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.92) 100%);
-  display: flex; flex-direction: column; justify-content: space-between;
-  padding: 12px;
-  opacity: 0; transition: opacity .2s;
-}
-.my-own-card:hover .my-own-overlay { opacity: 1; }
-.my-own-stats {
-  display: flex; gap: 10px;
-  color: rgba(255,255,255,0.95); font-size: 11.5px; font-weight: 700;
-  align-self: flex-end;
-}
-.my-own-stats span { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.55); padding: 4px 8px; border-radius: 6px; backdrop-filter: blur(4px); }
-.my-own-stats svg { width: 12px; height: 12px; }
-.my-own-actions { display: flex; gap: 6px; }
-.my-act-edit, .my-act-delete {
-  background: rgba(255,255,255,0.96); color: #0f1115;
-  border: none; padding: 8px 12px; border-radius: 7px;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 5px;
-  transition: all .12s;
-}
-.my-act-edit { flex: 1; justify-content: center; }
-.my-act-edit:hover { background: white; }
-.my-act-edit svg { width: 13px; height: 13px; }
-.my-act-delete { padding: 8px 10px; background: rgba(255,93,108,0.95); color: white; }
-.my-act-delete:hover { background: var(--danger); }
-.my-act-delete svg { width: 13px; height: 13px; }
-
-/* Badges nos cards proprios */
+/* Badges nos cards (rascunho/testado/favorito) — agora ficam dentro de .gal-card-extras */
 .my-draft-badge {
-  position: absolute; top: 10px; left: 10px;
-  display: flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: rgba(255,184,77,0.95); color: white;
   font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
   padding: 4px 9px; border-radius: 6px;
@@ -1765,8 +1785,7 @@ body.light-mode .my-header-text h1 {
   text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;
 }
 .my-tested-badge {
-  position: absolute; top: 10px; right: 10px;
-  display: flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: rgba(54,201,138,0.95); color: white;
   font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
   padding: 4px 9px; border-radius: 6px;
@@ -1774,15 +1793,13 @@ body.light-mode .my-header-text h1 {
 }
 .my-tested-badge svg { width: 11px; height: 11px; stroke-width: 2.5; }
 .my-fav-badge {
-  position: absolute; top: 10px; right: 10px;
-  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
   background: rgba(167,139,250,0.95); color: white;
-  display: flex; align-items: center; justify-content: center;
 }
 .my-fav-badge svg { width: 14px; height: 14px; fill: currentColor; }
 
-/* Botao remove favorito */
-.gal-card-actions { display: flex; align-items: center; gap: 4px; }
+/* Botao remove favorito (no footer) */
 .my-unfav-btn {
   background: transparent; border: none; color: var(--muted);
   cursor: pointer; padding: 4px; border-radius: 6px;
