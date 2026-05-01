@@ -36,8 +36,8 @@
       items: [
         { href: 'galeria.html', icon: 'layout-grid', label: 'Galeria' },
         { href: 'compartilhar.html', icon: 'plus-circle', label: 'Compartilhar' },
-        { href: '#', icon: 'bookmark', label: 'Meus prompts', disabled: true },
-        { href: '#', icon: 'heart', label: 'Favoritos', disabled: true },
+        { href: 'meus-prompts.html', icon: 'file-text', label: 'Meus prompts' },
+        { href: 'favoritos.html', icon: 'bookmark', label: 'Favoritos' },
       ],
     },
     {

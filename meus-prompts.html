@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Meus prompts — Innova & AI Studio</title>
+<meta name="description" content="Seus prompts publicados, rascunhos e validados.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar nos seus prompts…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="share-gate" id="authGate" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Faça login pra ver seus prompts</h2>
+    <p>Você precisa estar logado pra acessar essa área.</p>
+    <a class="gal-btn-primary" id="goLogin">Entrar</a>
+  </div>
+
+  <div id="myApp" hidden>
+    <!-- Header + stats -->
+    <div class="my-header">
+      <div class="my-header-text">
+        <span class="hero-badge">Sua área</span>
+        <h1>Meus prompts</h1>
+        <p>Tudo que você publicou, salvou como rascunho ou testou na comunidade.</p>
+      </div>
+      <a href="compartilhar.html" class="gal-btn-primary my-share-btn">
+        <i data-lucide="plus"></i> Compartilhar prompt
+      </a>
+    </div>
+
+    <div class="my-stats">
+      <div class="my-stat">
+        <i data-lucide="file-text"></i>
+        <div><span class="lbl">Publicados</span><span class="val" id="statPub">—</span></div>
+      </div>
+      <div class="my-stat">
+        <i data-lucide="copy"></i>
+        <div><span class="lbl">Cópias recebidas</span><span class="val" id="statCopies">—</span></div>
+      </div>
+      <div class="my-stat">
+        <i data-lucide="heart"></i>
+        <div><span class="lbl">Curtidas recebidas</span><span class="val" id="statLikes">—</span></div>
+      </div>
+      <div class="my-stat">
+        <i data-lucide="badge-check"></i>
+        <div><span class="lbl">Prompts testados</span><span class="val" id="statValidated">—</span></div>
+      </div>
+    </div>
+
+    <!-- Top prompt -->
+    <a class="my-top-card" id="myTopCard" href="#" hidden>
+      <div class="my-top-cover" id="myTopCover"></div>
+      <div class="my-top-info">
+        <span class="my-top-label"><i data-lucide="trophy"></i> Seu prompt mais copiado</span>
+        <h3 id="myTopTitle">—</h3>
+        <span class="my-top-meta"><i data-lucide="copy"></i> <span id="myTopCount">0</span> cópias</span>
+      </div>
+      <i data-lucide="chevron-right" class="my-top-chevron"></i>
+    </a>
+
+    <!-- Tabs -->
+    <div class="my-tabs">
+      <button class="my-tab active" data-tab="published">
+        Publicados <span class="my-tab-count" id="cntPub">0</span>
+      </button>
+      <button class="my-tab" data-tab="drafts">
+        Rascunhos <span class="my-tab-count" id="cntDraft">0</span>
+      </button>
+      <button class="my-tab" data-tab="validated">
+        Testados <span class="my-tab-count" id="cntVal">0</span>
+      </button>
+    </div>
+
+    <!-- Grid -->
+    <div class="gal-grid" id="grid"></div>
+
+    <div class="gal-loader" id="loader" hidden>
+      <span class="gal-spinner"></span> Carregando…
+    </div>
+    <div class="gal-empty" id="emptyMsg" hidden>
+      <i data-lucide="file-plus-2"></i>
+      <h3 id="emptyTitle">Nada por aqui ainda</h3>
+      <p id="emptySub">Compartilhe seu primeiro prompt pra começar.</p>
+      <a href="compartilhar.html" class="gal-btn-primary">Compartilhar prompt</a>
+    </div>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/meus-prompts.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

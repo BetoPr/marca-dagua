@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Favoritos — Innova & AI Studio</title>
+<meta name="description" content="Seus prompts favoritos da galeria.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar nos favoritos…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="share-gate" id="authGate" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Faça login pra ver seus favoritos</h2>
+    <p>Você precisa estar logado pra acessar essa área.</p>
+    <a class="gal-btn-primary" id="goLogin">Entrar</a>
+  </div>
+
+  <div id="favApp" hidden>
+    <div class="my-header">
+      <div class="my-header-text">
+        <span class="hero-badge">Sua área</span>
+        <h1>Meus favoritos</h1>
+        <p>Os prompts que você salvou pra usar depois.</p>
+      </div>
+    </div>
+
+    <div class="gal-filters">
+      <div class="gal-filter-row">
+        <div class="gal-search">
+          <i data-lucide="search"></i>
+          <input type="text" id="searchInput" placeholder="Buscar nos favoritos…">
+        </div>
+        <select id="sortSel" class="gal-select">
+          <option value="recent">Salvos recentemente</option>
+          <option value="popular">Mais populares</option>
+          <option value="copies">Mais copiados</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gal-grid" id="grid"></div>
+
+    <div class="gal-loader" id="loader" hidden>
+      <span class="gal-spinner"></span> Carregando…
+    </div>
+    <div class="gal-empty" id="emptyMsg" hidden>
+      <i data-lucide="bookmark-x"></i>
+      <h3>Nenhum favorito ainda</h3>
+      <p>Toque no ícone de salvar em qualquer prompt da galeria pra adicionar.</p>
+      <a href="galeria.html" class="gal-btn-primary">Ir pra galeria</a>
+    </div>
+  </div>
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="lib/favoritos.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
