@@ -257,9 +257,25 @@
       const { data: { user } } = await window.supabase.auth.getUser();
       apply(user);
       window.supabase.auth.onAuthStateChange((_event, session) => apply(session?.user || null));
+      // Lazy check: rebaixa Pro expirado caso webhook tenha falhado
+      if (user) lazyCheckProExpired(user.id);
     };
     if (window.supabase) initAuth();
     else document.addEventListener('supabase-ready', initAuth, { once: true });
+  }
+
+  // Roda 1x por sessao (debounce em sessionStorage) — barata
+  async function lazyCheckProExpired(userId) {
+    try {
+      if (sessionStorage.getItem('lazy-pro-checked')) return;
+      sessionStorage.setItem('lazy-pro-checked', '1');
+      const { data: prof } = await window.supabase
+        .from('profiles').select('plan, pro_until').eq('id', userId).maybeSingle();
+      if (!prof) return;
+      if (prof.plan && prof.plan !== 'free' && prof.pro_until && new Date(prof.pro_until) <= new Date()) {
+        await window.supabase.from('profiles').update({ plan: 'free', pro_until: null }).eq('id', userId);
+      }
+    } catch {}
   }
 
   async function loadAvatarUrl(user) {

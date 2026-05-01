@@ -2330,6 +2330,39 @@ body.light-mode .up-hero h1 {
 .up-compare { font-weight: 600; font-size: 13.5px !important; color: var(--text) !important; }
 .up-compare s { color: var(--muted); }
 
+/* Modal checkout */
+.up-modal-checkout { max-width: 460px; text-align: left; }
+.up-modal-checkout h2 { text-align: center; }
+.up-modal-checkout > p { text-align: center; }
+.up-checkout-form { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.up-field { display: flex; flex-direction: column; gap: 6px; }
+.up-field label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); font-weight: 700;
+}
+.up-field label .req { color: var(--danger); }
+.up-field label .opt { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; }
+.up-field input {
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 9px;
+  padding: 11px 13px; font-size: 14px; outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.up-field input:focus { border-color: var(--accent-2); }
+.up-checkout-summary {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; margin-top: 4px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.up-checkout-summary span { font-size: 13px; color: var(--muted); font-weight: 600; }
+.up-checkout-summary strong { font-size: 16px; color: var(--text); }
+.up-checkout-form .gal-modal-actions { margin-top: 6px; }
+.up-checkout-form .gal-btn-primary { width: 100%; padding: 12px; }
+.up-checkout-status { font-size: 12px; min-height: 16px; text-align: center; color: var(--muted); }
+.up-checkout-status.error { color: var(--danger); }
+.up-checkout-status.ok { color: var(--ok); }
+
 /* FAQ */
 .up-faq { padding: 30px 36px 50px; max-width: 760px; margin: 0 auto; }
 .up-faq h2 {

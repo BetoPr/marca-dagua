@@ -150,16 +150,36 @@
 
 </main>
 
-<!-- Modal: pagamento ainda não está pronto -->
-<div class="gal-modal-overlay" id="soonModal" hidden>
-  <div class="gal-modal">
-    <button class="gal-modal-close" id="soonClose"><i data-lucide="x"></i></button>
+<!-- Modal: dados pra checkout -->
+<div class="gal-modal-overlay" id="checkoutModal" hidden>
+  <div class="gal-modal up-modal-checkout">
+    <button class="gal-modal-close" id="checkoutClose"><i data-lucide="x"></i></button>
     <div class="gal-modal-icon"><i data-lucide="rocket"></i></div>
     <h2>Quase lá!</h2>
-    <p>Estamos ajustando o pagamento via <strong>Asaas</strong>. O acesso Pro abre em breve. Te avisamos no email cadastrado quando estiver pronto.</p>
-    <div class="gal-modal-actions">
-      <button class="gal-btn-primary" id="soonOk">Beleza</button>
-    </div>
+    <p>Confirme seus dados pra gerar a cobrança. Você escolhe na hora se paga via PIX, boleto ou cartão.</p>
+
+    <form id="checkoutForm" class="up-checkout-form" onsubmit="return false;">
+      <div class="up-field">
+        <label for="cpfInput">CPF <span class="req">*</span></label>
+        <input type="text" id="cpfInput" placeholder="000.000.000-00" inputmode="numeric" maxlength="14" required>
+      </div>
+      <div class="up-field">
+        <label for="phoneInput">Telefone <span class="opt">(opcional)</span></label>
+        <input type="tel" id="phoneInput" placeholder="(11) 99999-9999" inputmode="numeric" maxlength="15">
+      </div>
+
+      <div class="up-checkout-summary">
+        <span>Plano Pro mensal</span>
+        <strong>R$ 19,90/mês</strong>
+      </div>
+
+      <div class="gal-modal-actions">
+        <button class="gal-btn-primary" id="checkoutSubmit" type="submit">
+          <i data-lucide="credit-card"></i> Continuar pro pagamento
+        </button>
+      </div>
+      <span class="up-checkout-status" id="checkoutStatus"></span>
+    </form>
   </div>
 </div>
 
