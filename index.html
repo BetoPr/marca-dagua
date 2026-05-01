@@ -19,20 +19,27 @@
 <aside class="sidebar"></aside>
 
 <main class="main">
-  <header class="topbar">
-    <div class="search-box">
-      <i data-lucide="search"></i>
-      <input type="text" placeholder="Buscar prompts, ferramentas..." id="topSearch">
-      <kbd>Ctrl K</kbd>
-    </div>
-    <div class="topbar-actions">
-      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
-      <div class="topbar-avatar">A</div>
-    </div>
-  </header>
 
   <!-- ============== LANDING (anônimo) ============== -->
   <div id="anonView" hidden>
+
+    <!-- Topbar pública (sem sininho) -->
+    <header class="topbar topbar-public">
+      <a href="index.html" class="topbar-brand">
+        <img src="logo.png" alt="Innova" class="topbar-logo">
+        <span class="topbar-brandtext">INNOVA <span class="amp">&amp;</span> AI</span>
+      </a>
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" placeholder="Buscar prompts..." id="topSearch">
+        <kbd>Ctrl K</kbd>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="themeToggleTop" title="Alternar tema"><i data-lucide="moon"></i></button>
+        <a href="login.html" class="topbar-login">Entrar</a>
+        <a href="cadastro.html" class="topbar-signup">Criar conta</a>
+      </div>
+    </header>
 
     <section class="land-hero">
       <span class="hero-badge land-pill">Estúdio &amp; galeria de prompts da comunidade</span>
@@ -159,9 +166,24 @@
 
   <!-- ============== DASHBOARD (logado) ============== -->
   <div id="authView" hidden>
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" placeholder="Buscar prompts, ferramentas..." id="topSearchAuth">
+        <kbd>Ctrl K</kbd>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+        <button class="topbar-btn" id="themeToggleTopAuth" title="Alternar tema"><i data-lucide="moon"></i></button>
+        <div class="topbar-avatar">A</div>
+      </div>
+    </header>
+
     <div class="hero-card">
       <div class="hero-left">
-        <div class="hero-avatar" id="heroAvatar">I</div>
+        <div class="hero-avatar" id="heroAvatar">
+          <img src="logo.png" alt="Innova">
+        </div>
         <div class="hero-text">
           <h1 id="heroGreet">Bem-vindo ao Innova &amp; AI Studio</h1>
           <p>Suite de ferramentas para quem cria com inteligência artificial</p>
@@ -262,15 +284,32 @@ const fmtNumber = (n) => n == null ? '0' : (n >= 1000 ? (n/1000).toFixed(1).repl
 async function init() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
+    document.body.classList.remove('no-sidebar');
     $('authView').hidden = false;
-    // saudação personalizada
     const name = user.user_metadata?.display_name || user.email?.split('@')[0] || 'criador';
     $('heroGreet').textContent = `Bem-vindo de volta, ${name}`;
   } else {
+    // Anônimo: esconde sidebar, mostra landing
+    document.body.classList.add('no-sidebar');
     $('anonView').hidden = false;
     await Promise.all([loadStats(), loadFeatured()]);
   }
+  setupThemeToggle();
   if (window.lucide) lucide.createIcons();
+}
+
+function setupThemeToggle() {
+  const apply = (light) => {
+    document.body.classList.toggle('light-mode', light);
+    localStorage.setItem('innova-theme', light ? 'light' : 'dark');
+    document.querySelectorAll('#themeToggleTop, #themeToggleTopAuth').forEach(btn => {
+      btn.innerHTML = `<i data-lucide="${light ? 'sun' : 'moon'}"></i>`;
+    });
+    if (window.lucide) lucide.createIcons();
+  };
+  document.querySelectorAll('#themeToggleTop, #themeToggleTopAuth').forEach(btn => {
+    btn?.addEventListener('click', () => apply(!document.body.classList.contains('light-mode')));
+  });
 }
 
 async function loadStats() {
@@ -327,15 +366,17 @@ async function loadFeatured() {
 
 init();
 
-document.getElementById('topSearch')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.value.trim()) {
-    location.href = `galeria.html?q=${encodeURIComponent(e.target.value.trim())}`;
-  }
+document.querySelectorAll('#topSearch, #topSearchAuth').forEach(input => {
+  input?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      location.href = `galeria.html?q=${encodeURIComponent(e.target.value.trim())}`;
+    }
+  });
 });
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
-    document.getElementById('topSearch')?.focus();
+    (document.getElementById('topSearch') || document.getElementById('topSearchAuth'))?.focus();
   }
 });
 </script>
