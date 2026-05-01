@@ -2,12 +2,16 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Innova & AI Studio</title>
+<title>Innova & AI Studio — galeria de prompts e ferramentas pra criadores</title>
+<meta name="description" content="Banco de prompts validados pra Midjourney, Gemini, Flux, DALL·E. Compartilhe os prompts por trás da arte. Galeria, construtor visual e ferramentas pra criadores de IA.">
+<meta property="og:title" content="Innova & AI Studio">
+<meta property="og:description" content="Compartilhe os prompts por trás da arte. Descubra prompts validados pela comunidade.">
+<meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="stylesheet" href="shared.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -18,7 +22,7 @@
   <header class="topbar">
     <div class="search-box">
       <i data-lucide="search"></i>
-      <input type="text" placeholder="Buscar ferramentas..." id="topSearch">
+      <input type="text" placeholder="Buscar prompts, ferramentas..." id="topSearch">
       <kbd>Ctrl K</kbd>
     </div>
     <div class="topbar-actions">
@@ -27,132 +31,280 @@
     </div>
   </header>
 
-  <div class="hero-card">
-    <div class="hero-left">
-      <div class="hero-avatar">I</div>
-      <div class="hero-text">
-        <h1>Bem-vindo ao Innova & AI Studio</h1>
-        <p>Suite de ferramentas para quem cria com inteligência artificial</p>
-        <span class="hero-badge" id="heroBadge">Conectado ao sistema</span>
+  <!-- ============== LANDING (anônimo) ============== -->
+  <div id="anonView" hidden>
+
+    <section class="land-hero">
+      <span class="hero-badge land-pill">Estúdio &amp; galeria de prompts da comunidade</span>
+      <h1 class="land-title">
+        Compartilhe os prompts<br>
+        <span class="land-title-2">por trás da arte.</span>
+      </h1>
+      <p class="land-sub">
+        Descubra imagens de IA em alta que inspiram sua próxima criação.
+        Banco aberto onde criadores compartilham seus segredos — copie os prompts
+        exatos e acompanhe as tendências que moldam a arte generativa.
+      </p>
+      <div class="land-cta-row">
+        <a href="cadastro.html" class="land-cta-primary">
+          <i data-lucide="rocket"></i> Criar conta grátis
+        </a>
+        <a href="galeria.html" class="land-cta-secondary">
+          Explorar galeria <i data-lucide="arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="land-stats" id="landStats">
+        <div class="land-stat">
+          <span class="land-stat-num" id="landCount1">—</span>
+          <span class="land-stat-lbl">Prompts compartilhados</span>
+        </div>
+        <div class="land-stat">
+          <span class="land-stat-num" id="landCount2">—</span>
+          <span class="land-stat-lbl">Criadores contribuindo</span>
+        </div>
+        <div class="land-stat">
+          <span class="land-stat-num" id="landCount3">—</span>
+          <span class="land-stat-lbl">Total de cópias</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="land-section">
+      <div class="land-section-head">
+        <h2>Veja o que a comunidade está criando agora</h2>
+        <p>Cada imagem vem com o prompt exato que a criou. Pule as suposições e aprenda direto de peças que chamaram a atenção.</p>
+      </div>
+      <div class="gal-grid land-grid" id="landFeatured"></div>
+      <div class="land-section-cta">
+        <a href="galeria.html" class="land-pill-cta">
+          Explorar prompts em alta <i data-lucide="arrow-right"></i>
+        </a>
+      </div>
+    </section>
+
+    <section class="land-how">
+      <div class="land-how-card">
+        <span class="land-tag">Recursos da comunidade</span>
+        <h3>Por que compartilhamos todos os prompts</h3>
+        <p>Innova existe pra tornar o trabalho por trás dos visuais de IA <strong>transparente</strong>. Publicamos configurações, notas de ritmo e lições aprendidas pra que todos — de fãs curiosos a diretores profissionais — transformem inspiração em sua própria história.</p>
+      </div>
+      <div class="land-how-card highlight">
+        <span class="land-tag yellow">Compartilhe sua arte</span>
+        <h3>Envie seu prompt e ensine a comunidade</h3>
+        <p>Envie sua renderização mais recente com o prompt, configurações e história por trás dela. Destacamos os detalhes mais úteis e creditamos cada criador.</p>
+        <a href="cadastro.html" class="land-link">Enviar para a galeria →</a>
+      </div>
+    </section>
+
+    <section class="land-tools">
+      <div class="land-section-head center">
+        <span class="hero-badge">Tudo num só lugar</span>
+        <h2>Ferramentas pra fechar o ciclo do criador</h2>
+        <p>Marca d'água, redimensionamento, conversão, transcrição e construtor de prompts. Sem instalar nada, tudo no navegador.</p>
+      </div>
+      <div class="land-tools-grid">
+        <div class="land-tool"><i data-lucide="droplet"></i><span>Marca d'água em lote</span></div>
+        <div class="land-tool"><i data-lucide="scissors"></i><span>Remover fundo</span></div>
+        <div class="land-tool"><i data-lucide="maximize-2"></i><span>Redimensionar pra redes</span></div>
+        <div class="land-tool"><i data-lucide="package"></i><span>Comprimir</span></div>
+        <div class="land-tool"><i data-lucide="repeat"></i><span>Converter formato</span></div>
+        <div class="land-tool"><i data-lucide="message-circle"></i><span>Chat IA (BYOK)</span></div>
+        <div class="land-tool"><i data-lucide="blocks"></i><span>Construtor de prompts</span></div>
+        <div class="land-tool"><i data-lucide="mic"></i><span>Transcrever áudio/vídeo</span></div>
+      </div>
+    </section>
+
+    <section class="land-pricing">
+      <div class="land-section-head center">
+        <span class="hero-badge">Preço justo</span>
+        <h2>R$ 19,90/mês — sem créditos artificiais</h2>
+        <p>Você usa <strong>sua própria chave de API</strong> pro Chat IA (Groq tem free tier generoso). O Innova só cobra pelo acesso à galeria curada e blocos avançados do construtor.</p>
+        <a href="upgrade.html" class="land-cta-primary">
+          <i data-lucide="rocket"></i> Conhecer o plano Pro
+        </a>
+      </div>
+    </section>
+
+    <footer class="land-footer">
+      <div class="land-foot-brand">
+        <strong>INNOVA <span style="color:#888">&amp;</span> AI</strong>
+        <span>Estúdio de prompts pra criadores brasileiros · Feito por Roberto</span>
+      </div>
+      <div class="land-foot-links">
+        <a href="galeria.html">Galeria</a>
+        <a href="upgrade.html">Pro</a>
+        <a href="cadastro.html">Criar conta</a>
+        <a href="login.html">Entrar</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============== DASHBOARD (logado) ============== -->
+  <div id="authView" hidden>
+    <div class="hero-card">
+      <div class="hero-left">
+        <div class="hero-avatar" id="heroAvatar">I</div>
+        <div class="hero-text">
+          <h1 id="heroGreet">Bem-vindo ao Innova &amp; AI Studio</h1>
+          <p>Suite de ferramentas para quem cria com inteligência artificial</p>
+          <span class="hero-badge" id="heroBadge">Conectado ao sistema</span>
+        </div>
+      </div>
+      <div class="hero-icon-box">
+        <i data-lucide="sparkles"></i>
       </div>
     </div>
-    <div class="hero-icon-box">
-      <i data-lucide="sparkles"></i>
+
+    <div class="section-title">Ferramentas disponíveis</div>
+    <div class="tool-grid">
+      <a href="galeria.html" class="tool-card">
+        <span class="tag ready">Comunidade</span>
+        <div class="icon-box pink"><i data-lucide="layout-grid"></i></div>
+        <h3>Galeria de prompts</h3>
+        <p>Banco de prompts validados — copie, teste e publique os seus. Pro libera a curadoria completa.</p>
+      </a>
+
+      <a href="construtor.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box pink"><i data-lucide="blocks"></i></div>
+        <h3>Construtor de prompts</h3>
+        <p>11 blocos visuais — sujeito, pose, ambiente, lente, iluminação. Saída em inglês pronta pra IA.</p>
+      </a>
+
+      <a href="chat-ia.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box purple"><i data-lucide="message-circle"></i></div>
+        <h3>Chat IA</h3>
+        <p>Brainstorm com Groq/OpenAI/OpenRouter. 50+ modelos prontos pra retrato/cenário. Use sua chave gratuita.</p>
+      </a>
+
+      <a href="marca-dagua.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box blue"><i data-lucide="droplet"></i></div>
+        <h3>Marca d'água em lote</h3>
+        <p>Aplica seu logo em várias fotos de uma vez. Modo único (canto) ou mosaico (espalhado).</p>
+      </a>
+
+      <a href="remove-bg.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box purple"><i data-lucide="scissors"></i></div>
+        <h3>Remover fundo</h3>
+        <p>Tira o fundo das suas fotos automaticamente com IA local. Resultado em PNG transparente.</p>
+      </a>
+
+      <a href="redimensionar.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box orange"><i data-lucide="maximize-2"></i></div>
+        <h3>Redimensionar para redes</h3>
+        <p>1 imagem vira 8 formatos: Feed 1:1, 4:5, Stories, FB, LinkedIn, Twitter, YT thumb, Pinterest. ZIP em 1 clique.</p>
+      </a>
+
+      <a href="comprimir.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box green"><i data-lucide="package"></i></div>
+        <h3>Comprimir imagens</h3>
+        <p>Reduz peso mantendo qualidade visual. Ideal pra uploads em sites e redes sociais.</p>
+      </a>
+
+      <a href="converter.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box cyan"><i data-lucide="repeat"></i></div>
+        <h3>Converter formato</h3>
+        <p>HEIC → JPG, PNG → WebP, qualquer formato pra qualquer formato. Em lote, no navegador.</p>
+      </a>
+
+      <a href="transcrever.html" class="tool-card">
+        <span class="tag ready">Disponível</span>
+        <div class="icon-box cyan"><i data-lucide="mic"></i></div>
+        <h3>Transcrever áudio/vídeo</h3>
+        <p>MP3, MP4, WAV → texto com Whisper Large v3 via Groq. Português, inglês e mais. Exporta TXT/SRT.</p>
+      </a>
+
+      <a href="gerar-imagens.html" class="tool-card">
+        <span class="tag soon">Em breve</span>
+        <div class="icon-box purple"><i data-lucide="sparkles"></i></div>
+        <h3>Geração de imagens</h3>
+        <p>Em desenvolvimento — Whisk, Flux e mais modelos premium. Parte do plano Studio.</p>
+      </a>
     </div>
   </div>
 
-  <div class="section-title">Ferramentas disponíveis</div>
-  <div class="tool-grid">
-
-    <a href="marca-dagua.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box blue"><i data-lucide="droplet"></i></div>
-      <h3>Marca d'água em lote</h3>
-      <p>Aplica seu logo em várias fotos de uma vez. Modo único (canto da imagem) ou mosaico (espalhado e rotacionado).</p>
-    </a>
-
-    <a href="remove-bg.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box purple"><i data-lucide="scissors"></i></div>
-      <h3>Remover fundo</h3>
-      <p>Tira o fundo das suas fotos automaticamente com IA local. Em lote ou uma a uma — resultado em PNG transparente.</p>
-    </a>
-
-    <a href="redimensionar.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box orange"><i data-lucide="maximize-2"></i></div>
-      <h3>Redimensionar para redes</h3>
-      <p>1 imagem vira 8 formatos: Feed 1:1, Feed 4:5, Stories/Reels, FB, LinkedIn, Twitter, YT thumb, Pinterest. ZIP em 1 clique.</p>
-    </a>
-
-    <div class="tool-card disabled">
-      <span class="tag soon">Em breve</span>
-      <div class="icon-box gray"><i data-lucide="tag"></i></div>
-      <h3>Renomear em lote</h3>
-      <p>Padrão automático tipo cliente-001.jpg, cliente-002.jpg... renomeia centenas em segundos.</p>
-    </div>
-
-    <a href="comprimir.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box green"><i data-lucide="package"></i></div>
-      <h3>Comprimir imagens</h3>
-      <p>Reduz peso mantendo qualidade visual. Ideal pra uploads em sites e redes sociais.</p>
-    </a>
-
-    <a href="converter.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box cyan"><i data-lucide="repeat"></i></div>
-      <h3>Converter formato</h3>
-      <p>HEIC → JPG, PNG → WebP, qualquer formato pra qualquer formato. Em lote, no navegador.</p>
-    </a>
-
-    <a href="chat-ia.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box purple"><i data-lucide="message-circle"></i></div>
-      <h3>Chat IA (Groq/OpenRouter)</h3>
-      <p>Brainstorm de prompts pra Whisk/Midjourney, legendas pra Insta, ideias de conteúdo. Use sua API key gratuita.</p>
-    </a>
-
-    <a href="construtor.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box pink"><i data-lucide="blocks"></i></div>
-      <h3>Construtor de prompts</h3>
-      <p>Monta prompt em blocos visuais — sujeito, pose, ambiente, estilo, lente, iluminação. Saída em inglês pronta pra IA.</p>
-    </a>
-
-    <a href="galeria.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box pink"><i data-lucide="layout-grid"></i></div>
-      <h3>Galeria da comunidade</h3>
-      <p>Banco de prompts validados — copie, teste e publique os seus. Free pra navegar, Pro libera todos.</p>
-    </a>
-
-    <a href="transcrever.html" class="tool-card">
-      <span class="tag ready">Disponível</span>
-      <div class="icon-box cyan"><i data-lucide="mic"></i></div>
-      <h3>Transcrever áudio/vídeo</h3>
-      <p>MP3, MP4, WAV → texto em segundos com Whisper Large v3 via Groq. Português, inglês e mais 50 idiomas. Exporta TXT/SRT.</p>
-    </a>
-
-    <div class="tool-card disabled">
-      <span class="tag soon">Em breve</span>
-      <div class="icon-box gray"><i data-lucide="frame"></i></div>
-      <h3>Mockups automáticos</h3>
-      <p>Coloca sua foto/arte em moldura, celular, notebook ou outdoor — pronto pra apresentação.</p>
-    </div>
-
-  </div>
-
-  <div class="section-title" style="margin-top:36px;">Como funciona</div>
-  <div style="padding: 16px 36px 48px; max-width: 720px; color: var(--muted); font-size: 14px; line-height: 1.7;">
-    Suite completa de ferramentas pra criadores que usam IA. <strong style="color:var(--text);">Marca d'água, remoção de fundo, compressão, conversão e Chat IA</strong> num só lugar. Faça login pra sincronizar seu histórico de prompts e imagens entre dispositivos.
-    <br><br>
-    Escolha uma ferramenta na barra lateral ou nos cards acima pra começar.
-  </div>
 </main>
 
 <script src="favicon.js"></script>
 <script type="module" src="supabase-client.js"></script>
 <script src="sidebar.js"></script>
-<script>
+<script type="module">
+import { supabase } from './supabase-client.js';
+
+const $ = (id) => document.getElementById(id);
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNumber = (n) => n == null ? '0' : (n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n));
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    $('authView').hidden = false;
+    // saudação personalizada
+    const name = user.user_metadata?.display_name || user.email?.split('@')[0] || 'criador';
+    $('heroGreet').textContent = `Bem-vindo de volta, ${name}`;
+  } else {
+    $('anonView').hidden = false;
+    await Promise.all([loadStats(), loadFeatured()]);
+  }
   if (window.lucide) lucide.createIcons();
+}
 
-  // Busca filtra os cards de ferramentas em tempo real
-  document.getElementById('topSearch')?.addEventListener('input', e => {
-    const q = e.target.value.toLowerCase().trim();
-    document.querySelectorAll('.tool-card').forEach(card => {
-      const text = card.textContent.toLowerCase();
-      card.style.display = !q || text.includes(q) ? '' : 'none';
-    });
-  });
+async function loadStats() {
+  const { data } = await supabase.rpc('gallery_stats');
+  if (!data) return;
+  $('landCount1').textContent = `${fmtNumber(data.total_prompts)}+`;
+  $('landCount2').textContent = `${fmtNumber(data.total_creators)}+`;
+  $('landCount3').textContent = `${fmtNumber(data.total_copies)}+`;
+}
 
-  // Atalho Ctrl+K foca a busca
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+async function loadFeatured() {
+  const { data } = await supabase
+    .from('prompt_posts_public')
+    .select('*')
+    .eq('is_published', true)
+    .order('likes_count', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(6);
+  if (!data || !data.length) return;
+
+  const { renderPromptCard } = await import('./lib/cards.js');
+  const grid = $('landFeatured');
+  data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
+
+  // Click no botao Copiar = vai pra detalhe (anonimo nao copia direto aqui pra induzir cadastro)
+  grid.addEventListener('click', e => {
+    const copyBtn = e.target.closest('.gal-card-copy');
+    if (copyBtn) {
       e.preventDefault();
-      document.getElementById('topSearch')?.focus();
+      e.stopPropagation();
+      const card = copyBtn.closest('.gal-card');
+      if (card) location.href = `prompt.html?slug=${encodeURIComponent(card.dataset.slug)}`;
     }
   });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+init();
+
+document.getElementById('topSearch')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    location.href = `galeria.html?q=${encodeURIComponent(e.target.value.trim())}`;
+  }
+});
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    document.getElementById('topSearch')?.focus();
+  }
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Geração de imagens — Innova & AI Studio</title>
+<meta name="description" content="Geração de imagem com IA direto no Innova. Em breve, parte do plano Studio.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<aside class="sidebar"></aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-box">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Buscar…" id="topSearch">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" title="Notificações"><i data-lucide="bell"></i></button>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <div class="gen-hero">
+    <span class="hero-badge gen-badge"><i data-lucide="sparkles"></i> Em desenvolvimento</span>
+    <h1>Geração de imagens com IA</h1>
+    <p>Em breve você vai gerar imagens cinematográficas direto no Innova — sem precisar de chave de API, com cota mensal incluída no plano Studio.</p>
+  </div>
+
+  <div class="gen-grid">
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="image"></i></div>
+      <h3>Modelos premium</h3>
+      <p>Whisk, Flux, Imagen 4, e mais. Sem precisar configurar APIs — uma única assinatura cobre tudo.</p>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="layout-grid"></i></div>
+      <h3>Direto da galeria</h3>
+      <p>Clica em um prompt validado e gera uma variação na hora. Mais rápido que copiar e colar fora.</p>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="user-circle"></i></div>
+      <h3>Fidelidade facial</h3>
+      <p>Use sua própria foto como referência e mantenha 100% das características em todas as gerações.</p>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="layers"></i></div>
+      <h3>Cota mensal</h3>
+      <p>Plano Studio inclui um número fixo de gerações por mês. Sem créditos artificiais, sem surpresas no fim do mês.</p>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="bookmark"></i></div>
+      <h3>Histórico salvo</h3>
+      <p>Toda imagem gerada fica no seu histórico com o prompt original — pra remixar, baixar ou publicar na galeria.</p>
+    </div>
+
+    <div class="gen-card">
+      <div class="gen-icon"><i data-lucide="zap"></i></div>
+      <h3>Sem fila de espera</h3>
+      <p>Filas só pra quem usa de graça. Assinantes Studio têm prioridade na queue de geração.</p>
+    </div>
+  </div>
+
+  <div class="gen-cta">
+    <div class="gen-cta-text">
+      <h2>Quero ser avisado quando lançar</h2>
+      <p>Entre na lista de espera. Você é avisado primeiro e ganha desconto no primeiro mês.</p>
+    </div>
+    <form class="up-waitlist gen-waitlist" id="waitlistForm">
+      <input type="email" placeholder="seu@email.com" id="waitlistEmail" required>
+      <button type="submit" class="gal-btn-primary">
+        <i data-lucide="bell"></i> Avise-me
+      </button>
+    </form>
+    <span class="up-card-foot" id="waitlistMsg"></span>
+  </div>
+
+</main>
+
+<div id="toastHost"></div>
+
+<script src="favicon.js"></script>
+<script type="module" src="supabase-client.js"></script>
+<script src="sidebar.js"></script>
+<script type="module">
+import { supabase } from './supabase-client.js';
+
+const $ = (id) => document.getElementById(id);
+
+$('waitlistForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('waitlistEmail').value.trim().toLowerCase();
+  if (!email) return;
+  const msg = $('waitlistMsg');
+  msg.textContent = 'Enviando…';
+  msg.className = 'up-card-foot';
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('studio_waitlist')
+    .insert({ email, user_id: user?.id || null });
+  if (error) {
+    if (String(error.message || '').includes('duplicate')) {
+      msg.textContent = '✓ Você já está na lista!';
+      msg.className = 'up-card-foot ok';
+    } else {
+      msg.textContent = 'Erro: ' + error.message;
+      msg.className = 'up-card-foot error';
+    }
+    return;
+  }
+  msg.textContent = '✓ Adicionado à lista. Te avisamos no lançamento.';
+  msg.className = 'up-card-foot ok';
+  $('waitlistEmail').value = '';
+});
+</script>
+<script>
+  if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

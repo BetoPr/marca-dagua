@@ -511,21 +511,48 @@ document.querySelectorAll('.quick-prompts button').forEach(b => {
 });
 
 // Modelos prontos: toggle Com/Sem referência + dropdown
+// Free ve 3 templates por subcategoria (~18 total), Pro ve todos
 let refMode = 'com';
+const FREE_TEMPLATE_LIMIT = 3;
+let userIsPro = false;
+let userIsAdmin = false;
 
 function rebuildTemplateSelect() {
   const cats = TEMPLATES[refMode];
+  const unlocked = userIsPro || userIsAdmin;
   let html = '<option value="">— escolha um modelo —</option>';
   Object.entries(cats).forEach(([catKey, cat]) => {
     html += `<optgroup label="${cat.label}">`;
-    cat.items.forEach(t => {
-      html += `<option value="${refMode}:${catKey}:${t.id}">${t.name}</option>`;
+    cat.items.forEach((t, i) => {
+      const locked = !unlocked && i >= FREE_TEMPLATE_LIMIT;
+      const label = locked ? `🔒 ${t.name} (Pro)` : t.name;
+      html += `<option value="${refMode}:${catKey}:${t.id}" data-locked="${locked ? '1' : '0'}">${label}</option>`;
     });
     html += '</optgroup>';
   });
   $('templateSelect').innerHTML = html;
 }
-rebuildTemplateSelect();
+
+async function checkUserTier() {
+  if (!window.supabase) return;
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) { userIsPro = false; userIsAdmin = false; return; }
+  const { data: prof } = await window.supabase
+    .from('profiles').select('plan, pro_until, is_admin').eq('id', user.id).maybeSingle();
+  userIsAdmin = !!prof?.is_admin;
+  userIsPro = userIsAdmin || ((prof?.plan === 'pro' || prof?.plan === 'studio')
+    && prof?.pro_until && new Date(prof.pro_until) > new Date());
+}
+
+(async () => {
+  if (window.whenSupabaseReady) {
+    await new Promise(r => window.whenSupabaseReady(r));
+    await checkUserTier();
+    rebuildTemplateSelect();
+  } else {
+    rebuildTemplateSelect();
+  }
+})();
 
 document.querySelectorAll('#refToggle button').forEach(b => b.addEventListener('click', () => {
   refMode = b.dataset.ref;
@@ -538,6 +565,15 @@ document.querySelectorAll('#refToggle button').forEach(b => b.addEventListener('
 $('templateSelect').addEventListener('change', e => {
   const v = e.target.value;
   if (!v) return;
+  const opt = e.target.selectedOptions[0];
+  const locked = opt?.dataset?.locked === '1';
+  if (locked) {
+    e.target.value = '';
+    if (confirm('Este modelo é exclusivo do plano Pro.\n\nQuer conhecer o Pro? (R$ 19,90/mês — todos os 50+ modelos liberados)')) {
+      location.href = 'upgrade.html';
+    }
+    return;
+  }
   const [mode, catKey, id] = v.split(':');
   const t = TEMPLATES[mode]?.[catKey]?.items.find(x => x.id === id);
   if (!t) return;

@@ -27,6 +27,7 @@
       items: [
         { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA' },
         { href: 'construtor.html', icon: 'blocks', label: 'Construtor' },
+        { href: 'gerar-imagens.html', icon: 'sparkles', label: 'Geração de imagens', soon: true },
         { href: 'transcrever.html', icon: 'mic', label: 'Transcrever' },
       ],
     },
@@ -49,15 +50,6 @@
         { href: 'upgrade.html', icon: 'rocket', label: 'Plano Pro' },
         { href: 'assinatura.html', icon: 'credit-card', label: 'Minha assinatura' },
         { href: 'configuracoes.html', icon: 'key-round', label: 'Chaves de API' },
-      ],
-    },
-    {
-      label: 'Em breve',
-      icon: 'clock',
-      color: 'gray',
-      items: [
-        { href: '#', icon: 'tag', label: 'Renomear', disabled: true },
-        { href: '#', icon: 'frame', label: 'Mockups', disabled: true },
       ],
     },
   ];
@@ -104,7 +96,7 @@
       html += `<a href="${it.href}" class="${cls}">
         <span class="icon"><i data-lucide="${it.icon}"></i></span>
         <span>${it.label}</span>
-        ${it.disabled ? '<span class="badge">Em breve</span>' : ''}
+        ${it.disabled ? '<span class="badge">Em breve</span>' : it.soon ? '<span class="badge badge-soon">Em breve</span>' : ''}
       </a>`;
     });
     html += `</div>`;
