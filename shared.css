@@ -226,18 +226,33 @@ body.light-mode .topbar-logo {
 }
 
 /* === SIDEBAR === */
+/* Sidebar sempre dark (design consistente com a brand "preta"). */
 .sidebar {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   width: var(--sidebar-w);
-  background: var(--panel);
-  border-right: 1px solid var(--border);
+  background: #000000;
+  border-right: 1px solid #262626;
+  color: #f0f0f0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   z-index: 50;
   transition: width .2s;
 }
+/* No light-mode mantemos sidebar escura, mas sobrescrevemos elementos que herdam --vars do body. */
+body.light-mode .sidebar { background: #000000; color: #f0f0f0; }
+body.light-mode .sidebar .sidebar-header,
+body.light-mode .sidebar .nav-section,
+body.light-mode .sidebar-footer { border-color: #262626; }
+body.light-mode .sidebar .nav-section .label,
+body.light-mode .sidebar .nav-items a,
+body.light-mode .sidebar-footer .footer-item .info .title { color: #f0f0f0; }
+body.light-mode .sidebar .nav-items a:hover,
+body.light-mode .sidebar .nav-section:hover,
+body.light-mode .sidebar-footer .footer-item:hover { background: #1a1a1a; }
+body.light-mode .sidebar-footer .footer-item .icon-circle { background: #1a1a1a; color: #888; }
+body.light-mode .sidebar .nav-items a.active { color: #ffffff; border-left-color: #ffffff; background: rgba(255,255,255,0.06); }
 body.sidebar-collapsed { --sidebar-w: 70px; }
 
 .sidebar .sidebar-header {
@@ -873,7 +888,9 @@ body.no-sidebar .main { margin-left: 0; }
   box-shadow: 0 12px 32px rgba(0,0,0,0.45);
   padding: 4px;
   z-index: 200;
+  display: none;
 }
+.lang-menu.open { display: block; }
 body.light-mode .lang-menu { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 .lang-opt {
   display: flex; align-items: center; gap: 10px;

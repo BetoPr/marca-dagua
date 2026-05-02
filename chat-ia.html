@@ -282,6 +282,7 @@
 
 <script src="favicon.js"></script>
 <script type="module" src="supabase-client.js"></script>
+<script type="module" src="lib/require-auth.js"></script>
 <script src="sidebar.js"></script>
 <script>
 const SYSTEM_PROMPT = `Você é um assistente especializado em criação de conteúdo visual para criadores que usam IA (Whisk, Midjourney, Imagen, DALL-E).
@@ -461,7 +462,12 @@ function fillModelOptions() {
   sel.value = getModel();
 }
 
+// Fecha qualquer modal aberto antes de abrir outro — evita sobreposição.
+function closeAllModals() {
+  document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
+}
 function openSettings() {
+  closeAllModals();
   $('providerSel').value = config.provider;
   $('apiKeyInput').value = getKey();
   fillModelOptions();
@@ -632,7 +638,7 @@ async function loadSessions() {
   return data || [];
 }
 
-function openSessions() { $('sessionsModal').classList.add('open'); renderSessionsList(); }
+function openSessions() { closeAllModals(); $('sessionsModal').classList.add('open'); renderSessionsList(); }
 function closeSessions() { $('sessionsModal').classList.remove('open'); }
 
 async function renderSessionsList() {
@@ -1009,6 +1015,7 @@ async function refreshHistoryCount() {
 }
 
 $('openHistory').addEventListener('click', async () => {
+  closeAllModals();
   await renderHistory();
   $('historyModal').classList.add('open');
 });
