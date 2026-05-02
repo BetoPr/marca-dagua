@@ -202,6 +202,14 @@
     document.body.appendChild(s);
   }
 
+  // Carrega o seletor de idioma se houver topbar
+  if (document.querySelector('.topbar-actions') && !document.querySelector('.lang-toggle')) {
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.src = 'lib/lang-toggle.js';
+    document.body.appendChild(s);
+  }
+
   // Render icons
   if (window.lucide) lucide.createIcons();
 
