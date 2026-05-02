@@ -835,8 +835,10 @@ let cloudUser = null;
 async function refreshCloudUser() {
   if (!window.supabase) return null;
   try {
-    const { data: { user } } = await window.supabase.auth.getUser();
-    cloudUser = user || null;
+    // getSession lê do localStorage — confiável durante hidratação inicial.
+    // getUser chama API e pode retornar null antes da sessão ser restaurada.
+    const { data: { session } } = await window.supabase.auth.getSession();
+    cloudUser = session?.user || null;
   } catch { cloudUser = null; }
   return cloudUser;
 }
@@ -1344,8 +1346,9 @@ $('saveManualPrompt').addEventListener('click', async () => {
 (async () => {
   if (window.whenSupabaseReady) {
     await new Promise(resolve => window.whenSupabaseReady(resolve));
-    await refreshCloudUser();
-    $('openSessions').hidden = !cloudUser;
+    // Registra o listener ANTES do refresh inicial pra capturar INITIAL_SESSION
+    // (sem isso, se o token ainda não tiver sido hidratado quando refreshCloudUser roda,
+    // cloudUser fica null pra sempre e o histórico fica preso no IndexedDB local).
     window.supabase.auth.onAuthStateChange(async (_event, session) => {
       cloudUser = session?.user || null;
       $('openSessions').hidden = !cloudUser;
@@ -1354,6 +1357,8 @@ $('saveManualPrompt').addEventListener('click', async () => {
         await renderHistory();
       }
     });
+    await refreshCloudUser();
+    $('openSessions').hidden = !cloudUser;
   }
   updateConfigLabel();
   renderMessages();
