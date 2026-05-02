@@ -1084,16 +1084,35 @@ async function renderHistory() {
     setTimeout(() => { b.innerHTML = '<i data-lucide="copy"></i> Copiar'; if (window.lucide) lucide.createIcons(); }, 1200);
   }));
 
-  // Postar na galeria — manda prompt + imagem gerada (sem ref pra preservar privacidade)
+  // Postar na galeria — manda prompt + imagem gerada (sem ref pra preservar privacidade).
+  // Usa staging IndexedDB pra capa: resolve blob: URLs morrendo na navegação (Free) e CORS de
+  // signed URLs (Pro/Cloud). A página destino consome o staging por id.
   list.querySelectorAll('[data-action="publish"]').forEach(b => b.addEventListener('click', async () => {
     const id = idFromStr(b.dataset.id);
     const all = await dbGetAllPrompts();
     const p = all.find(x => String(x.id) === String(id));
     if (!p) return;
-    const cover = b.dataset.cover || '';
     const seed = encodeURIComponent(p.text);
-    const coverParam = cover ? `&cover=${encodeURIComponent(cover)}` : '';
-    location.href = `compartilhar.html?seed=${seed}${coverParam}`;
+    let stagingParam = '';
+    try {
+      const first = (p.generatedImages || [])[0];
+      let blob = null;
+      if (first instanceof Blob) {
+        blob = first;
+      } else if (first?.path && cloudUser) {
+        // Pro/Cloud: baixa via SDK (autenticado, sem CORS) usando o storage path
+        const { data, error } = await window.supabase.storage.from('prompt-images').download(first.path);
+        if (!error && data) blob = data;
+      }
+      if (blob) {
+        const { stageCover } = await import('./lib/staging-cover.js');
+        const stagingId = await stageCover(blob);
+        stagingParam = `&staging=${stagingId}`;
+      }
+    } catch (err) {
+      console.warn('Staging da capa falhou — vai abrir compartilhar sem capa:', err);
+    }
+    location.href = `compartilhar.html?seed=${seed}${stagingParam}`;
   }));
   list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Apagar este prompt?')) return;
@@ -1227,9 +1246,6 @@ function renderHistoryItem(p) {
   const getImgId = (item) => item instanceof Blob ? '' : (item?.id || '');
   const getImgPath = (item) => item instanceof Blob ? '' : (item?.path || '');
 
-  // Pega URL da PRIMEIRA imagem gerada (pra Postar usar como cover)
-  const firstGenUrl = (p.generatedImages || []).map(getImgUrl).find(u => u) || '';
-
   const renderImgs = (imgs, kind, label) => {
     const thumbs = (imgs || []).map((it, i) => {
       const url = getImgUrl(it);
@@ -1268,7 +1284,7 @@ function renderHistoryItem(p) {
         <button class="hist-act-btn" data-action="quick-add-ref" data-id="${p.id}" title="Adicionar imagem de referência"><i data-lucide="image-plus"></i> Ref</button>
         <button class="hist-act-btn" data-action="quick-add-gen" data-id="${p.id}" title="Adicionar imagem gerada"><i data-lucide="sparkles"></i> Gerada</button>
         <button class="hist-act-btn" data-action="copy" data-id="${p.id}" title="Copiar prompt"><i data-lucide="copy"></i> Copiar</button>
-        <button class="hist-act-btn hist-act-publish" data-action="publish" data-id="${p.id}" data-cover="${escapeHtml(firstGenUrl)}" title="Publicar na galeria (apenas imagem gerada + prompt)">
+        <button class="hist-act-btn hist-act-publish" data-action="publish" data-id="${p.id}" title="Publicar na galeria (apenas imagem gerada + prompt)">
           <i data-lucide="upload-cloud"></i> Postar
         </button>
       </div>
