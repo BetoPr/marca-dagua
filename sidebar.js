@@ -64,6 +64,75 @@
   const savedTheme = localStorage.getItem('innova-theme') || 'dark';
   if (savedTheme === 'light') document.body.classList.add('light-mode');
 
+  // ===== Detecção anon-first (antes de construir sidebar, evita flash) =====
+  // index.html tem sua própria lógica anon view, então não interfere lá
+  const isIndex = path === 'index.html' || path === '';
+  let cachedAuth = null;
+  try {
+    const raw = localStorage.getItem('innova-auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      cachedAuth = parsed?.access_token ? parsed : null;
+    }
+  } catch {}
+
+  // Se cache vazio (= anon) e NÃO é index, vira modo público: sem sidebar + topbar custom
+  if (!cachedAuth && !isIndex) {
+    document.body.classList.add('no-sidebar');
+    customizeTopbarForAnon();
+    // Confirma async caso cache esteja desatualizado (login em outra aba etc)
+    document.addEventListener('supabase-ready', async () => {
+      try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        if (user) {
+          document.body.classList.remove('no-sidebar');
+          location.reload(); // reconstruir UI logada
+        }
+      } catch {}
+    }, { once: true });
+    return; // não constrói sidebar
+  }
+
+  function customizeTopbarForAnon() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+    topbar.classList.add('topbar-public');
+
+    // Esconde sininho e avatar
+    topbar.querySelectorAll('.topbar-btn[title="Notificações"], .topbar-avatar')
+      .forEach(el => el.style.display = 'none');
+
+    // Logo à esquerda
+    if (!topbar.querySelector('.topbar-brand')) {
+      const brand = document.createElement('a');
+      brand.href = 'index.html';
+      brand.className = 'topbar-brand';
+      brand.innerHTML = `<img src="logo.png" class="topbar-logo" alt="Innova"><span class="topbar-brandtext">INNOVA <span class="amp">&amp;</span> AI</span>`;
+      topbar.insertBefore(brand, topbar.firstChild);
+    }
+
+    // Theme toggle + Entrar + Criar conta
+    const actions = topbar.querySelector('.topbar-actions');
+    if (actions && !actions.querySelector('.topbar-login')) {
+      const themeIcon = document.body.classList.contains('light-mode') ? 'sun' : 'moon';
+      actions.insertAdjacentHTML('beforeend', `
+        <button class="topbar-btn" id="themeToggleAnon" title="Alternar tema"><i data-lucide="${themeIcon}"></i></button>
+        <a href="login.html" class="topbar-login">Entrar</a>
+        <a href="cadastro.html" class="topbar-signup">Criar conta</a>
+      `);
+      actions.querySelector('#themeToggleAnon')?.addEventListener('click', () => {
+        const light = !document.body.classList.contains('light-mode');
+        document.body.classList.toggle('light-mode', light);
+        localStorage.setItem('innova-theme', light ? 'light' : 'dark');
+        const btn = actions.querySelector('#themeToggleAnon');
+        btn.innerHTML = `<i data-lucide="${light ? 'sun' : 'moon'}"></i>`;
+        if (window.lucide) lucide.createIcons();
+      });
+    }
+
+    if (window.lucide) lucide.createIcons();
+  }
+
   let html = `
     <div class="sidebar-header">
       <div class="brand-text">

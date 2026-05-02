@@ -752,6 +752,35 @@ select, input[type="number"], input[type="text"] {
 .hidden { display: none !important; }
 [hidden] { display: none !important; }
 
+/* === Marca d'agua Free banner === */
+.wm-free-banner {
+  margin: 0 36px 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(255,184,77,0.06), rgba(167,139,250,0.04));
+  border: 1px solid rgba(255,184,77,0.3);
+  border-radius: 12px;
+  display: flex; align-items: center; gap: 14px;
+  flex-wrap: wrap;
+}
+.wm-free-banner > svg {
+  width: 22px; height: 22px; color: #ffb84d; flex-shrink: 0;
+  background: rgba(255,184,77,0.16); padding: 8px; border-radius: 9px;
+  box-sizing: content-box;
+}
+.wm-free-banner > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wm-free-banner strong { font-size: 13.5px; }
+.wm-free-banner span { font-size: 12.5px; color: var(--muted); }
+.wm-free-banner strong:not(:first-child),
+.wm-free-banner span strong { color: var(--text); }
+.wm-free-cta {
+  background: var(--accent); color: var(--bg);
+  padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700;
+  text-decoration: none; flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .wm-free-banner { margin: 0 16px 14px; }
+}
+
 /* === No-sidebar (landing publica) === */
 body.no-sidebar .sidebar { display: none; }
 body.no-sidebar .main { margin-left: 0; }
@@ -1199,17 +1228,15 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
-/* Likes no topo direito */
-.gal-card-top-likes {
-  position: absolute; top: 12px; right: 12px;
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(0,0,0,0.55); color: white;
+/* Likes no footer (canto direito) */
+.gal-card-likes-foot {
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 12px; font-weight: 700;
-  padding: 6px 11px; border-radius: 999px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-left: auto;
 }
-.gal-card-top-likes svg { width: 13px; height: 13px; color: #ff8094; fill: currentColor; }
+.gal-card-likes-foot svg { width: 13px; height: 13px; color: #ff8094; fill: currentColor; }
 
 /* Badges extras (PRO, RASCUNHO, TESTADO, FAV) — coluna inferior esquerda */
 .gal-card-extras {
@@ -1247,11 +1274,15 @@ body.light-mode .gal-filters { background: rgba(245,246,248,0.92); }
   word-break: break-word;
 }
 
-/* Footer: Copiar + autor */
+/* Footer: Copiar/Editar + autor + likes */
 .gal-card-footer {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   padding: 10px 14px 14px;
   gap: 10px;
+}
+.gal-card-footer .gal-card-author {
+  flex: 1; min-width: 0;
+  text-align: left;
 }
 .gal-card-copy {
   display: inline-flex; align-items: center; gap: 6px;

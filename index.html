@@ -336,16 +336,18 @@ async function loadFeatured() {
   ]);
 
   const { renderPromptCard } = await import('./lib/cards.js');
+  // Anônimo nesta view, então sem owner/admin actions
+  const opts = { mode: 'public' };
 
   if (topLikedRes.data?.length) {
     const grid = $('landTopLiked');
-    topLikedRes.data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
+    topLikedRes.data.forEach(p => grid.appendChild(renderPromptCard(p, opts)));
   }
 
   if (premiumRes.data?.length) {
     $('landPremiumWrap').hidden = false;
     const grid = $('landPremium');
-    premiumRes.data.forEach(p => grid.appendChild(renderPromptCard(p, { mode: 'public' })));
+    premiumRes.data.forEach(p => grid.appendChild(renderPromptCard(p, opts)));
   }
 
   // Click no botao Copiar dos cards na landing = vai pra detalhe (induz cadastro)

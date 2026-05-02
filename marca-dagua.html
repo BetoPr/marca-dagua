@@ -495,6 +495,108 @@ $('clearBtn').addEventListener('click', () => {
   renderFileList();
   refresh();
 });
+
+// ===== Gating Free vs Pro =====
+// Free: marca d'água fixa Innova (texto OU logo). Pro/Admin: livre.
+(async function applyPlanGating() {
+  if (!window.whenSupabaseReady) return;
+  await new Promise(r => window.whenSupabaseReady(r));
+  const { data: { user } } = await window.supabase.auth.getUser();
+  if (!user) {
+    setupAnonOrFreeGating();
+    return;
+  }
+  const { data: prof } = await window.supabase
+    .from('profiles').select('plan, pro_until, is_admin').eq('id', user.id).maybeSingle();
+  const isPro = !!prof?.is_admin || ((prof?.plan === 'pro' || prof?.plan === 'studio')
+    && prof?.pro_until && new Date(prof.pro_until) > new Date());
+  if (!isPro) setupAnonOrFreeGating();
+})();
+
+function setupAnonOrFreeGating() {
+  // 1. Banner upgrade no topo
+  const header = document.querySelector('.page-header');
+  if (header && !document.getElementById('wmFreeBanner')) {
+    const banner = document.createElement('div');
+    banner.id = 'wmFreeBanner';
+    banner.className = 'wm-free-banner';
+    banner.innerHTML = `
+      <i data-lucide="lock"></i>
+      <div>
+        <strong>Plano Free: marca d'água Innova fixa</strong>
+        <span>Use sua própria marca (texto ou logo) com o plano <strong>Pro · R$ 39,90/mês</strong>.</span>
+      </div>
+      <a href="upgrade.html" class="wm-free-cta">Conhecer Pro →</a>
+    `;
+    header.parentNode.insertBefore(banner, header.nextSibling);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // 2. Substitui panel "1. Logo" por seletor de marca Innova
+  const logoPanel = document.querySelector('.panel');
+  if (logoPanel) {
+    logoPanel.innerHTML = `
+      <h2>1. Marca Innova</h2>
+      <div class="seg cols-2" id="wmFreeChoice">
+        <button data-wm="text" class="active">Texto</button>
+        <button data-wm="logo">Logo</button>
+      </div>
+      <p class="hint" style="font-size:11.5px; color:var(--muted); margin-top:8px;">
+        Texto: <strong>"INNOVA &amp; AI STUDIO"</strong>. Logo: ícone do Innova.
+      </p>
+    `;
+  }
+
+  // 3. Esconde modo "Texto" do segmented (porque já está embutido na escolha)
+  // Mantém modos Único/Mosaico operando com a marca Innova
+  const textModeBtn = document.querySelector('#modeSeg button[data-mode="text"]');
+  if (textModeBtn) textModeBtn.style.display = 'none';
+
+  // 4. Carrega logo.png como state.logo (pra Único/Mosaico funcionar com logo Innova)
+  fetch('logo.png').then(r => r.blob()).then(blob => {
+    const f = new File([blob], 'innova-logo.png', { type: 'image/png' });
+    loadImage(f).then(img => {
+      state.logo = { name: 'Innova logo', img, file: f };
+      refresh();
+    });
+  });
+
+  // 5. Force texto pra "INNOVA & AI STUDIO" e bloqueia input
+  state.text = 'INNOVA & AI STUDIO';
+  const textInput = document.getElementById('textInput');
+  if (textInput) {
+    textInput.value = state.text;
+    textInput.disabled = true;
+    textInput.style.opacity = '0.55';
+    textInput.style.cursor = 'not-allowed';
+  }
+
+  // 6. Handler do toggle Texto/Logo
+  document.querySelector('#wmFreeChoice')?.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#wmFreeChoice button').forEach(b => b.classList.toggle('active', b === btn));
+    if (btn.dataset.wm === 'text') {
+      // Modo texto: força modo "text" no segmented
+      const segText = document.querySelector('#modeSeg button[data-mode="text"]');
+      // Como escondemos, precisamos disparar manualmente
+      state.mode = 'text';
+      // Esconde controles de Único/Mosaico, mostra de texto
+      document.getElementById('singleControls')?.classList.add('hidden');
+      document.getElementById('tileControls')?.classList.add('hidden');
+      document.getElementById('textControls')?.classList.remove('hidden');
+      document.querySelector('#modeSeg button.active')?.classList.remove('active');
+    } else {
+      // Modo logo: usa modo "single" ou "tile"
+      state.mode = 'single';
+      document.getElementById('singleControls')?.classList.remove('hidden');
+      document.getElementById('tileControls')?.classList.add('hidden');
+      document.getElementById('textControls')?.classList.add('hidden');
+      document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === 'single'));
+    }
+    refresh();
+  });
+}
 </script>
 </body>
 </html>
