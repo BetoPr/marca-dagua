@@ -13,7 +13,7 @@ const ASAAS_API_URL = Deno.env.get('ASAAS_API_URL') || 'https://sandbox.asaas.co
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const PRO_VALUE = 19.90;
+const PRO_VALUE = 39.90;
 const PRO_DESCRIPTION = 'Innova AI Studio — Assinatura Pro Mensal';
 
 const corsHeaders = {

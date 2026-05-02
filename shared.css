@@ -156,6 +156,11 @@ body {
   width: 70%; height: 70%; object-fit: contain; display: block;
   filter: brightness(1.1);
 }
+/* Logo no modo claro: inverte cor pra preto */
+body.light-mode .hero-avatar img,
+body.light-mode .topbar-logo {
+  filter: brightness(0);
+}
 .hero-text h1 {
   margin: 0; font-family: 'Inter', system-ui, sans-serif;
   font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
@@ -2494,6 +2499,12 @@ body.light-mode .up-hero h1 {
 .up-cents { font-size: 22px; font-weight: 700; }
 .up-period { color: var(--muted); font-size: 13px; margin-left: 6px; font-weight: 600; }
 .up-price-soon .up-amount { font-size: 28px; color: var(--muted); }
+.up-yearly-hint {
+  display: block;
+  font-size: 12px; color: var(--muted);
+  margin-top: -8px; margin-bottom: 4px;
+}
+.up-yearly-hint strong { color: var(--text); }
 
 .up-features {
   list-style: none; padding: 0; margin: 0;

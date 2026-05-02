@@ -569,7 +569,7 @@ $('templateSelect').addEventListener('change', e => {
   const locked = opt?.dataset?.locked === '1';
   if (locked) {
     e.target.value = '';
-    if (confirm('Este modelo é exclusivo do plano Pro.\n\nQuer conhecer o Pro? (R$ 19,90/mês — todos os 50+ modelos liberados)')) {
+    if (confirm('Este modelo é exclusivo do plano Pro.\n\nQuer conhecer o Pro? (R$ 39,90/mês — todos os 50+ modelos liberados)')) {
       location.href = 'upgrade.html';
     }
     return;
