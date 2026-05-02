@@ -545,13 +545,13 @@ async function checkUserTier() {
 }
 
 (async () => {
-  if (window.whenSupabaseReady) {
-    await new Promise(r => window.whenSupabaseReady(r));
-    await checkUserTier();
-    rebuildTemplateSelect();
-  } else {
-    rebuildTemplateSelect();
+  // supabase-client.js é módulo (deferred) — espera carregar antes de checar tier.
+  if (!window.whenSupabaseReady) {
+    await new Promise(r => document.addEventListener('supabase-ready', r, { once: true }));
   }
+  await new Promise(r => window.whenSupabaseReady(r));
+  await checkUserTier();
+  rebuildTemplateSelect();
 })();
 
 document.querySelectorAll('#refToggle button').forEach(b => b.addEventListener('click', () => {
@@ -1342,34 +1342,37 @@ $('saveManualPrompt').addEventListener('click', async () => {
   renderHistory();
 });
 
-// Init — espera Supabase carregar antes de decidir cloud vs local
+// Init — espera Supabase carregar antes de decidir cloud vs local.
+// IMPORTANTE: supabase-client.js é <script type="module"> e portanto é deferred,
+// então window.whenSupabaseReady AINDA NÃO EXISTE quando este script roda.
+// Antes esse IIFE checava `if (window.whenSupabaseReady)` e pulava silenciosamente
+// — cloudUser ficava null pra sempre e o histórico ficava preso no IndexedDB local.
 (async () => {
-  if (window.whenSupabaseReady) {
-    await new Promise(resolve => window.whenSupabaseReady(resolve));
-
-    // Espera o primeiro evento de auth (INITIAL_SESSION) antes de calcular o histórico.
-    // Sem isso, se a hidratação do token tá em andamento quando refreshCloudUser roda,
-    // cloudUser fica null pra sempre e o histórico fica preso no IndexedDB local.
-    let resolveFirstEvent;
-    const firstEventPromise = new Promise(r => { resolveFirstEvent = r; });
-    let firstEventSeen = false;
-    window.supabase.auth.onAuthStateChange(async (_event, session) => {
-      cloudUser = session?.user || null;
-      $('openSessions').hidden = !cloudUser;
-      if (!firstEventSeen) { firstEventSeen = true; resolveFirstEvent(); return; }
-      await refreshHistoryCount();
-      if (document.getElementById('historyModal').classList.contains('open')) {
-        await renderHistory();
-      }
-    });
-    // Race entre o evento e um timeout (2s) que cai num fallback via getSession.
-    await Promise.race([
-      firstEventPromise,
-      new Promise(r => setTimeout(r, 2000)),
-    ]);
-    if (!cloudUser) await refreshCloudUser();
-    $('openSessions').hidden = !cloudUser;
+  if (!window.whenSupabaseReady) {
+    await new Promise(r => document.addEventListener('supabase-ready', r, { once: true }));
   }
+  await new Promise(resolve => window.whenSupabaseReady(resolve));
+
+  // Listener — captura INITIAL_SESSION e mudanças subsequentes.
+  let resolveFirstEvent;
+  const firstEventPromise = new Promise(r => { resolveFirstEvent = r; });
+  let firstEventSeen = false;
+  window.supabase.auth.onAuthStateChange(async (_event, session) => {
+    cloudUser = session?.user || null;
+    $('openSessions').hidden = !cloudUser;
+    if (!firstEventSeen) { firstEventSeen = true; resolveFirstEvent(); return; }
+    await refreshHistoryCount();
+    if (document.getElementById('historyModal').classList.contains('open')) {
+      await renderHistory();
+    }
+  });
+  // Race com timeout 2s — fallback via getSession se INITIAL_SESSION não vier.
+  await Promise.race([
+    firstEventPromise,
+    new Promise(r => setTimeout(r, 2000)),
+  ]);
+  if (!cloudUser) await refreshCloudUser();
+  $('openSessions').hidden = !cloudUser;
   updateConfigLabel();
   renderMessages();
   updateSendBtn();
