@@ -210,6 +210,14 @@
     document.body.appendChild(s);
   }
 
+  // Carrega tooltips de tutorial (primeiro uso) só nas páginas-chave
+  const p = location.pathname.toLowerCase();
+  if (p.endsWith('galeria.html') || p.endsWith('construtor.html') || p.endsWith('chat-ia.html')) {
+    const s = document.createElement('script');
+    s.src = 'lib/tutorial.js';
+    document.body.appendChild(s);
+  }
+
   // Render icons
   if (window.lucide) lucide.createIcons();
 

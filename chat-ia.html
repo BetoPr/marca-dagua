@@ -1079,9 +1079,21 @@ async function renderHistory() {
     const all = await dbGetAllPrompts();
     const p = all.find(x => String(x.id) === String(id));
     if (p) navigator.clipboard.writeText(p.text);
-    b.innerHTML = '<i data-lucide="check"></i>';
+    b.innerHTML = '<i data-lucide="check"></i> Copiado!';
     if (window.lucide) lucide.createIcons();
-    setTimeout(() => { b.innerHTML = '<i data-lucide="copy"></i>'; if (window.lucide) lucide.createIcons(); }, 1200);
+    setTimeout(() => { b.innerHTML = '<i data-lucide="copy"></i> Copiar'; if (window.lucide) lucide.createIcons(); }, 1200);
+  }));
+
+  // Postar na galeria — manda prompt + imagem gerada (sem ref pra preservar privacidade)
+  list.querySelectorAll('[data-action="publish"]').forEach(b => b.addEventListener('click', async () => {
+    const id = idFromStr(b.dataset.id);
+    const all = await dbGetAllPrompts();
+    const p = all.find(x => String(x.id) === String(id));
+    if (!p) return;
+    const cover = b.dataset.cover || '';
+    const seed = encodeURIComponent(p.text);
+    const coverParam = cover ? `&cover=${encodeURIComponent(cover)}` : '';
+    location.href = `compartilhar.html?seed=${seed}${coverParam}`;
   }));
   list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', async () => {
     if (!confirm('Apagar este prompt?')) return;
@@ -1199,11 +1211,12 @@ async function renderHistory() {
 function renderHistoryItem(p) {
   const idStr = String(p.id);
   const isEditing = editingIds.has(idStr);
-  const hasImages = (p.refImages?.length || 0) + (p.generatedImages?.length || 0) > 0;
-  const expanded = expandedIds.has(idStr) || hasImages || isEditing;
+  // Default: collapse. Só abre se user clicou expand OU está editando
+  const expanded = expandedIds.has(idStr) || isEditing;
   const goodCls = p.good === true ? 'good' : (p.good === false ? 'bad' : '');
   const date = new Date(p.timestamp).toLocaleDateString('pt-BR') + ' ' + new Date(p.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const previewText = p.text.length > 200 ? p.text.slice(0, 200) + '…' : p.text;
+  // Texto sempre clamped no preview, expande via collapse
+  const previewText = p.text.length > 160 ? p.text.slice(0, 160) + '…' : p.text;
   const fullText = expanded ? p.text : previewText;
 
   const refCount = p.refImages?.length || 0;
@@ -1213,6 +1226,9 @@ function renderHistoryItem(p) {
   const getImgUrl = (item) => item instanceof Blob ? URL.createObjectURL(item) : (item?.url || '');
   const getImgId = (item) => item instanceof Blob ? '' : (item?.id || '');
   const getImgPath = (item) => item instanceof Blob ? '' : (item?.path || '');
+
+  // Pega URL da PRIMEIRA imagem gerada (pra Postar usar como cover)
+  const firstGenUrl = (p.generatedImages || []).map(getImgUrl).find(u => u) || '';
 
   const renderImgs = (imgs, kind, label) => {
     const thumbs = (imgs || []).map((it, i) => {
@@ -1230,13 +1246,6 @@ function renderHistoryItem(p) {
   const imgCounts = (refCount + genCount > 0) ?
     `<span style="font-size:11px; color:var(--muted); display:inline-flex; align-items:center; gap:4px;"><i data-lucide="image" style="width:12px;height:12px;"></i> ${refCount + genCount}</span>` : '';
 
-  const tagsHtml = `
-    <div class="prompt-tags">
-      ${tags.map(t => `<span class="ptag">${escapeHtml(t)}<button class="x" data-action="remove-tag" data-id="${p.id}" data-tag="${escapeHtml(t)}" title="Remover tag">×</button></span>`).join('')}
-      <button class="add-tag" data-action="add-tag" data-id="${p.id}"><i data-lucide="plus"></i> tag</button>
-    </div>
-  `;
-
   const textBlock = isEditing
     ? `<div class="text" style="flex:1;">
          <textarea class="edit-area" data-edit-id="${p.id}">${escapeHtml(p.text)}</textarea>
@@ -1247,6 +1256,32 @@ function renderHistoryItem(p) {
        </div>`
     : `<div class="text">${escapeHtml(fullText)}</div>`;
 
+  // Body so renderiza se expanded
+  const bodyHtml = !expanded ? '' : `
+    <div class="prompt-tags">
+      ${tags.map(t => `<span class="ptag">${escapeHtml(t)}<button class="x" data-action="remove-tag" data-id="${p.id}" data-tag="${escapeHtml(t)}" title="Remover tag">×</button></span>`).join('')}
+      <button class="add-tag" data-action="add-tag" data-id="${p.id}"><i data-lucide="plus"></i> tag</button>
+    </div>
+    <div class="item-body">
+      <div class="hist-actions-row">
+        <button class="hist-act-btn" data-action="edit" data-id="${p.id}" title="Editar prompt"><i data-lucide="pencil"></i> Editar</button>
+        <button class="hist-act-btn" data-action="quick-add-ref" data-id="${p.id}" title="Adicionar imagem de referência"><i data-lucide="image-plus"></i> Ref</button>
+        <button class="hist-act-btn" data-action="quick-add-gen" data-id="${p.id}" title="Adicionar imagem gerada"><i data-lucide="sparkles"></i> Gerada</button>
+        <button class="hist-act-btn" data-action="copy" data-id="${p.id}" title="Copiar prompt"><i data-lucide="copy"></i> Copiar</button>
+        <button class="hist-act-btn hist-act-publish" data-action="publish" data-id="${p.id}" data-cover="${escapeHtml(firstGenUrl)}" title="Publicar na galeria (apenas imagem gerada + prompt)">
+          <i data-lucide="upload-cloud"></i> Postar
+        </button>
+      </div>
+      <div class="img-section">
+        <h4>Imagens de referência (${refCount})</h4>
+        ${renderImgs(p.refImages, 'ref', 'referência')}
+      </div>
+      <div class="img-section">
+        <h4>Imagens geradas (${genCount})</h4>
+        ${renderImgs(p.generatedImages, 'gen', 'gerada')}
+      </div>
+    </div>`;
+
   return `
     <div class="history-item ${goodCls} ${expanded ? 'expanded' : ''}">
       <div class="item-head">
@@ -1254,11 +1289,9 @@ function renderHistoryItem(p) {
         <button class="check ${p.good === false ? 'bad' : ''}" data-action="check" data-id="${p.id}" data-value="bad" title="Marcar como ruim"><i data-lucide="x"></i></button>
         ${textBlock}
         <div class="actions">
-          <button class="icon-btn" data-action="edit" data-id="${p.id}" title="Editar prompt"><i data-lucide="pencil"></i></button>
-          <button class="icon-btn" data-action="quick-add-ref" data-id="${p.id}" title="Adicionar imagem de referência"><i data-lucide="image-plus"></i></button>
-          <button class="icon-btn" data-action="quick-add-gen" data-id="${p.id}" title="Adicionar imagem gerada"><i data-lucide="sparkles"></i></button>
-          <button class="icon-btn" data-action="copy" data-id="${p.id}" title="Copiar"><i data-lucide="copy"></i></button>
-          <button class="icon-btn" data-action="expand" data-id="${p.id}" title="Expandir/Recolher"><i data-lucide="${expanded ? 'chevron-up' : 'chevron-down'}"></i></button>
+          <button class="icon-btn" data-action="expand" data-id="${p.id}" title="${expanded ? 'Recolher' : 'Expandir'}">
+            <i data-lucide="${expanded ? 'chevron-up' : 'chevron-down'}"></i>
+          </button>
           <button class="icon-btn" data-action="delete" data-id="${p.id}" title="Apagar"><i data-lucide="trash-2"></i></button>
         </div>
         <div class="date" style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
@@ -1266,17 +1299,7 @@ function renderHistoryItem(p) {
           <span>${date}</span>
         </div>
       </div>
-      ${tagsHtml}
-      <div class="item-body">
-        <div class="img-section">
-          <h4>Imagens de referência (${refCount})</h4>
-          ${renderImgs(p.refImages, 'ref', 'referência')}
-        </div>
-        <div class="img-section">
-          <h4>Imagens geradas (${genCount})</h4>
-          ${renderImgs(p.generatedImages, 'gen', 'gerada')}
-        </div>
-      </div>
+      ${bodyHtml}
     </div>`;
 }
 

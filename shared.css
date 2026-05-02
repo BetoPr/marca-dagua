@@ -992,15 +992,18 @@ body.light-mode .legal-title { color: #0a0a0a; }
 
 /* Footer global expandido (.land-footer já existe — extensão) */
 .land-foot-cols {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 28px;
   padding: 50px 36px 28px;
   max-width: 1100px; margin: 0 auto;
   border-top: 1px solid var(--border);
 }
-@media (max-width: 800px) {
-  .land-foot-cols { grid-template-columns: 1fr 1fr; gap: 28px; padding: 30px 16px 18px; }
+@media (max-width: 900px) {
+  .land-foot-cols { grid-template-columns: 1fr 1fr 1fr; gap: 24px; padding: 30px 16px 18px; }
 }
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  .land-foot-cols { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
   .land-foot-cols { grid-template-columns: 1fr; }
 }
 .land-foot-col h4 {
@@ -1045,6 +1048,127 @@ body.light-mode .legal-title { color: #0a0a0a; }
   border-top: 1px solid var(--border);
   font-size: 12px; color: var(--muted);
 }
+
+/* === Botões de ação no histórico do Chat IA === */
+.hist-actions-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.hist-act-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--panel); border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all .12s;
+}
+.hist-act-btn:hover { border-color: var(--accent-2); }
+.hist-act-btn svg { width: 13px; height: 13px; }
+.hist-act-btn.hist-act-publish {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  color: white; border-color: transparent;
+}
+.hist-act-btn.hist-act-publish:hover { transform: translateY(-1px); }
+
+/* === Dropdown "Abrir em..." (detalhe prompt) === */
+.pd-open-wrap { position: relative; }
+.pd-open-wrap .pd-chev { width: 12px; height: 12px; opacity: 0.6; margin-left: 2px; }
+.pd-open-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; min-width: 220px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  padding: 4px;
+  z-index: 200;
+  display: flex; flex-direction: column;
+}
+body.light-mode .pd-open-menu { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.pd-open-menu button {
+  text-align: left; padding: 9px 12px;
+  background: transparent; border: none; cursor: pointer;
+  border-radius: 7px;
+  display: flex; flex-direction: column; gap: 2px;
+  color: var(--text);
+  transition: background .12s;
+}
+.pd-open-menu button:hover { background: var(--panel-2); }
+.pd-open-menu button strong { font-size: 13px; font-weight: 700; }
+.pd-open-menu button span { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+
+/* === Página /guia.html === */
+.guide-wrap .guide-steps {
+  display: flex; flex-direction: column; gap: 18px;
+  margin: 30px 0 50px;
+}
+.guide-step {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px;
+  display: flex; gap: 22px;
+  align-items: flex-start;
+}
+.guide-num {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  color: white; font-weight: 800; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.guide-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.guide-content h3 {
+  margin: 0; font-family: 'Inter', system-ui, sans-serif;
+  font-size: 20px; font-weight: 700; letter-spacing: -0.01em;
+}
+.guide-content p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+.guide-content p strong { color: var(--text); }
+.guide-content p a { color: var(--text); font-weight: 600; }
+.guide-content ul { margin: 4px 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 4px; }
+.guide-content li { font-size: 14px; line-height: 1.55; color: var(--muted); }
+.guide-content li strong { color: var(--text); }
+.guide-tips h2 {
+  margin: 30px 0 22px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
+}
+.guide-cta-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-top: 50px; justify-content: center;
+}
+@media (max-width: 700px) {
+  .guide-step { flex-direction: column; padding: 22px; }
+  .guide-num { width: 38px; height: 38px; font-size: 18px; }
+}
+
+/* === Tooltip de primeiro uso (Camada 1) === */
+.tut-tip {
+  position: fixed;
+  background: var(--panel); border: 1px solid var(--accent-2);
+  border-radius: 14px; padding: 16px 18px;
+  max-width: 320px; z-index: 300;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55);
+  display: flex; flex-direction: column; gap: 10px;
+}
+body.light-mode .tut-tip { box-shadow: 0 12px 32px rgba(0,0,0,0.15); }
+.tut-tip-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.tut-tip-head strong {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13.5px; font-weight: 700;
+}
+.tut-tip-head strong svg { width: 14px; height: 14px; color: #a78bfa; }
+.tut-tip-close {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--muted); padding: 2px;
+}
+.tut-tip-close:hover { color: var(--text); }
+.tut-tip-close svg { width: 16px; height: 16px; }
+.tut-tip p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+.tut-tip a { color: var(--text); font-weight: 700; text-decoration: none; }
+.tut-tip a:hover { text-decoration: underline; }
 
 @media (max-width: 700px) {
   .topbar-login { display: none; }
