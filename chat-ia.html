@@ -1346,18 +1346,28 @@ $('saveManualPrompt').addEventListener('click', async () => {
 (async () => {
   if (window.whenSupabaseReady) {
     await new Promise(resolve => window.whenSupabaseReady(resolve));
-    // Registra o listener ANTES do refresh inicial pra capturar INITIAL_SESSION
-    // (sem isso, se o token ainda não tiver sido hidratado quando refreshCloudUser roda,
-    // cloudUser fica null pra sempre e o histórico fica preso no IndexedDB local).
+
+    // Espera o primeiro evento de auth (INITIAL_SESSION) antes de calcular o histórico.
+    // Sem isso, se a hidratação do token tá em andamento quando refreshCloudUser roda,
+    // cloudUser fica null pra sempre e o histórico fica preso no IndexedDB local.
+    let resolveFirstEvent;
+    const firstEventPromise = new Promise(r => { resolveFirstEvent = r; });
+    let firstEventSeen = false;
     window.supabase.auth.onAuthStateChange(async (_event, session) => {
       cloudUser = session?.user || null;
       $('openSessions').hidden = !cloudUser;
+      if (!firstEventSeen) { firstEventSeen = true; resolveFirstEvent(); return; }
       await refreshHistoryCount();
       if (document.getElementById('historyModal').classList.contains('open')) {
         await renderHistory();
       }
     });
-    await refreshCloudUser();
+    // Race entre o evento e um timeout (2s) que cai num fallback via getSession.
+    await Promise.race([
+      firstEventPromise,
+      new Promise(r => setTimeout(r, 2000)),
+    ]);
+    if (!cloudUser) await refreshCloudUser();
     $('openSessions').hidden = !cloudUser;
   }
   updateConfigLabel();
