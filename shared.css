@@ -1908,10 +1908,12 @@ body.light-mode .pd-lock-overlay {
   background: linear-gradient(180deg, rgba(245,246,248,0.4) 0%, rgba(245,246,248,0.95) 80%);
 }
 .pd-lock-overlay > svg {
-  width: 32px; height: 32px;
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
   color: #a78bfa;
   background: rgba(167,139,250,0.16);
-  padding: 12px; border-radius: 50%;
+  padding: 16px; border-radius: 50%;
   box-sizing: content-box;
 }
 .pd-lock-overlay p { margin: 0; color: var(--text); font-size: 14px; max-width: 320px; }
