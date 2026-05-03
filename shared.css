@@ -546,6 +546,16 @@ body.sidebar-collapsed .sidebar-footer .footer-item { padding: 10px 12px; justif
   border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 12px;
 }
 .logo-preview img { max-width: 60px; max-height: 40px; background: #fff3; border-radius: 4px; padding: 2px; }
+.logo-preview span { flex: 1; min-width: 0; word-break: break-word; }
+.logo-preview .logo-remove {
+  flex-shrink: 0; width: 24px; height: 24px;
+  border: none; background: rgba(255,255,255,0.06);
+  color: var(--muted); border-radius: 50%;
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.logo-preview .logo-remove:hover { background: rgba(255,93,108,0.18); color: var(--danger); }
 
 /* === ACTIONS === */
 .actions {

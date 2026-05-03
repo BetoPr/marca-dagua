@@ -226,7 +226,19 @@ setupDrop('dropLogo', 'logoInput', async (files) => {
   state.logo = { img, name: files[0].name };
   const lp = $('logoPreview');
   lp.style.display = 'flex';
-  lp.innerHTML = `<img src="${img.src}"><span>${files[0].name}</span>`;
+  lp.innerHTML = `
+    <img src="${img.src}">
+    <span>${files[0].name}</span>
+    <button type="button" class="logo-remove" id="logoRemoveBtn" title="Remover logo" aria-label="Remover logo">×</button>
+  `;
+  // Reset do input pra permitir subir novo logo (até o mesmo arquivo)
+  $('logoRemoveBtn').addEventListener('click', () => {
+    state.logo = null;
+    lp.style.display = 'none';
+    lp.innerHTML = '';
+    $('logoInput').value = '';
+    refresh();
+  });
   refresh();
 });
 
