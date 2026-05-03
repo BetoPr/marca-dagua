@@ -1,55 +1,55 @@
 (function buildSidebar() {
   const sections = [
     {
-      label: 'Principal',
+      label: 'Principal', i18n: 'sidebar.section.main',
       icon: 'layout-grid',
       color: 'green',
       items: [
-        { href: 'index.html', icon: 'home', label: 'Início' },
+        { href: 'index.html', icon: 'home', label: 'Início', i18n: 'sidebar.home' },
       ],
     },
     {
-      label: 'Ferramentas',
+      label: 'Ferramentas', i18n: 'sidebar.section.tools',
       icon: 'wrench',
       color: 'blue',
       items: [
-        { href: 'marca-dagua.html', icon: 'droplet', label: "Marca d'água" },
-        { href: 'remove-bg.html', icon: 'scissors', label: 'Remover fundo' },
-        { href: 'comprimir.html', icon: 'package', label: 'Comprimir' },
-        { href: 'converter.html', icon: 'repeat', label: 'Converter formato' },
-        { href: 'redimensionar.html', icon: 'maximize-2', label: 'Redimensionar' },
+        { href: 'marca-dagua.html', icon: 'droplet', label: "Marca d'água", i18n: 'sidebar.watermark' },
+        { href: 'remove-bg.html', icon: 'scissors', label: 'Remover fundo', i18n: 'sidebar.removeBg' },
+        { href: 'comprimir.html', icon: 'package', label: 'Comprimir', i18n: 'sidebar.compress' },
+        { href: 'converter.html', icon: 'repeat', label: 'Converter formato', i18n: 'sidebar.convert' },
+        { href: 'redimensionar.html', icon: 'maximize-2', label: 'Redimensionar', i18n: 'sidebar.resize' },
       ],
     },
     {
-      label: 'IA',
+      label: 'IA', i18n: 'sidebar.section.ia',
       icon: 'sparkles',
       color: 'purple',
       items: [
-        { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA' },
-        { href: 'construtor.html', icon: 'blocks', label: 'Construtor' },
-        { href: 'gerar-imagens.html', icon: 'sparkles', label: 'Geração de imagens', soon: true },
-        { href: 'transcrever.html', icon: 'mic', label: 'Transcrever' },
+        { href: 'chat-ia.html', icon: 'message-circle', label: 'Chat IA', i18n: 'sidebar.chatIa' },
+        { href: 'construtor.html', icon: 'blocks', label: 'Construtor', i18n: 'sidebar.builder' },
+        { href: 'gerar-imagens.html', icon: 'sparkles', label: 'Geração de imagens', soon: true, i18n: 'sidebar.imageGen' },
+        { href: 'transcrever.html', icon: 'mic', label: 'Transcrever', i18n: 'sidebar.transcribe' },
       ],
     },
     {
-      label: 'Comunidade',
+      label: 'Comunidade', i18n: 'sidebar.section.community',
       icon: 'users',
       color: 'pink',
       items: [
-        { href: 'galeria.html', icon: 'layout-grid', label: 'Galeria' },
-        { href: 'compartilhar.html', icon: 'plus-circle', label: 'Compartilhar' },
-        { href: 'meus-prompts.html', icon: 'file-text', label: 'Meus prompts' },
-        { href: 'favoritos.html', icon: 'bookmark', label: 'Favoritos' },
+        { href: 'galeria.html', icon: 'layout-grid', label: 'Galeria', i18n: 'sidebar.gallery' },
+        { href: 'compartilhar.html', icon: 'plus-circle', label: 'Compartilhar', i18n: 'sidebar.share' },
+        { href: 'meus-prompts.html', icon: 'file-text', label: 'Meus prompts', i18n: 'sidebar.myPrompts' },
+        { href: 'favoritos.html', icon: 'bookmark', label: 'Favoritos', i18n: 'sidebar.favorites' },
       ],
     },
     {
-      label: 'Sistema',
+      label: 'Sistema', i18n: 'sidebar.section.system',
       icon: 'settings',
       color: 'gray',
       items: [
-        { href: 'upgrade.html', icon: 'rocket', label: 'Plano Pro' },
-        { href: 'assinatura.html', icon: 'credit-card', label: 'Minha assinatura' },
-        { href: 'configuracoes.html', icon: 'key-round', label: 'Chaves de API' },
+        { href: 'upgrade.html', icon: 'rocket', label: 'Plano Pro', i18n: 'sidebar.proPlan' },
+        { href: 'assinatura.html', icon: 'credit-card', label: 'Minha assinatura', i18n: 'sidebar.subscription' },
+        { href: 'configuracoes.html', icon: 'key-round', label: 'Chaves de API', i18n: 'sidebar.apiKeys' },
       ],
     },
   ];
@@ -154,7 +154,7 @@
     html += `
       <button class="nav-section" data-section="${sIdx}" aria-expanded="${!sectionCollapsed}">
         <span class="icon-circle ${sec.color}"><i data-lucide="${sec.icon}"></i></span>
-        <span class="label">${sec.label}</span>
+        <span class="label" data-i18n="${sec.i18n}">${sec.label}</span>
         <span class="chevron"><i data-lucide="chevron-right"></i></span>
       </button>
       <div class="nav-items ${sectionCollapsed ? 'collapsed' : ''}" data-items="${sIdx}">
@@ -164,8 +164,8 @@
       const cls = [isActive ? 'active' : '', it.disabled ? 'disabled' : ''].filter(Boolean).join(' ');
       html += `<a href="${it.href}" class="${cls}">
         <span class="icon"><i data-lucide="${it.icon}"></i></span>
-        <span>${it.label}</span>
-        ${it.disabled ? '<span class="badge">Em breve</span>' : it.soon ? '<span class="badge badge-soon">Em breve</span>' : ''}
+        <span data-i18n="${it.i18n}">${it.label}</span>
+        ${it.disabled ? '<span class="badge" data-i18n="sidebar.soonBadge">Em breve</span>' : it.soon ? '<span class="badge badge-soon" data-i18n="sidebar.soonBadge">Em breve</span>' : ''}
       </a>`;
     });
     html += `</div>`;
