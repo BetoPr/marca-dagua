@@ -511,13 +511,13 @@ body.sidebar-collapsed .sidebar-footer .footer-item { padding: 10px 12px; justif
 
 /* === FILE LIST === */
 .file-list {
-  margin-top: 10px; max-height: 140px; overflow-y: auto;
+  margin-top: 10px; max-height: 140px; overflow-y: auto; overflow-x: hidden;
   font-size: 13px; color: var(--muted);
 }
 .file-list .item {
   padding: 4px 8px; border-radius: 4px; display: flex;
   justify-content: space-between; align-items: center; gap: 8px;
-  cursor: pointer;
+  cursor: pointer; min-width: 0;
 }
 .file-list .item:hover, .file-list .item.active { background: var(--panel-2); color: var(--text); }
 .file-list .item.active { color: var(--accent-2); }
