@@ -545,7 +545,11 @@ body.sidebar-collapsed .sidebar-footer .footer-item { padding: 10px 12px; justif
   border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 12px;
 }
 .logo-preview img { max-width: 60px; max-height: 40px; background: #fff3; border-radius: 4px; padding: 2px; }
-.logo-preview span { flex: 1; min-width: 0; word-break: break-word; }
+.logo-preview > span,
+.file-list .item > span:not(.actions) {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .logo-preview .logo-remove,
 .file-list .item .x {
   flex-shrink: 0; width: 24px; height: 24px;

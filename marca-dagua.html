@@ -228,7 +228,7 @@ setupDrop('dropLogo', 'logoInput', async (files) => {
   lp.style.display = 'flex';
   lp.innerHTML = `
     <img src="${img.src}">
-    <span>${files[0].name}</span>
+    <span title="${files[0].name}">${files[0].name}</span>
     <button type="button" class="logo-remove" id="logoRemoveBtn" title="Remover logo" aria-label="Remover logo">×</button>
   `;
   // Reset do input pra permitir subir novo logo (até o mesmo arquivo)
@@ -260,7 +260,7 @@ function renderFileList() {
   fl.innerHTML = state.images.map((it, i) => {
     const dlBtn = canDownload ? `<button class="dl" data-dl="${i}" title="Baixar esta"><i data-lucide="download"></i></button>` : '';
     return `<div class="item">
-      <span>${it.name}</span>
+      <span title="${it.name}">${it.name}</span>
       <span class="actions">${dlBtn}<button class="x" data-x="${i}">×</button></span>
     </div>`;
   }).join('');
