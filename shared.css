@@ -10,6 +10,9 @@
   --ok: #36c98a;
   --danger: #ff5d6c;
   --sidebar-w: 240px;
+  --sidebar-bg: #000000;
+  --sidebar-text: #f0f0f0;
+  --sidebar-border: #262626;
 }
 
 body.light-mode {
@@ -23,6 +26,9 @@ body.light-mode {
   --accent-2: #3a4253;
   --ok: #1a9d6b;
   --danger: #d63a4a;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #1a1d24;
+  --sidebar-border: #d8dde6;
 }
 body.light-mode .topbar { background: rgba(255,255,255,0.85); }
 body.light-mode .preview-canvas { background: repeating-conic-gradient(#e9ecf1 0% 25%, #f5f6f8 0% 50%) 50% / 20px 20px; }
@@ -231,28 +237,15 @@ body.light-mode .topbar-logo {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   width: var(--sidebar-w);
-  background: #000000;
-  border-right: 1px solid #262626;
-  color: #f0f0f0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  color: var(--sidebar-text);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   z-index: 50;
   transition: width .2s;
 }
-/* No light-mode mantemos sidebar escura, mas sobrescrevemos elementos que herdam --vars do body. */
-body.light-mode .sidebar { background: #000000; color: #f0f0f0; }
-body.light-mode .sidebar .sidebar-header,
-body.light-mode .sidebar .nav-section,
-body.light-mode .sidebar-footer { border-color: #262626; }
-body.light-mode .sidebar .nav-section .label,
-body.light-mode .sidebar .nav-items a,
-body.light-mode .sidebar-footer .footer-item .info .title { color: #f0f0f0; }
-body.light-mode .sidebar .nav-items a:hover,
-body.light-mode .sidebar .nav-section:hover,
-body.light-mode .sidebar-footer .footer-item:hover { background: #1a1a1a; }
-body.light-mode .sidebar-footer .footer-item .icon-circle { background: #1a1a1a; color: #888; }
-body.light-mode .sidebar .nav-items a.active { color: #ffffff; border-left-color: #ffffff; background: rgba(255,255,255,0.06); }
 body.sidebar-collapsed { --sidebar-w: 70px; }
 
 .sidebar .sidebar-header {
