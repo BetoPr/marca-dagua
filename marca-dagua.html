@@ -498,9 +498,7 @@ $('clearBtn').addEventListener('click', () => {
 
 // ===== Gating Free vs Pro =====
 // Free: marca d'água fixa Innova (texto OU logo). Pro/Admin: livre.
-(async function applyPlanGating() {
-  if (!window.whenSupabaseReady) return;
-  await new Promise(r => window.whenSupabaseReady(r));
+async function applyPlanGating() {
   const { data: { user } } = await window.supabase.auth.getUser();
   if (!user) {
     setupAnonOrFreeGating();
@@ -511,7 +509,16 @@ $('clearBtn').addEventListener('click', () => {
   const isPro = !!prof?.is_admin || ((prof?.plan === 'pro' || prof?.plan === 'studio')
     && prof?.pro_until && new Date(prof.pro_until) > new Date());
   if (!isPro) setupAnonOrFreeGating();
-})();
+}
+
+// supabase-client.js é module (deferred) e roda DEPOIS deste script inline.
+// Espera o evento 'supabase-ready' antes de aplicar o gating. Se já carregou
+// (raro mas possível), aplica direto.
+if (window.supabase) {
+  applyPlanGating();
+} else {
+  document.addEventListener('supabase-ready', applyPlanGating, { once: true });
+}
 
 function setupAnonOrFreeGating() {
   // 1. Banner upgrade no topo
